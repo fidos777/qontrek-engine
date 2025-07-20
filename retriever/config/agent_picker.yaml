@@ -1,0 +1,12 @@
+shopee_leads:
+  primary: Izara
+  fallback: Danish
+
+cold_email:
+  primary: Zeyti
+  fallback: Zamer
+
+reminder_followup:
+  primary: Zamer
+  fallback: Tawfiq
+

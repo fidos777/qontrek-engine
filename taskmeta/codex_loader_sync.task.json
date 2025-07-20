@@ -1,0 +1,8 @@
+{
+  "title": "CSV → YAML → Supabase Loader",
+  "batch": "batch/codex_loader_sync.batch",
+  "type": "resipi_sync",
+  "tags": ["voltek", "runtime", "yaml", "supabase"],
+  "persona": "Tawfiq"
+}
+

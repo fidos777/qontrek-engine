@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "agent": { "type": "string" },
+    "lead_id": { "type": "string" },
+    "source": { "type": "string", "enum": ["whatsapp", "form", "manual"] },
+    "message": { "type": "string" },
+    "nonce": { "type": "string" }
+  },
+  "required": ["agent", "lead_id", "message", "nonce"]
+}
+

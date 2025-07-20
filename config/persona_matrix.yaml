@@ -1,0 +1,7 @@
+rules:
+- confidence: 0.95
+  if: vertical == "clinic" and title contains "reminder"
+  persona: Zeyti
+- confidence: 0.9
+  if: title contains "quotation" or "roi"
+  persona: Danish

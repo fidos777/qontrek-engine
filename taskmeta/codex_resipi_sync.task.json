@@ -1,0 +1,15 @@
+{
+  "task_name": "resipi_sync_runtime",
+  "trigger": "manual",
+  "task_type": "sync",
+  "agent": "loader_bot",
+  "target": "resipi_catalog",
+  "status": "queued",
+  "timestamp": "{{now}}",
+  "log": {
+    "input_dir": "resipi/clinic",
+    "file_count": "auto",
+    "credit_loaded": "sum(credit_cost)"
+  }
+}
+

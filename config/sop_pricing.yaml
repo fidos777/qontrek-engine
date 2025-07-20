@@ -1,0 +1,10 @@
+tiers:
+  Bronze:
+    credit_cost: 0.3
+    nodes_range: 1-5
+  Gold:
+    credit_cost: 1.0
+    nodes_range: 16+
+  Silver:
+    credit_cost: 0.6
+    nodes_range: 6-15

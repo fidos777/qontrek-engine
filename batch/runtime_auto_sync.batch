@@ -1,0 +1,6 @@
+codex convert csv_to_yaml --file=n8n_workflow_catalog_full.csv --outdir=resipi/clinic/
+codex run resipi_loader --dir=resipi/clinic/
+codex run task_log_writer --task=resipi_loader --agent=loader_bot --status=success
+codex run fallback_logger --sop=quotation_generator --agent=Zamer --reason="demo_fail"
+codex sync diff --target=resipi_hash.json
+codex create cron --interval=1h --task=resipi_loader

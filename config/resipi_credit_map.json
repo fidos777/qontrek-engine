@@ -1,0 +1,16 @@
+[
+  {
+    "title": "whatsapp_followup",
+    "tier": "Bronze",
+    "credit_cost": 0.3,
+    "persona": "Zeyti",
+    "premium": false
+  },
+  {
+    "title": "quotation_generator",
+    "tier": "Silver",
+    "credit_cost": 0.6,
+    "persona": "Danish",
+    "premium": true
+  }
+]
