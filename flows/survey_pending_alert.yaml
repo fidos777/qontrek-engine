@@ -1,0 +1,46 @@
+meta:
+  flow_name: survey_pending_alert
+  version: 1
+  owner: ops
+  description: Nudge client + alert ops if 7d after deposit and survey not scheduled
+
+when:
+  all:
+    - eq: [ "{{lead.stage}}", "Deposit" ]
+    - is_false: "{{lead.survey_scheduled}}"
+    - gte: [ "{{lead.idle_days}}", 7 ]
+    - is_false: "{{lead.do_not_proceed}}"
+    - is_false: "{{lead.do_not_contact}}"
+
+guards:
+  idempotency_key: "{{lead.id}}:{{lead.stage}}:{{iso_week}}:survey_pending_alert"
+  not_fired_in_days: 7
+  max_sends_total: 3
+  cool_off_hours: 48
+
+do:
+  - log_trigger: { status: "queued", idempotency_key: "{{guards.idempotency_key}}" }
+
+  - send_whatsapp:
+      provider: "whatchimp"
+      to: "{{lead.wa_number}}"
+      template_id: "survey_nudge_v1"
+      variables: { name: "{{lead.first_name}}", choice_cta: "Pilih slot survey" }
+      quick_replies: ["Pilih Slot","Tunda 1 Minggu","Saya Perlukan Bantuan"]
+      on_sent: { log_trigger_status: "sent" }
+
+  - notify_slack:
+      channel: "#ops-leads"
+      text: "🔔 7d post-deposit, tiada survey — {{lead.id}} ({{lead.name}}) • idle={{lead.idle_days}}d"
+
+  - schedule:
+      at: "{{now_plus_3d}}"
+      flow: "survey_pending_alert_followup"
+      only_if: "survey_scheduled==false"
+
+on_skip:
+  - log_trigger: { status: "skipped", reason: "idempotent_or_guard_failed", idempotency_key: "{{guards.idempotency_key}}" }
+
+on_error:
+  - log_trigger: { status: "error", error: "{{last_error}}", idempotency_key: "{{guards.idempotency_key}}" }
+
