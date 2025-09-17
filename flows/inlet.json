@@ -1,0 +1,82 @@
+{
+  "name": "Flow A - Inlet",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "wa/inlet",
+        "options": {
+          "responseData": "={ \"status\": \"accepted\", \"idempotency_key\": $json.idempotency_key }",
+          "responseCode": 202
+        }
+      },
+      "id": "1",
+      "name": "Inbound Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Generate deterministic idempotency key based on request payload\nconst crypto = require('crypto');\nreturn items.map(item => {\n  const { request_id = '', brand = '', customer_phone = '' } = item.json;\n  const fingerprint = `${request_id}|${brand}|${customer_phone}`;\n  const idempotency = crypto\n    .createHash('sha1')\n    .update(fingerprint)\n    .digest('hex');\n  item.json.idempotency_key = idempotency;\n  return item;\n});"
+      },
+      "id": "2",
+      "name": "Generate Idempotency",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO public.events_raw (request_id, brand, customer_phone, payload, idempotency_key)\nVALUES ('{{$json.request_id}}', '{{$json.brand}}', '{{$json.customer_phone}}', '{{JSON.stringify($json)}}'::jsonb, '{{$json.idempotency_key}}')\nON CONFLICT (idempotency_key) DO UPDATE\nSET payload = EXCLUDED.payload, updated_at = now()\nRETURNING id, idempotency_key;"
+      },
+      "id": "3",
+      "name": "Upsert events_raw",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        660,
+        300
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    }
+  ],
+  "connections": {
+    "Inbound Webhook": {
+      "main": [
+        [
+          {
+            "node": "Generate Idempotency",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Idempotency": {
+      "main": [
+        [
+          {
+            "node": "Upsert events_raw",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {}
+}

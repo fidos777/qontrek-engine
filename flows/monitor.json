@@ -1,0 +1,170 @@
+{
+  "name": "Flow Monitor - WhatsApp Health",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": "everyX",
+        "unit": "minutes",
+        "value": 5
+      },
+      "id": "1",
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        160,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  SUM(CASE WHEN status = 'sent' AND metered_at IS NULL THEN 1 ELSE 0 END) AS unmetered_count,\n  SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) AS sent_count,\n  SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) AS accepted_count,\n  CASE WHEN SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) = 0 THEN true\n       ELSE SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) >= SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) * 0.9 END AS acceptance_ok\nFROM public.wa_template_log\nWHERE created_at >= now() - interval '1 hour';"
+      },
+      "id": "2",
+      "name": "Fetch Metering Stats",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        420,
+        300
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.unmetered_count}}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "Unmetered Pending?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        680,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#alerts-whatsapp",
+        "text": "=:rotating_light: {{$json.unmetered_count}} WhatsApp sends pending metering in the past hour."
+      },
+      "id": "4",
+      "name": "Slack Unmetered Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        940,
+        180
+      ],
+      "credentials": {
+        "slackApi": "Slack Bot"
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": true,
+              "value2": "={{$json.acceptance_ok}}"
+            }
+          ]
+        }
+      },
+      "id": "5",
+      "name": "Acceptance Healthy?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        680,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#alerts-whatsapp",
+        "text": "=:warning: Acceptance has dropped below target. Sent={{$json.sent_count}}, Accepted={{$json.accepted_count}}"
+      },
+      "id": "6",
+      "name": "Slack Acceptance Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        940,
+        420
+      ],
+      "credentials": {
+        "slackApi": "Slack Bot"
+      }
+    }
+  ],
+  "connections": {
+    "Cron": {
+      "main": [
+        [
+          {
+            "node": "Fetch Metering Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Metering Stats": {
+      "main": [
+        [
+          {
+            "node": "Unmetered Pending?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Acceptance Healthy?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unmetered Pending?": {
+      "main": [
+        [
+          {
+            "node": "Slack Unmetered Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acceptance Healthy?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Slack Acceptance Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {}
+}

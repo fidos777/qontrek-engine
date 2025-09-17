@@ -1,0 +1,327 @@
+{
+  "name": "Flow B - Send + Meter",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        120,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT phone_number_id, whatsapp_api_token, default_locale\nFROM public.brand_config\nWHERE brand = '{{$json.brand}}';"
+      },
+      "id": "2",
+      "name": "Fetch Brand Config",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        360,
+        220
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine"
+      },
+      "id": "3",
+      "name": "Merge Config",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 1,
+      "position": [
+        600,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT template_name, unit_price_rm\nFROM public.vw_templates_by_price\nWHERE brand = '{{$json.brand}}'\n  AND locale = COALESCE(NULLIF('{{$json.locale}}', ''), '{{$json.default_locale}}')\nORDER BY unit_price_rm ASC, template_name ASC\nLIMIT 1;"
+      },
+      "id": "4",
+      "name": "Pick Template",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        860,
+        280
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine"
+      },
+      "id": "5",
+      "name": "Merge Template",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "POST",
+        "url": "=https://graph.facebook.com/v17.0/{{$json.phone_number_id}}/messages",
+        "jsonParameters": true,
+        "options": {
+          "fullResponse": true
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$json.whatsapp_api_token}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "bodyParametersJson": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": $json.customer_phone,\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": $json.template_name,\n    \"language\": { \"code\": $json.locale || $json.default_locale },\n    \"components\": $json.components || []\n  }\n}"
+      },
+      "id": "6",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine"
+      },
+      "id": "7",
+      "name": "Merge Result",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 1,
+      "position": [
+        1580,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.statusCode}}",
+              "operation": "largerEqual",
+              "value2": 200
+            },
+            {
+              "value1": "={{$json.statusCode}}",
+              "operation": "smallerEqual",
+              "value2": 299
+            }
+          ]
+        }
+      },
+      "id": "8",
+      "name": "Status OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO public.wa_template_log (brand, idempotency_key, request_id, status, payload, response)\nVALUES ('{{$json.brand}}', '{{$json.idempotency_key}}', '{{$json.request_id}}', 'sent', '{{JSON.stringify($json.request_payload || $json)}}'::jsonb, '{{JSON.stringify($json.body)}}'::jsonb)\nRETURNING id;"
+      },
+      "id": "9",
+      "name": "Log Template Sent",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        2060,
+        140
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO public.credit_logs (brand, idempotency_key, request_id, unit_price_rm, notes)\nVALUES ('{{$json.brand}}', '{{$json.idempotency_key}}', '{{$json.request_id}}', {{$json.unit_price_rm}}, 'wa_template_send')\nON CONFLICT (brand, idempotency_key) DO NOTHING;"
+      },
+      "id": "10",
+      "name": "Insert Credit Log",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        2300,
+        140
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO public.wa_template_log (brand, idempotency_key, request_id, status, payload, response, reversal_reason)\nVALUES ('{{$json.brand}}', '{{$json.idempotency_key}}', '{{$json.request_id}}', 'reversed', '{{JSON.stringify($json.request_payload || $json)}}'::jsonb, '{{JSON.stringify($json.body)}}'::jsonb, '{{$json.statusCode}}')\nON CONFLICT (brand, idempotency_key) DO UPDATE\nSET status = EXCLUDED.status, response = EXCLUDED.response, reversal_reason = EXCLUDED.reversal_reason;"
+      },
+      "id": "11",
+      "name": "Log Template Reversed",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        2060,
+        440
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Brand Config",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Brand Config": {
+      "main": [
+        [
+          {
+            "node": "Merge Config",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Config": {
+      "main": [
+        [
+          {
+            "node": "Pick Template",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick Template": {
+      "main": [
+        [
+          {
+            "node": "Merge Template",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Template": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Merge Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Result": {
+      "main": [
+        [
+          {
+            "node": "Status OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status OK?": {
+      "main": [
+        [
+          {
+            "node": "Log Template Sent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Template Reversed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Template Sent": {
+      "main": [
+        [
+          {
+            "node": "Insert Credit Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {}
+}

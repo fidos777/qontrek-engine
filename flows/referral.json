@@ -1,0 +1,166 @@
+{
+  "name": "Flow F - Referral",
+  "nodes": [
+    {
+      "parameters": {
+        "schema": "public",
+        "table": "installations",
+        "triggerCondition": "stage = 'install_complete' AND (processed_referral IS NULL OR processed_referral = false)",
+        "pollTime": 60
+      },
+      "id": "1",
+      "name": "Install Complete Trigger",
+      "type": "n8n-nodes-base.postgresTrigger",
+      "typeVersion": 1,
+      "position": [
+        160,
+        320
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const crypto = require('crypto');\nreturn items.map(item => {\n  const installation = item.json;\n  const idempotency = crypto.createHash('sha1').update(`${installation.brand}|${installation.id}|referral`).digest('hex');\n  const referralCode = installation.referral_code || crypto.createHash('md5').update(`${installation.customer_phone}|${installation.id}`).digest('hex').slice(0, 8).toUpperCase();\n  const payload = {\n    brand: installation.brand,\n    request_id: installation.id,\n    idempotency_key: idempotency,\n    customer_phone: installation.customer_phone,\n    template: { name: 'referral_reward_notify', language: installation.locale || 'ms_MY' },\n    components: installation.components || [\n      { type: 'body', parameters: [{ type: 'text', text: referralCode }] }\n    ]\n  };\n  return { json: { ...installation, idempotency_key: idempotency, referral_code: referralCode, send_payload: payload } };\n});"
+      },
+      "id": "2",
+      "name": "Build Referral Payload",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        420,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH upsert AS (\n  INSERT INTO public.referrals (brand, installation_id, referral_code, reward_status, idempotency_key)\n  VALUES ('{{$json.brand}}', {{$json.id}}, '{{$json.referral_code}}', 'pending', '{{$json.idempotency_key}}')\n  ON CONFLICT (brand, installation_id) DO NOTHING\n  RETURNING 1\n), marker AS (\n  UPDATE public.installations\n  SET processed_referral = true, processed_referral_at = now()\n  WHERE id = {{$json.id}}\n  RETURNING 1\n)\nSELECT EXISTS(SELECT 1 FROM upsert) AS inserted;"
+      },
+      "id": "3",
+      "name": "Insert Referral",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        680,
+        320
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": true,
+              "value2": "={{$json.inserted}}"
+            }
+          ]
+        }
+      },
+      "id": "4",
+      "name": "Inserted?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        940,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(item => ({ json: item.json.send_payload }));"
+      },
+      "id": "5",
+      "name": "Prepare Send Payload",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "Flow B - Send + Meter",
+        "options": {
+          "waitForReturnData": false
+        }
+      },
+      "id": "6",
+      "name": "Send Reward",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "Install Complete Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Referral Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Referral Payload": {
+      "main": [
+        [
+          {
+            "node": "Insert Referral",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Referral": {
+      "main": [
+        [
+          {
+            "node": "Inserted?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserted?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Send Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Send Payload": {
+      "main": [
+        [
+          {
+            "node": "Send Reward",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {}
+}
