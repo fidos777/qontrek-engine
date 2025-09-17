@@ -1,15 +1,24 @@
-# Voltek Prompts
+# Qontrek Agents Runtime
 
-Voltek Prompts bundles persona prompts, runtime helpers, and automation tooling that power Voltek's AI agents. The toolkit ships reusable prompt snippets, Supabase-backed logging utilities, and batch scripts for Codex/n8n so agents can message leads through WhatsApp and Slack while keeping a full audit trail in Supabase.
+The Qontrek Agents Runtime powers Qontrek's multi-tenant agent workflows across messaging channels. It bundles persona prompts, Supabase-backed logging utilities, and Codex/n8n automation scripts that can serve many brands from a single deployment. Voltek and Perodua are the current example tenants that ship with this repository.
+
+## Multi-Tenant Design
+- Each tenant (brand) receives its own configuration row in the Supabase `brand_config` table, capturing the WhatsApp `phone_number_id`, API tokens, locale, and unit pricing used when metering credit consumption.
+- Idempotency keys, credit usage logs, and delivery audit trails are always stamped with the active brand so concurrent tenant traffic stays isolated.
+- Flows and persona prompts are shared assets: the runtime loads tenant-aware overrides (config, persona selection, pricing) before executing a flow, while Supabase and n8n integrations read the tenant metadata to route notifications to the correct channels.
+
+## Example Tenants
+- **Voltek** – Solar lead engagement nurtures prospects via WhatsApp/Slack and logs outcomes in Supabase using the Voltek tenant configuration.
+- **Perodua** – Automotive sales follow-ups reuse the same runtime while injecting Perodua-specific personas, pricing, and channel tokens.
 
 ## Prerequisites
-- **Supabase project** with the `yaml_trigger_log` and related tables plus API credentials exposed as environment variables:
+- **Supabase project** with the `brand_config`, `yaml_trigger_log`, and related tables plus API credentials exposed as environment variables:
   - `SUPABASE_URL`
   - `SUPABASE_SERVICE_KEY` (used by `agent_runner.py` for writes)
   - `SUPABASE_API_KEY` (used by batch upload scripts)
 - **Python 3.10+** and the Python dependencies pinned in `requirements.txt`.
-- **(Optional) n8n workflows** wired to your WhatsApp provider (e.g., WhatChimp) if you plan to trigger live sends instead of running in `DRY_RUN` mode.
-- **(Optional) Slack Incoming Webhook** for the runtime's Slack notifications.
+- **(Optional) n8n workflows** wired to your WhatsApp provider (e.g., WhatChimp) if you plan to trigger live sends instead of running in `DRY_RUN` mode. n8n nodes should read the tenant metadata supplied by the runtime to select the proper WhatsApp credential set.
+- **(Optional) Slack Incoming Webhook** for the runtime's Slack notifications, scoped per tenant workspace if needed.
 
 ## Repository structure
 - `agents/` – Persona-specific prompt snippets and dossiers for human handoff or QA.
@@ -43,20 +52,21 @@ Voltek Prompts bundles persona prompts, runtime helpers, and automation tooling 
    SUPABASE_API_KEY="anon-or-service-key"
    SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..."  # optional
    DRY_RUN=1  # keep 1 until WhatsApp is wired
+   BRAND=voltek  # optional: local testing only; production tenants live in brand_config
    ```
-   Export the same variables in your shell if you are not using `.env`.
+   Export the same variables in your shell if you are not using `.env`. In production, rely on the Supabase `brand_config` table instead of `.env` overrides so the runtime can load credentials and unit prices dynamically per tenant.
 
 ## Runtime quick start
-1. **Ensure Supabase credentials are loaded** so the runtime can upsert into `yaml_trigger_log`.
-2. **Run the survey pending alert demo** using a dummy tenant/lead:
+1. **Ensure Supabase credentials are loaded** so the runtime can upsert into `yaml_trigger_log` with the correct tenant metadata.
+2. **Run the survey pending alert demo** using the default Voltek tenant setup:
    ```bash
    python agent_runner.py --flow survey_pending_alert --tenant-id demo-tenant
    ```
-   The current CLI ignores the `--flow` / `--tenant-id` flags but still executes the embedded demo lead. You should see console output showing:
+   The current CLI ignores the `--flow` / `--tenant-id` flags but still executes the embedded demo lead with Voltek defaults. You should see console output showing:
    - The first run firing `survey_pending_alert` and logging `sent` to Supabase.
    - A second call being skipped because the idempotency guard detects a recent send.
    - A `formb_helper` run demonstrating guard evaluation.
-   With `DRY_RUN=1`, WhatsApp/Slack actions are stubbed, so no live messages are dispatched. When you disable `DRY_RUN`, ensure WhatChimp/n8n credentials are configured.
+   With `DRY_RUN=1`, WhatsApp/Slack actions are stubbed, so no live messages are dispatched. When you disable `DRY_RUN`, ensure WhatChimp/n8n credentials are configured for the active tenant.
 
 ## Batch pipeline quick start (CSV → YAML → Supabase)
 1. Prepare an n8n workflow catalogue CSV such as `n8n_workflow_catalog_full.csv`.
