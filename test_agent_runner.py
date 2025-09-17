@@ -29,13 +29,17 @@ def test_template_guard_missing_image_url():
         template_guard(block)
 
 def test_gpt_qualifier_score_mock(monkeypatch):
-    def mock_post(url, json):
+    def mock_post(url, json, timeout=None):
         class MockResponse:
+            def raise_for_status(self):
+                return None
+
             def json(self):
                 return {"intent_score": 87}
+
         return MockResponse()
 
-    monkeypatch.setattr("requests.post", mock_post)
+    monkeypatch.setattr("agent_runner.requests.post", mock_post)
     lead_input = {"lead_id": "L123", "text": "Saya nak pasang solar"}
     score = gpt_qualifier_score(lead_input)
     assert score == 87

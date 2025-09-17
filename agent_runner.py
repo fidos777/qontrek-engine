@@ -5,7 +5,16 @@
 from __future__ import annotations
 import os
 import uuid
-import requests
+try:
+    import requests  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - lightweight stub for tests
+    class _RequestsStub:
+        get = post = patch = delete = None
+
+        def __getattr__(self, name):
+            raise ModuleNotFoundError("requests module is required for network calls")
+
+    requests = _RequestsStub()  # type: ignore
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, Tuple, Optional
 
