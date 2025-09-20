@@ -30,6 +30,8 @@ This guide walks a new teammate through validating the Qontrek WhatsApp runtime 
 1. In n8n, import the JSON exports located under `flows/`:
    - `inlet.json`
    - `roi_nudge.json`
+   - `monitor.json`
+   - `referral.json`
    - (Optional) `send_meter.json` if you want to inspect the shared Flow B logic.
 2. Wire the Postgres credentials to your Supabase project and the Slack credential to your alerts channel.
 3. Keep the flows disabled until you are ready to connect production webhooks—these exports are meant as stubs for local validation.
