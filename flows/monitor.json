@@ -19,15 +19,15 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT\n  SUM(CASE WHEN status = 'sent' AND metered_at IS NULL THEN 1 ELSE 0 END) AS unmetered_count,\n  SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) AS sent_count,\n  SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) AS accepted_count,\n  CASE WHEN SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) = 0 THEN true\n       ELSE SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) >= SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) * 0.9 END AS acceptance_ok\nFROM public.wa_template_log\nWHERE created_at >= now() - interval '1 hour';"
+        "query": "SELECT COUNT(*) AS unmetered_count\nFROM public.vw_unmetered_24h;"
       },
       "id": "2",
-      "name": "Fetch Metering Stats",
+      "name": "Fetch Unmetered Count",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 1,
       "position": [
-        420,
-        300
+        440,
+        180
       ],
       "credentials": {
         "postgres": "Supabase"
@@ -50,21 +50,21 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        680,
+        700,
         180
       ]
     },
     {
       "parameters": {
         "channel": "#alerts-whatsapp",
-        "text": "=:rotating_light: {{$json.unmetered_count}} WhatsApp sends pending metering in the past hour."
+        "text": "=:rotating_light: {{$json.unmetered_count}} WhatsApp sends pending metering in the last 24 hours."
       },
       "id": "4",
       "name": "Slack Unmetered Alert",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 1,
       "position": [
-        940,
+        960,
         180
       ],
       "credentials": {
@@ -73,35 +73,52 @@
     },
     {
       "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH events AS (\n    SELECT COUNT(*) AS total_events\n    FROM public.events_raw\n    WHERE created_at >= now() - interval '24 hours'\n), templates AS (\n    SELECT COUNT(*) AS total_templates,\n           SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) AS sent_count\n    FROM public.wa_template_log\n    WHERE created_at >= now() - interval '24 hours'\n)\nSELECT\n  events.total_events,\n  templates.total_templates,\n  templates.sent_count,\n  (events.total_events = templates.total_templates) AS acceptance_match\nFROM events, templates;"
+      },
+      "id": "5",
+      "name": "Fetch Acceptance Window",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        440,
+        420
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    },
+    {
+      "parameters": {
         "conditions": {
           "boolean": [
             {
-              "value1": true,
-              "value2": "={{$json.acceptance_ok}}"
+              "value1": false,
+              "value2": "={{$json.acceptance_match}}"
             }
           ]
         }
       },
-      "id": "5",
-      "name": "Acceptance Healthy?",
+      "id": "6",
+      "name": "Acceptance Mismatch?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        680,
+        700,
         420
       ]
     },
     {
       "parameters": {
         "channel": "#alerts-whatsapp",
-        "text": "=:warning: Acceptance has dropped below target. Sent={{$json.sent_count}}, Accepted={{$json.accepted_count}}"
+        "text": "=:warning: Acceptance mismatch detected. Events={{$json.total_events}} vs Sends={{$json.total_templates}} (Sent OK={{$json.sent_count}})."
       },
-      "id": "6",
+      "id": "7",
       "name": "Slack Acceptance Alert",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 1,
       "position": [
-        940,
+        960,
         420
       ],
       "credentials": {
@@ -114,23 +131,25 @@
       "main": [
         [
           {
-            "node": "Fetch Metering Stats",
+            "node": "Fetch Unmetered Count",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Acceptance Window",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Fetch Metering Stats": {
+    "Fetch Unmetered Count": {
       "main": [
         [
           {
             "node": "Unmetered Pending?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Acceptance Healthy?",
             "type": "main",
             "index": 0
           }
@@ -148,9 +167,19 @@
         ]
       ]
     },
-    "Acceptance Healthy?": {
+    "Fetch Acceptance Window": {
       "main": [
-        [],
+        [
+          {
+            "node": "Acceptance Mismatch?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acceptance Mismatch?": {
+      "main": [
         [
           {
             "node": "Slack Acceptance Alert",

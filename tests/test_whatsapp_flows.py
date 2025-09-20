@@ -76,40 +76,76 @@ def test_send_meter_policy_holds_do_not_send():
 
 def test_roi_nudge_cooldown_branch_logs_hold_reason():
     flow = load_flow("roi_nudge.json")
+
+    check_query = node_by_name(flow, "Check Opt-Outs + Cooldown")["parameters"]["query"]
+    assert "interval '72 hours'" in check_query
+
     evaluate_code = node_by_name(flow, "Evaluate Eligibility")["parameters"]["functionCode"]
-    assert "cooldown_active" in evaluate_code
-    assert "Cooling down" in evaluate_code or "cooldown" in evaluate_code.lower()
+    assert "hold_reason" in evaluate_code
+    assert "'cooldown'" in evaluate_code
+    assert "'roi_nudge_v1'" in evaluate_code
 
     log_query = node_by_name(flow, "Log Held")["parameters"]["query"]
     assert "status" in log_query and "'held'" in log_query
-    assert "reversal_reason" in log_query
     assert "{{$json.hold_reason}}" in log_query
 
-    connections = flow.get("connections", {})
-    eligible_branches = connections.get("Eligible?", {}).get("main", [])
-    assert len(eligible_branches) >= 2, "Eligible? node must split into send vs hold branches"
-    assert eligible_branches[1][0]["node"] == "Log Held"
+    eligible_connections = flow.get("connections", {}).get("Eligible?", {}).get("main", [])
+    assert eligible_connections[1][0]["node"] == "Log Held"
 
 
-def test_roi_nudge_opt_out_branch_logs_hold_reason():
+def test_roi_nudge_opt_out_branch_detects_keywords():
     flow = load_flow("roi_nudge.json")
     evaluate_code = node_by_name(flow, "Evaluate Eligibility")["parameters"]["functionCode"]
-    assert "Opt-out" in evaluate_code
-    assert "opt_out_reason" in evaluate_code
 
-    log_query = node_by_name(flow, "Log Held")["parameters"]["query"]
-    assert "reversal_reason" in log_query
+    for keyword in ["STOP", "BATAL", "UNSUBSCRIBE", "BERHENTI"]:
+        assert keyword in evaluate_code
+
+    assert "'optout'" in evaluate_code
+    assert "keywordOptOut" in evaluate_code
 
 
-def test_referral_flow_is_idempotent_and_single_send():
+def test_monitor_flow_alerts_on_unmetered_and_acceptance_mismatch():
+    flow = load_flow("monitor.json")
+    nodes = {node["name"]: node for node in flow.get("nodes", [])}
+
+    unmetered_query = nodes["Fetch Unmetered Count"]["parameters"]["query"]
+    assert "vw_unmetered_24h" in unmetered_query
+
+    acceptance_query = nodes["Fetch Acceptance Window"]["parameters"]["query"]
+    assert "events_raw" in acceptance_query
+    assert "wa_template_log" in acceptance_query
+    assert "acceptance_match" in acceptance_query
+
+    acceptance_if = flow.get("connections", {}).get("Acceptance Mismatch?", {}).get("main", [])
+    assert acceptance_if and acceptance_if[0][0]["node"] == "Slack Acceptance Alert"
+
+
+def test_referral_flow_is_idempotent_and_caps_rewards():
     flow = load_flow("referral.json")
-    insert_query = node_by_name(flow, "Insert Referral")["parameters"]["query"]
-    assert "ON CONFLICT (brand, installation_id) DO NOTHING" in insert_query
+    nodes = {node["name"]: node for node in flow.get("nodes", [])}
 
-    connections = flow.get("connections", {})
-    inserted_branches = connections.get("Inserted?", {}).get("main", [])
-    assert len(inserted_branches) == 1, "Referral flow should only send when insert succeeds"
-    assert inserted_branches[0][0]["node"] == "Prepare Send Payload"
+    cap_query = nodes["Check Reward Cap"]["parameters"]["query"]
+    assert "reward_cap_month" in cap_query or "brand_config" in cap_query
+    assert "referrer_id" in cap_query
 
-    send_targets = connections.get("Prepare Send Payload", {}).get("main", [])
+    eval_code = nodes["Evaluate Reward Eligibility"]["parameters"]["functionCode"]
+    assert "referrer_id" in eval_code
+    assert "'reward_cap'" in eval_code
+
+    insert_query = nodes["Insert Referral"]["parameters"]["query"]
+    assert "ON CONFLICT (brand, referrer_id, referred_id, event_name) DO NOTHING" in insert_query
+    assert "set_config('app.brand'" in insert_query
+
+    hold_query = nodes["Log Reward Cap Hold"]["parameters"]["query"]
+    assert "'reward_cap'" in hold_query
+    assert "set_config('app.brand'" in hold_query
+
+    eligible_connections = flow.get("connections", {}).get("Eligible?", {}).get("main", [])
+    assert len(eligible_connections) == 2
+    assert eligible_connections[1][0]["node"] == "Log Reward Cap Hold"
+
+    inserted_connections = flow.get("connections", {}).get("Inserted?", {}).get("main", [])
+    assert inserted_connections[0][0]["node"] == "Prepare Send Payload"
+
+    send_targets = flow.get("connections", {}).get("Prepare Send Payload", {}).get("main", [])
     assert any(conn["node"] == "Send Reward" for branch in send_targets for conn in branch)

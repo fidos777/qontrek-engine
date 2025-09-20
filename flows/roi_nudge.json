@@ -18,7 +18,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT\n  EXISTS (SELECT 1 FROM public.opt_outs WHERE brand = '{{$json.brand}}' AND customer_phone = '{{$json.customer_phone}}') AS is_opted_out,\n  (SELECT COALESCE(MAX(next_eligible_at) > now(), false) FROM public.nudge_cooldowns WHERE brand = '{{$json.brand}}' AND conv_id = '{{$json.conv_id}}') AS cooldown_active,\n  COALESCE((SELECT reason FROM public.opt_outs WHERE brand = '{{$json.brand}}' AND customer_phone = '{{$json.customer_phone}}' LIMIT 1), '') AS opt_out_reason;"
+        "query": "WITH brand_ctx AS (\n    SELECT set_config('app.brand', '{{$json.brand}}', true)\n), last_sent AS (\n    SELECT MAX(created_at) AS last_sent_at\n    FROM public.wa_template_log\n    WHERE brand = '{{$json.brand}}'\n      AND request_id = '{{$json.conv_id}}'\n      AND status = 'sent'\n), opt_out_row AS (\n    SELECT\n      EXISTS (\n        SELECT 1\n        FROM public.opt_outs\n        WHERE brand = '{{$json.brand}}'\n          AND customer_phone = '{{$json.customer_phone}}'\n      ) AS is_opted_out,\n      COALESCE((\n        SELECT reason\n        FROM public.opt_outs\n        WHERE brand = '{{$json.brand}}'\n          AND customer_phone = '{{$json.customer_phone}}'\n        ORDER BY created_at DESC\n        LIMIT 1\n      ), '') AS opt_out_reason\n)\nSELECT\n  opt_out_row.is_opted_out,\n  opt_out_row.opt_out_reason,\n  last_sent.last_sent_at,\n  (last_sent.last_sent_at IS NOT NULL AND last_sent.last_sent_at > now() - interval '72 hours') AS cooldown_active\nFROM opt_out_row, last_sent;"
       },
       "id": "2",
       "name": "Check Opt-Outs + Cooldown",
@@ -47,7 +47,7 @@
     },
     {
       "parameters": {
-        "functionCode": "return items.map(item => {\n  const eligible = !item.json.is_opted_out && !item.json.cooldown_active;\n  const holdReason = item.json.is_opted_out\n    ? `Opt-out: ${item.json.opt_out_reason}`\n    : (item.json.cooldown_active ? 'Cooling down' : '');\n  const requestId = item.json.request_id || item.json.conv_id;\n  const idempotency = item.json.idempotency_key || requestId;\n  item.json = { ...item.json, eligible, hold_reason: holdReason, request_id: requestId, idempotency_key: idempotency };\n  const payload = {\n    brand: item.json.brand,\n    locale: item.json.locale || undefined,\n    request_id: requestId,\n    idempotency_key: idempotency,\n    template: item.json.template || { name: 'roi_follow_up', language: item.json.locale || 'ms_MY' },\n    customer_phone: item.json.customer_phone,\n    components: item.json.components || []\n  };\n  item.json.send_payload = payload;\n  return item;\n});"
+        "functionCode": "const crypto = require('crypto');\nconst KEYWORDS = ['STOP', 'BATAL', 'UNSUBSCRIBE', 'BERHENTI'];\n\nreturn items.map((item) => {\n  const data = item.json || {};\n  const inbound = (data.latest_message || data.last_message || data.last_inbound_message || data.last_message_text || '').toUpperCase();\n  const keywordOptOut = KEYWORDS.some((word) => inbound.includes(word));\n\n  const isOptedOut = Boolean(data.is_opted_out) || keywordOptOut;\n  const cooldownActive = Boolean(data.cooldown_active);\n  const holdReason = isOptedOut ? 'optout' : (cooldownActive ? 'cooldown' : '');\n\n  const brand = data.brand || 'Voltek';\n  const locale = data.locale || data.brand_default_locale || 'ms_MY';\n  const requestId = data.request_id || data.conv_id || `${brand}-${data.customer_phone || 'roi'}`;\n  const template = data.template || { name: 'roi_nudge_followup', language: locale };\n  const components = data.components || [];\n  const purpose = 'roi_nudge_v1';\n\n  const idSeed = [brand, requestId, template.name, locale, purpose].join('|');\n  const idempotencyKey = crypto.createHash('sha1').update(idSeed).digest('hex');\n\n  const sendPayload = {\n    brand,\n    locale,\n    customer_phone: data.customer_phone,\n    request_id: requestId,\n    purpose,\n    template,\n    components,\n    idempotency_key: idempotencyKey,\n  };\n\n  return {\n    json: {\n      ...data,\n      brand,\n      locale,\n      eligible: !isOptedOut && !cooldownActive,\n      hold_reason: holdReason,\n      keyword_opt_out: keywordOptOut,\n      purpose,\n      request_id: requestId,\n      idempotency_key: idempotencyKey,\n      send_payload: sendPayload,\n    },\n  };\n});"
       },
       "id": "4",
       "name": "Evaluate Eligibility",
@@ -80,7 +80,7 @@
     },
     {
       "parameters": {
-        "functionCode": "return items.map(item => ({ json: item.json.send_payload }));"
+        "functionCode": "return items.map((item) => ({ json: item.json.send_payload }));"
       },
       "id": "6",
       "name": "Prepare Send Payload",
@@ -110,7 +110,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO public.wa_template_log (brand, idempotency_key, request_id, status, payload, reversal_reason)\nVALUES ('{{$json.brand}}', '{{$json.idempotency_key}}', '{{$json.request_id}}', 'held', '{{JSON.stringify($json)}}'::jsonb, '{{$json.hold_reason}}')\nON CONFLICT (brand, idempotency_key) DO UPDATE SET status = EXCLUDED.status, reversal_reason = EXCLUDED.reversal_reason;"
+        "query": "WITH brand_ctx AS (\n    SELECT set_config('app.brand', '{{$json.brand}}', true)\n)\nINSERT INTO public.wa_template_log (brand, idempotency_key, request_id, status, payload, reversal_reason)\nVALUES ('{{$json.brand}}', '{{$json.idempotency_key}}', '{{$json.request_id}}', 'held', '{{JSON.stringify($json.send_payload)}}'::jsonb, '{{$json.hold_reason}}')\nON CONFLICT (brand, idempotency_key) DO UPDATE\nSET status = EXCLUDED.status, reversal_reason = EXCLUDED.reversal_reason, payload = EXCLUDED.payload;"
       },
       "id": "8",
       "name": "Log Held",
