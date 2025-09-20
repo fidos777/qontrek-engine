@@ -1,22 +1,34 @@
+WITH filtered_log AS (
+    SELECT
+        brand,
+        idempotency_key,
+        status,
+        created_at
+    FROM public.wa_template_log
+    WHERE COALESCE({{brand}}, brand) = brand
+)
 SELECT
-    w.brand,
-    COUNT(*) FILTER (WHERE w.status = 'sent') AS sent_count,
-    COUNT(*) FILTER (WHERE w.status = 'sent'
-        AND EXISTS (
-            SELECT 1
-            FROM public.credit_logs c
-            WHERE c.brand = w.brand
-              AND c.idempotency_key = w.idempotency_key
-        )
+    f.brand,
+    SUM(CASE WHEN f.status = 'sent' THEN 1 ELSE 0 END) AS sent_count,
+    SUM(
+        CASE
+            WHEN f.status = 'sent' AND COALESCE(meter_hit.matched, FALSE) THEN 1
+            ELSE 0
+        END
     ) AS metered_count,
-    COUNT(*) FILTER (WHERE w.status = 'sent'
-        AND NOT EXISTS (
-            SELECT 1
-            FROM public.credit_logs c
-            WHERE c.brand = w.brand
-              AND c.idempotency_key = w.idempotency_key
-        )
+    SUM(
+        CASE
+            WHEN f.status = 'sent' AND NOT COALESCE(meter_hit.matched, FALSE) THEN 1
+            ELSE 0
+        END
     ) AS unmetered_count
-FROM public.wa_template_log w
-GROUP BY w.brand
-ORDER BY w.brand;
+FROM filtered_log AS f
+LEFT JOIN LATERAL (
+    SELECT TRUE AS matched
+    FROM public.credit_logs AS c
+    WHERE c.brand = f.brand
+      AND c.idempotency_key = f.idempotency_key
+    LIMIT 1
+) AS meter_hit ON TRUE
+GROUP BY f.brand
+ORDER BY f.brand;
