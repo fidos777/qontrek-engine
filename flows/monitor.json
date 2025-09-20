@@ -19,14 +19,31 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT COUNT(*) AS unmetered_count\nFROM public.vw_unmetered_24h;"
+        "query": "SELECT brand FROM public.brand_config ORDER BY brand;"
       },
       "id": "2",
+      "name": "Fetch Brands",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        420,
+        300
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH brand_ctx AS (\n    SELECT set_config('app.brand', '{{$json.brand}}', true)\n), counts AS (\n    SELECT COUNT(*)::int AS unmetered_count\n    FROM public.vw_unmetered_24h\n)\nSELECT '{{$json.brand}}'::text AS brand,\n       counts.unmetered_count\nFROM counts;"
+      },
+      "id": "3",
       "name": "Fetch Unmetered Count",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 1,
       "position": [
-        440,
+        700,
         180
       ],
       "credentials": {
@@ -38,33 +55,33 @@
         "conditions": {
           "number": [
             {
-              "value1": "={{$json.unmetered_count}}",
+              "value1": "={{Number($json.unmetered_count)}}",
               "operation": "larger",
               "value2": 0
             }
           ]
         }
       },
-      "id": "3",
+      "id": "4",
       "name": "Unmetered Pending?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        700,
+        960,
         180
       ]
     },
     {
       "parameters": {
         "channel": "#alerts-whatsapp",
-        "text": "=:rotating_light: {{$json.unmetered_count}} WhatsApp sends pending metering in the last 24 hours."
+        "text": "=:rotating_light: {{$json.brand}} has {{$json.unmetered_count}} WhatsApp sends pending metering in the last 24 hours."
       },
-      "id": "4",
+      "id": "5",
       "name": "Slack Unmetered Alert",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 1,
       "position": [
-        960,
+        1220,
         180
       ],
       "credentials": {
@@ -74,14 +91,14 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "WITH events AS (\n    SELECT COUNT(*) AS total_events\n    FROM public.events_raw\n    WHERE created_at >= now() - interval '24 hours'\n), templates AS (\n    SELECT COUNT(*) AS total_templates,\n           SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) AS sent_count\n    FROM public.wa_template_log\n    WHERE created_at >= now() - interval '24 hours'\n)\nSELECT\n  events.total_events,\n  templates.total_templates,\n  templates.sent_count,\n  (events.total_events = templates.total_templates) AS acceptance_match\nFROM events, templates;"
+        "query": "WITH brand_ctx AS (\n    SELECT set_config('app.brand', '{{$json.brand}}', true)\n), events AS (\n    SELECT COUNT(*)::int AS total_events\n    FROM public.events_raw\n    WHERE brand = current_setting('app.brand', true)\n      AND created_at >= now() - interval '24 hours'\n), templates AS (\n    SELECT COUNT(*)::int AS total_templates,\n           COALESCE(SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END), 0)::int AS sent_count\n    FROM public.wa_template_log\n    WHERE brand = current_setting('app.brand', true)\n      AND created_at >= now() - interval '24 hours'\n)\nSELECT '{{$json.brand}}'::text AS brand,\n       events.total_events,\n       templates.total_templates,\n       templates.sent_count,\n       (events.total_events = templates.total_templates) AS acceptance_match\nFROM events, templates;"
       },
-      "id": "5",
+      "id": "6",
       "name": "Fetch Acceptance Window",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 1,
       "position": [
-        440,
+        700,
         420
       ],
       "credentials": {
@@ -99,26 +116,26 @@
           ]
         }
       },
-      "id": "6",
+      "id": "7",
       "name": "Acceptance Mismatch?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        700,
+        960,
         420
       ]
     },
     {
       "parameters": {
         "channel": "#alerts-whatsapp",
-        "text": "=:warning: Acceptance mismatch detected. Events={{$json.total_events}} vs Sends={{$json.total_templates}} (Sent OK={{$json.sent_count}})."
+        "text": "=:warning: {{$json.brand}} acceptance mismatch detected. Events={{$json.total_events}} vs Sends={{$json.total_templates}} (Sent OK={{$json.sent_count}})."
       },
-      "id": "7",
+      "id": "8",
       "name": "Slack Acceptance Alert",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 1,
       "position": [
-        960,
+        1220,
         420
       ],
       "credentials": {
@@ -128,6 +145,17 @@
   ],
   "connections": {
     "Cron": {
+      "main": [
+        [
+          {
+            "node": "Fetch Brands",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Brands": {
       "main": [
         [
           {
