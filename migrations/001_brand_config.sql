@@ -33,3 +33,9 @@ ALTER TABLE IF EXISTS public.credit_logs
 
 CREATE UNIQUE INDEX IF NOT EXISTS credit_logs_brand_idempotency_key_idx
     ON public.credit_logs (brand, idempotency_key);
+
+INSERT INTO public.brand_config (brand, phone_number_id, whatsapp_api_token, default_locale)
+VALUES
+    ('Voltek', 'VOLTEK_PHONE_SAMPLE', 'VOLTEK_TOKEN_SAMPLE', 'ms_MY'),
+    ('Perodua', 'PERODUA_PHONE_SAMPLE', 'PERODUA_TOKEN_SAMPLE', 'ms_MY')
+ON CONFLICT (brand) DO NOTHING;

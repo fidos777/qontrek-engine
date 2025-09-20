@@ -38,11 +38,12 @@ def test_send_meter_failure_records_reversal_without_credit():
     reversed_query = nodes["Log Template Reversed"]["parameters"]["query"]
     assert "status" in reversed_query and "'reversed'" in reversed_query
     assert "reversal_reason" in reversed_query
+    assert "set_config('app.brand'" in reversed_query
     assert "ON CONFLICT (brand, idempotency_key) DO UPDATE" in reversed_query
 
     connections = flow.get("connections", {})
-    status_branches = connections.get("Status OK?", {}).get("main", [])
-    assert len(status_branches) >= 2, "Status OK? node should have success and failure branches"
+    status_branches = connections.get("Send Successful?", {}).get("main", [])
+    assert len(status_branches) >= 2, "Send Successful? node should have success and failure branches"
     failure_branch = status_branches[1]
     assert failure_branch[0]["node"] == "Log Template Reversed"
 
@@ -51,6 +52,26 @@ def test_send_meter_failure_records_reversal_without_credit():
 
     reversed_targets = connections.get("Log Template Reversed", {}).get("main", [])
     assert not any(conn["node"] == "Insert Credit Log" for branch in reversed_targets for conn in branch)
+
+    ops_log_query = nodes["Ops Log (Reversed)"]["parameters"]["query"]
+    assert "{{$loadFile('sql/ops_log_insert.sql')}}" in ops_log_query
+
+
+def test_send_meter_policy_holds_do_not_send():
+    flow = load_flow("send_meter.json")
+    nodes = {node["name"]: node for node in flow.get("nodes", [])}
+
+    held_query = nodes["Log Template Held"]["parameters"]["query"]
+    assert "'held'" in held_query
+    assert "policy_hold_reason" in held_query
+    assert "set_config('app.brand'" in held_query
+
+    policy_if = flow.get("connections", {}).get("Policy Blocked?", {}).get("main", [])
+    assert len(policy_if) == 2
+    assert policy_if[0][0]["node"] == "Mark Held"
+
+    held_targets = flow.get("connections", {}).get("Log Template Held", {}).get("main", [])
+    assert any(conn["node"] == "Ops Log (Held)" for branch in held_targets for conn in branch)
 
 
 def test_roi_nudge_cooldown_branch_logs_hold_reason():

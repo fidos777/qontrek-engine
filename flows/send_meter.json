@@ -15,7 +15,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT phone_number_id, whatsapp_api_token, default_locale\nFROM public.brand_config\nWHERE brand = '{{$json.brand}}';"
+        "query": "WITH brand_context AS (\n    SELECT set_config('app.brand', '{{$json.brand}}', true)\n), cfg AS (\n    SELECT brand, phone_number_id, whatsapp_api_token, default_locale\n    FROM public.brand_config\n    WHERE brand = '{{$json.brand}}'\n)\nSELECT brand, phone_number_id, whatsapp_api_token, default_locale\nFROM cfg;"
       },
       "id": "2",
       "name": "Fetch Brand Config",
@@ -23,7 +23,7 @@
       "typeVersion": 1,
       "position": [
         360,
-        220
+        180
       ],
       "credentials": {
         "postgres": "Supabase"
@@ -38,22 +38,128 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 1,
       "position": [
+        360,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const crypto = require('crypto');\n\nfunction asArray(value) {\n  if (!value) {\n    return [];\n  }\n  return Array.isArray(value) ? value : [value];\n}\n\nreturn items.map((item) => {\n  const data = item.json || {};\n\n  const brand = data.brand || 'Voltek';\n  const defaultLocale = data.default_locale || data.brand_default_locale || 'ms_MY';\n  const requestedLocale = data.locale || data.requested_locale || '';\n  const requestId = data.request_id || data.requestId || data.requestID;\n  const templateName = data.template?.name || data.template_name;\n  const purpose = data.purpose || data.flow || 'whatsapp_template_send';\n\n  if (!requestId) {\n    throw new Error('request_id is required for payload_builder');\n  }\n  if (!templateName) {\n    throw new Error('template.name is required for payload_builder');\n  }\n\n  const components = data.components || data.template?.components || [];\n  const localeSeed = requestedLocale || defaultLocale || '';\n  const idempotencySeed = [brand, requestId, templateName, localeSeed, purpose].join('|');\n  const idempotencyKey = crypto.createHash('sha1').update(idempotencySeed).digest('hex');\n\n  const languageCode = (data.template?.language || localeSeed || 'en_US').split('_')[0];\n\n  const sendPayload = {\n    messaging_product: 'whatsapp',\n    to: data.customer_phone || data.to,\n    type: 'template',\n    template: {\n      name: templateName,\n      language: { code: languageCode },\n      components: asArray(components),\n    },\n  };\n\n  item.json = {\n    ...data,\n    brand,\n    default_locale: defaultLocale,\n    locale_requested: requestedLocale,\n    locale_seed: localeSeed,\n    request_id: requestId,\n    template_name: templateName,\n    purpose,\n    idempotency_key: idempotencyKey,\n    send_payload: sendPayload,\n  };\n\n  return item;\n});"
+      },
+      "id": "4",
+      "name": "Prepare Send Payload",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
         600,
-        280
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map((item) => {\n  const data = item.json || {};\n  const reasons = Array.isArray(data.policy_hold_reasons)\n    ? [...data.policy_hold_reasons]\n    : [];\n\n  const requested = data.locale_requested || '';\n  const brandDefault = data.default_locale || '';\n  const resolved = requested || brandDefault || 'en_US';\n\n  if (!resolved) {\n    reasons.push('template_locale_missing');\n  }\n\n  if (resolved) {\n    item.json.locale_resolved = resolved;\n    const languageCode = resolved.split('_')[0] || resolved;\n    if (item.json.send_payload?.template?.language) {\n      item.json.send_payload.template.language.code = languageCode;\n    }\n  } else {\n    item.json.locale_resolved = null;\n  }\n\n  if (!resolved) {\n    item.json.policy_hold_reasons = reasons;\n    item.json.policy_hold = true;\n    item.json.policy_hold_reason = reasons.join(',');\n  } else {\n    item.json.policy_hold_reasons = reasons;\n    item.json.policy_hold = reasons.length > 0;\n    item.json.policy_hold_reason = reasons.join(',');\n  }\n\n  return item;\n});"
+      },
+      "id": "5",
+      "name": "Resolve Locale",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        840,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const E164 = /^\\+[1-9]\\d{7,14}$/;\n\nreturn items.map((item) => {\n  const data = item.json || {};\n  const reasons = Array.isArray(data.policy_hold_reasons)\n    ? [...data.policy_hold_reasons]\n    : [];\n\n  const phone = data.send_payload?.to || data.customer_phone || '';\n  const valid = E164.test(phone);\n\n  item.json.recipient_phone = phone;\n  item.json.phone_valid = valid;\n\n  if (!valid) {\n    if (!reasons.includes('invalid_phone')) {\n      reasons.push('invalid_phone');\n    }\n  }\n\n  item.json.policy_hold_reasons = reasons;\n  item.json.policy_hold = reasons.length > 0;\n  item.json.policy_hold_reason = reasons.join(',');\n\n  return item;\n});"
+      },
+      "id": "6",
+      "name": "Validate Phone",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.policy_hold}}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "id": "7",
+      "name": "Policy Blocked?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map((item) => {\n  item.json.template_log_status = 'held';\n  item.json.delivery_status = 'held';\n  item.json.ops_status = 'held';\n  item.json.ops_reason = item.json.policy_hold_reason || 'policy_blocked';\n  item.json.should_log_credit = false;\n  return item;\n});"
+      },
+      "id": "8",
+      "name": "Mark Held",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        220
       ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT template_name, unit_price_rm\nFROM public.vw_templates_by_price\nWHERE brand = '{{$json.brand}}'\n  AND locale = COALESCE(NULLIF('{{$json.locale}}', ''), '{{$json.default_locale}}')\nORDER BY unit_price_rm ASC, template_name ASC\nLIMIT 1;"
+        "query": "WITH brand_context AS (\n    SELECT set_config('app.brand', '{{$json.brand}}', true)\n)\nINSERT INTO public.wa_template_log (brand, idempotency_key, request_id, status, payload, reversal_reason)\nVALUES ('{{$json.brand}}', '{{$json.idempotency_key}}', '{{$json.request_id}}', 'held', '{{JSON.stringify($json.send_payload)}}'::jsonb, '{{$json.policy_hold_reason}}')\nON CONFLICT (brand, idempotency_key) DO UPDATE\nSET status = EXCLUDED.status, reversal_reason = EXCLUDED.reversal_reason, payload = EXCLUDED.payload;"
       },
-      "id": "4",
+      "id": "9",
+      "name": "Log Template Held",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        1800,
+        220
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{$loadFile('sql/ops_log_insert.sql')}}"
+      },
+      "id": "10",
+      "name": "Ops Log (Held)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        2040,
+        220
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH brand_context AS (\n    SELECT set_config('app.brand', '{{$json.brand}}', true)\n), template_choice AS (\n    SELECT template_name, unit_price_rm\n    FROM public.vw_templates_by_price\n    WHERE brand = '{{$json.brand}}'\n      AND locale = '{{$json.locale_resolved}}'\n    ORDER BY unit_price_rm ASC, template_name ASC\n    LIMIT 1\n)\nSELECT template_name, unit_price_rm\nFROM template_choice;"
+      },
+      "id": "11",
       "name": "Pick Template",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 1,
       "position": [
-        860,
-        280
+        1560,
+        600
       ],
       "credentials": {
         "postgres": "Supabase"
@@ -63,13 +169,13 @@
       "parameters": {
         "mode": "combine"
       },
-      "id": "5",
+      "id": "12",
       "name": "Merge Template",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 1,
       "position": [
-        1100,
-        280
+        1800,
+        600
       ]
     },
     {
@@ -79,7 +185,20 @@
         "url": "=https://graph.facebook.com/v17.0/{{$json.phone_number_id}}/messages",
         "jsonParameters": true,
         "options": {
-          "fullResponse": true
+          "fullResponse": true,
+          "retry": {
+            "maxAttempts": 3,
+            "waitBetweenAttempts": 2000,
+            "waitBetweenAttemptsMax": 8000,
+            "waitPolicy": "exponential",
+            "retryOnHttpResponseCodes": [
+              "429",
+              "500",
+              "502",
+              "503",
+              "504"
+            ]
+          }
         },
         "headerParametersUi": {
           "parameter": [
@@ -93,68 +212,62 @@
             }
           ]
         },
-        "bodyParametersJson": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": $json.customer_phone,\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": $json.template_name,\n    \"language\": { \"code\": $json.locale || $json.default_locale },\n    \"components\": $json.components || []\n  }\n}"
+        "bodyParametersJson": "={{JSON.stringify($json.send_payload)}}"
       },
-      "id": "6",
+      "id": "13",
       "name": "Send WhatsApp",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
       "position": [
-        1340,
-        280
+        2040,
+        600
       ]
     },
     {
       "parameters": {
-        "mode": "combine"
+        "functionCode": "return items.map((item) => {\n  const data = item.json || {};\n  const rawCode = data.statusCode ?? data.code ?? data.status;\n  const statusCode = Number(rawCode);\n  const hasStatus = Number.isFinite(statusCode);\n\n  const isSuccess = hasStatus && statusCode >= 200 && statusCode < 300;\n  const isRetryable = hasStatus && (statusCode === 429 || statusCode >= 500);\n  const reversalReason = isSuccess\n    ? undefined\n    : `http_${hasStatus ? statusCode : 'unknown'}`;\n\n  item.json.delivery_status = isSuccess ? 'sent' : 'reversed';\n  item.json.template_log_status = isSuccess ? 'sent' : 'reversed';\n  item.json.should_log_credit = isSuccess;\n  item.json.retryable = isRetryable;\n  item.json.reversal_reason = reversalReason;\n  item.json.ops_status = isSuccess ? 'sent' : isRetryable ? 'retry' : 'reversed';\n  item.json.ops_reason = reversalReason || null;\n\n  return item;\n});"
       },
-      "id": "7",
-      "name": "Merge Result",
-      "type": "n8n-nodes-base.merge",
+      "id": "14",
+      "name": "Status Check",
+      "type": "n8n-nodes-base.function",
       "typeVersion": 1,
       "position": [
-        1580,
-        280
+        2280,
+        600
       ]
     },
     {
       "parameters": {
         "conditions": {
-          "number": [
+          "boolean": [
             {
-              "value1": "={{$json.statusCode}}",
-              "operation": "largerEqual",
-              "value2": 200
-            },
-            {
-              "value1": "={{$json.statusCode}}",
-              "operation": "smallerEqual",
-              "value2": 299
+              "value1": "={{$json.should_log_credit}}",
+              "operation": "isTrue"
             }
           ]
         }
       },
-      "id": "8",
-      "name": "Status OK?",
+      "id": "15",
+      "name": "Send Successful?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        1820,
-        280
+        2520,
+        600
       ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO public.wa_template_log (brand, idempotency_key, request_id, status, payload, response)\nVALUES ('{{$json.brand}}', '{{$json.idempotency_key}}', '{{$json.request_id}}', 'sent', '{{JSON.stringify($json.request_payload || $json)}}'::jsonb, '{{JSON.stringify($json.body)}}'::jsonb)\nRETURNING id;"
+        "query": "WITH brand_context AS (\n    SELECT set_config('app.brand', '{{$json.brand}}', true)\n)\nINSERT INTO public.wa_template_log (brand, idempotency_key, request_id, status, payload, response)\nVALUES ('{{$json.brand}}', '{{$json.idempotency_key}}', '{{$json.request_id}}', 'sent', '{{JSON.stringify($json.send_payload)}}'::jsonb, '{{JSON.stringify($json.body)}}'::jsonb)\nON CONFLICT (brand, idempotency_key) DO UPDATE\nSET status = EXCLUDED.status, response = EXCLUDED.response, payload = EXCLUDED.payload;"
       },
-      "id": "9",
+      "id": "16",
       "name": "Log Template Sent",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 1,
       "position": [
-        2060,
-        140
+        2760,
+        460
       ],
       "credentials": {
         "postgres": "Supabase"
@@ -163,15 +276,15 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO public.credit_logs (brand, idempotency_key, request_id, unit_price_rm, notes)\nVALUES ('{{$json.brand}}', '{{$json.idempotency_key}}', '{{$json.request_id}}', {{$json.unit_price_rm}}, 'wa_template_send')\nON CONFLICT (brand, idempotency_key) DO NOTHING;"
+        "query": "WITH brand_context AS (\n    SELECT set_config('app.brand', '{{$json.brand}}', true)\n)\nINSERT INTO public.credit_logs (brand, idempotency_key, request_id, unit_price_rm, notes)\nVALUES ('{{$json.brand}}', '{{$json.idempotency_key}}', '{{$json.request_id}}', {{$json.unit_price_rm}}, 'wa_template_send')\nON CONFLICT (brand, idempotency_key) DO NOTHING;"
       },
-      "id": "10",
+      "id": "17",
       "name": "Insert Credit Log",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 1,
       "position": [
-        2300,
-        140
+        3000,
+        460
       ],
       "credentials": {
         "postgres": "Supabase"
@@ -180,15 +293,49 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO public.wa_template_log (brand, idempotency_key, request_id, status, payload, response, reversal_reason)\nVALUES ('{{$json.brand}}', '{{$json.idempotency_key}}', '{{$json.request_id}}', 'reversed', '{{JSON.stringify($json.request_payload || $json)}}'::jsonb, '{{JSON.stringify($json.body)}}'::jsonb, '{{$json.statusCode}}')\nON CONFLICT (brand, idempotency_key) DO UPDATE\nSET status = EXCLUDED.status, response = EXCLUDED.response, reversal_reason = EXCLUDED.reversal_reason;"
+        "query": "{{$loadFile('sql/ops_log_insert.sql')}}"
       },
-      "id": "11",
+      "id": "18",
+      "name": "Ops Log (Sent)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        3240,
+        460
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH brand_context AS (\n    SELECT set_config('app.brand', '{{$json.brand}}', true)\n)\nINSERT INTO public.wa_template_log (brand, idempotency_key, request_id, status, payload, response, reversal_reason)\nVALUES ('{{$json.brand}}', '{{$json.idempotency_key}}', '{{$json.request_id}}', 'reversed', '{{JSON.stringify($json.send_payload)}}'::jsonb, '{{JSON.stringify($json.body)}}'::jsonb, '{{$json.reversal_reason}}')\nON CONFLICT (brand, idempotency_key) DO UPDATE\nSET status = EXCLUDED.status, response = EXCLUDED.response, reversal_reason = EXCLUDED.reversal_reason, payload = EXCLUDED.payload;"
+      },
+      "id": "19",
       "name": "Log Template Reversed",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 1,
       "position": [
-        2060,
-        440
+        2760,
+        760
+      ],
+      "credentials": {
+        "postgres": "Supabase"
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{$loadFile('sql/ops_log_insert.sql')}}"
+      },
+      "id": "20",
+      "name": "Ops Log (Reversed)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        3000,
+        760
       ],
       "credentials": {
         "postgres": "Supabase"
@@ -227,12 +374,80 @@
       "main": [
         [
           {
+            "node": "Prepare Send Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Send Payload": {
+      "main": [
+        [
+          {
+            "node": "Resolve Locale",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Locale": {
+      "main": [
+        [
+          {
+            "node": "Validate Phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Phone": {
+      "main": [
+        [
+          {
+            "node": "Policy Blocked?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Policy Blocked?": {
+      "main": [
+        [
+          {
+            "node": "Mark Held",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Pick Template",
             "type": "main",
             "index": 0
-          },
+          }
+        ]
+      ]
+    },
+    "Mark Held": {
+      "main": [
+        [
           {
-            "node": "Merge Template",
+            "node": "Log Template Held",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Template Held": {
+      "main": [
+        [
+          {
+            "node": "Ops Log (Held)",
             "type": "main",
             "index": 0
           }
@@ -245,7 +460,7 @@
           {
             "node": "Merge Template",
             "type": "main",
-            "index": 1
+            "index": 0
           }
         ]
       ]
@@ -257,11 +472,6 @@
             "node": "Send WhatsApp",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Merge Result",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -270,25 +480,25 @@
       "main": [
         [
           {
-            "node": "Merge Result",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge Result": {
-      "main": [
-        [
-          {
-            "node": "Status OK?",
+            "node": "Status Check",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Status OK?": {
+    "Status Check": {
+      "main": [
+        [
+          {
+            "node": "Send Successful?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Successful?": {
       "main": [
         [
           {
@@ -316,12 +526,28 @@
           }
         ]
       ]
+    },
+    "Insert Credit Log": {
+      "main": [
+        [
+          {
+            "node": "Ops Log (Sent)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Template Reversed": {
+      "main": [
+        [
+          {
+            "node": "Ops Log (Reversed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
-  },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "staticData": null,
-  "pinData": {}
+  }
 }
