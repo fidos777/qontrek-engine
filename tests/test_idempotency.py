@@ -43,3 +43,4 @@ def test_send_meter_inserts_idempotency_key_everywhere():
 
     ops_sql = Path("sql/ops_log_insert.sql").read_text()
     assert "idempotency_key" in ops_sql
+    assert "set_config('app.brand'" in ops_sql

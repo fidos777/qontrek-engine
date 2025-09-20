@@ -1,3 +1,6 @@
+WITH brand_context AS (
+    SELECT set_config('app.brand', '{{$json.brand}}', true)
+)
 INSERT INTO public.ops_logs (
     brand,
     flow,
@@ -6,7 +9,8 @@ INSERT INTO public.ops_logs (
     status,
     reason,
     metadata
-) VALUES (
+)
+VALUES (
     '{{$json.brand}}',
     'flow_b_send_meter',
     '{{$json.request_id}}',
