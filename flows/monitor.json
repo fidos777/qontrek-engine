@@ -36,7 +36,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "WITH brand_ctx AS (\n    SELECT set_config('app.brand', '{{$json.brand}}', true)\n), counts AS (\n    SELECT COUNT(*)::int AS unmetered_count\n    FROM public.vw_unmetered_24h\n)\nSELECT '{{$json.brand}}'::text AS brand,\n       counts.unmetered_count\nFROM counts;"
+        "query": "WITH brand_ctx AS (\n    SELECT set_config('app.brand', '{{$json.brand}}', true)\n), counts AS (\n    SELECT COUNT(*)::int AS unmetered_count\n    FROM public.vw_unmetered_24h\n    WHERE brand = current_setting('app.brand', true)\n      AND missing_credit\n)\nSELECT '{{$json.brand}}'::text AS brand,\n       counts.unmetered_count\nFROM counts;"
       },
       "id": "3",
       "name": "Fetch Unmetered Count",

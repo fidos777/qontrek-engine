@@ -22,6 +22,10 @@ def test_ops_logs_table_and_index_defined():
     assert "CREATE TABLE IF NOT EXISTS public.ops_logs" in sql
     assert "ops_logs_brand_created_at_idx" in sql
     assert "ENABLE ROW LEVEL SECURITY" in sql
+    assert "node text NOT NULL" in sql
+    assert "latency_ms integer" in sql
+    assert "error_code text" in sql
+    assert "error_msg text" in sql
 
 
 def test_unmetered_view_checks_credit_matches():
@@ -29,8 +33,16 @@ def test_unmetered_view_checks_credit_matches():
     assert "CREATE OR REPLACE VIEW public.vw_unmetered_24h" in view_sql
     assert "LEFT JOIN public.credit_logs" in view_sql
     assert "w.status = 'sent'" in view_sql
-    assert "c.idempotency_key IS NULL" in view_sql
+    assert "missing_credit" in view_sql
     assert "INTERVAL '24 hours'" in view_sql
+
+
+def test_ops_alerts_view_defined():
+    sql = Path("migrations/006_ops_alerts.sql").read_text()
+    assert "CREATE OR REPLACE VIEW public.ops_alerts" in sql
+    assert "COUNT(*) AS event_count" in sql
+    assert "AVG(latency_ms)" in sql
+    assert "ARRAY" in sql
 
 
 def test_flow_sets_brand_context_before_queries():

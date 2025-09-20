@@ -10,13 +10,13 @@ This guide walks a new teammate through validating the Qontrek WhatsApp runtime 
    ```
 3. A successful run prints ✅ messages for environment variables, table checks, unique indexes, and `vw_unmetered_24h`. Investigate any ❌ output before continuing.
 
-## Step 2 — Execute the runtime demo (Voltek & Perodua)
-1. With the same shell session, trigger the baked-in runtime demo for both tenants:
+## Step 2 — Preview Flow B (Send+Meter) for Voltek & Perodua
+1. With the same shell session, trigger the Flow B preview for both tenants:
    ```bash
    make run-demo
    ```
-2. The command runs `agent_runner.py` twice—once with `BRAND=Voltek` and once with `BRAND=Perodua`—so you can see the sample survey alert logic execute in each context. The script reuses the same mock lead but the Supabase logs will be brand-scoped when live credentials are present.
-3. Expect to see console output showing the first survey alert firing, the second being skipped because of idempotency, and the Form B helper guard evaluation.
+2. The command invokes `agent_runner.py --flow flows/send_and_meter.yaml` twice—once with `--brand Voltek` and once with `--brand Perodua`—so you can inspect the metadata that powers the multi-tenant send-and-meter pipeline before wiring it into n8n.
+3. Review the console output for the flow name, brand context, and description to confirm you’re pointing at the expected YAML asset. Live sends remain disabled (dry-run) in this preview; n8n handles real execution once credentials are applied.
 
 ## Step 3 — Import Metabase SQL (3 tiles)
 1. Open Metabase → **Browse Data → Native query** and paste the three KPI statements from `dashboards/sql/`:

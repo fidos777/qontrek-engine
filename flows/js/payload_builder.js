@@ -55,6 +55,7 @@ return items.map((item) => {
     template_name: templateName,
     purpose,
     idempotency_key: idempotencyKey,
+    ops_flow: data.ops_flow || 'flow_b_send_meter',
     send_payload: sendPayload,
   };
 

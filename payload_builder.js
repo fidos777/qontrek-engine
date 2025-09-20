@@ -48,6 +48,7 @@ return items.map(item => {
       language: templateLanguage,
     },
     components,
+    ops_flow: data.ops_flow || 'flow_b_send_meter',
   };
 
   return { json: payload };

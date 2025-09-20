@@ -23,7 +23,7 @@
 ## Step 5 – Preflight + Makefile
 | Step | Action | Acceptance (DoD) | Risks & Fix |
 | --- | --- | --- | --- |
-| 5 | Jalankan `make preflight` dan `make run-demo` untuk Voltek & Perodua. | Preflight hijau, demo mengesahkan pemisahan tenant. | Sediakan aset dummy (contoh stub flow) jika ada skrip bergantung pada fail yang belum tersedia. |
+| 5 | Jalankan `make preflight` dan `make run-demo` (preview Flow B `send_and_meter`) untuk Voltek & Perodua. | Preflight hijau, demo mengesahkan pemisahan tenant. | Sediakan aset dummy (contoh stub flow) jika ada skrip bergantung pada fail yang belum tersedia. |
 
 ## Step 6 – Metabase SQL Pack
 | Step | Action | Acceptance (DoD) | Risks & Fix |

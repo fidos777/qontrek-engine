@@ -3,10 +3,13 @@ CREATE TABLE IF NOT EXISTS public.ops_logs (
     id bigserial PRIMARY KEY,
     brand text NOT NULL,
     flow text NOT NULL,
+    node text NOT NULL,
+    status text NOT NULL,
     request_id text,
     idempotency_key text,
-    status text NOT NULL,
-    reason text,
+    latency_ms integer,
+    error_code text,
+    error_msg text,
     metadata jsonb DEFAULT '{}'::jsonb,
     created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
 );

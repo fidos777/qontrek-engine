@@ -66,6 +66,10 @@ def test_send_meter_policy_holds_do_not_send():
     assert "policy_hold_reason" in held_query
     assert "set_config('app.brand'" in held_query
 
+    mark_code = nodes["Mark Held"]["parameters"]["functionCode"]
+    assert "ops_node = 'policy_hold'" in mark_code
+    assert "ops_error_code" in mark_code
+
     policy_if = flow.get("connections", {}).get("Policy Blocked?", {}).get("main", [])
     assert len(policy_if) == 2
     assert policy_if[0][0]["node"] == "Mark Held"
@@ -110,6 +114,7 @@ def test_monitor_flow_alerts_on_unmetered_and_acceptance_mismatch():
 
     unmetered_query = nodes["Fetch Unmetered Count"]["parameters"]["query"]
     assert "vw_unmetered_24h" in unmetered_query
+    assert "missing_credit" in unmetered_query
 
     acceptance_query = nodes["Fetch Acceptance Window"]["parameters"]["query"]
     assert "events_raw" in acceptance_query

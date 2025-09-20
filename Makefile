@@ -15,7 +15,7 @@ test:
 $(PYTHON) -m pytest -q
 
 run-demo:
-@echo "Running survey_pending_alert demo for Voltek"
-BRAND=Voltek $(PYTHON) agent_runner.py --flow survey_pending_alert --tenant-id demo-tenant
-@echo "\nRunning survey_pending_alert demo for Perodua"
-BRAND=Perodua $(PYTHON) agent_runner.py --flow survey_pending_alert --tenant-id demo-tenant
+    @echo "Previewing Flow B (send_and_meter) for Voltek"
+    $(PYTHON) agent_runner.py --flow flows/send_and_meter.yaml --dry-run --brand Voltek
+    @echo "\nPreviewing Flow B (send_and_meter) for Perodua"
+    $(PYTHON) agent_runner.py --flow flows/send_and_meter.yaml --dry-run --brand Perodua --tenant-id demo-perodua

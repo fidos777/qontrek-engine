@@ -38,3 +38,7 @@ def test_status_check_marks_retryable_codes():
     assert "statusCode === 429" in status_code
     assert "statusCode >= 500" in status_code
     assert "item.json.retryable" in status_code
+    assert "ops_flow" in status_code
+    assert "ops_node = 'send_whatsapp'" in status_code
+    assert "ops_latency_ms" in status_code
+    assert "ops_error_code" in status_code

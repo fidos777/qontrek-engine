@@ -23,11 +23,13 @@ def test_payload_builder_uses_multitenant_idempotency_key():
     assert "createHash('sha1')" in code
     assert "[brand, requestId, templateName, localeSeed, purpose].join('|')" in code
     assert "purpose = data.purpose" in code
+    assert "ops_flow: data.ops_flow || 'flow_b_send_meter'" in code
 
     flow = load_flow("send_meter.json")
     builder_code = node_by_name(flow, "Prepare Send Payload")["parameters"]["functionCode"]
     assert "idempotencySeed = [brand, requestId, templateName, localeSeed, purpose].join('|')" in builder_code
     assert "idempotency_key" in builder_code
+    assert "ops_flow: data.ops_flow || 'flow_b_send_meter'" in builder_code
 
 
 def test_send_meter_inserts_idempotency_key_everywhere():
@@ -42,5 +44,8 @@ def test_send_meter_inserts_idempotency_key_everywhere():
     assert "{{$json.idempotency_key}}" in credit_query
 
     ops_sql = Path("sql/ops_log_insert.sql").read_text()
-    assert "idempotency_key" in ops_sql
     assert "set_config('app.brand'" in ops_sql
+    assert "idempotency_key" in ops_sql
+    assert "flow" in ops_sql and "node" in ops_sql
+    assert "latency_ms" in ops_sql
+    assert "error_code" in ops_sql

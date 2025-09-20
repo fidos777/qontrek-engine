@@ -19,12 +19,14 @@ TABLE_CHECKS = [
     "wa_template_log",
     "credit_logs",
     "brand_config",
+    "ops_logs",
 ]
 COLUMN_EXPECTATIONS = {
     "events_raw": ["brand", "idempotency_key"],
     "wa_template_log": ["brand", "idempotency_key"],
     "credit_logs": ["brand", "idempotency_key"],
     "brand_config": ["brand", "phone_number_id", "whatsapp_api_token"],
+    "ops_logs": ["brand", "flow", "node", "status", "idempotency_key"],
 }
 UNIQUE_EXPECTATIONS = {
     "wa_template_log": ["brand", "idempotency_key"],
@@ -305,6 +307,8 @@ class PreflightRunner:
             for table, columns in UNIQUE_EXPECTATIONS.items():
                 self.check_unique_constraint(table, columns)
             self.check_view("vw_unmetered_24h")
+            self.check_view("ops_alerts")
+            self.check_view("vw_templates_by_price")
             self.check_brand_config_rows()
 
         if self.failures:
