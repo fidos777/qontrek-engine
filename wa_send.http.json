@@ -1,0 +1,30 @@
+{
+  "method": "POST",
+  "url": "https://graph.facebook.com/v17.0/{{phone_number_id}}/messages",
+  "headers": {
+    "Authorization": "Bearer {{api_token}}",
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "messaging_product": "whatsapp",
+    "to": "{{recipient}}",
+    "type": "template",
+    "template": {
+      "name": "{{template_name}}",
+      "language": {
+        "code": "{{template_language}}"
+      },
+      "components": [
+        {
+          "type": "body",
+          "parameters": [
+            {
+              "type": "text",
+              "text": "{{contact_name}}"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
