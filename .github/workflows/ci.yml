@@ -1,0 +1,28 @@
+name: Qontrek CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 1) Checkout repo + submodules guna PAT rahsia
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          submodules: recursive
+
+      # 2) Verify submodule pointer
+      - name: List submodules
+        run: git submodule status
+
+      # 3) Dummy build/test – ganti dgn step sebenar nanti
+      - name: Run build step
+        run: |
+          echo "✅ Submodules checked out successfully"
+          ls -R flows/

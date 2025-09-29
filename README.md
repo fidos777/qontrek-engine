@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Qontrek Agents Runtime
 
 The Qontrek Agents Runtime powers Qontrek's multi-tenant agent workflows across messaging channels. It bundles persona prompts, Supabase-backed logging utilities, and Codex/n8n automation scripts that can serve many brands from a single deployment. Voltek and Perodua are the current example tenants that ship with this repository.
@@ -94,3 +95,28 @@ This currently executes `test_agent_runner.py`, which validates template guards 
 ## Next steps
 - Populate `resipi/` and `agent_profiles/` assets or update scripts to degrade gracefully when data is missing.
 - Expand the README with additional flows, deployment playbooks, or a Supabase schema reference as the project matures.
+=======
+# Qontrek Engine
+
+Core runtime & agent configs powering **SME AutoBiz OS**.  
+This repo hosts the engine (agents, retrievers, configs, scripts) and links to runbook flows via a submodule.
+
+---
+
+## 📂 Structure
+
+- `agents/` → AI agent prompt configs
+- `config/` → matrices & pricing maps
+- `scripts/` → runtime tools (loggers, loaders, etc.)
+- `flows/` → **submodule** pointing to [qontrek-flows](https://github.com/fidos777/qontrek-flows)
+
+---
+
+## 🚀 Getting Started
+
+### Clone with submodules
+```bash
+git clone --recurse-submodules git@github.com:fidos777/qontrek-engine.git
+cd qontrek-engine
+
+>>>>>>> main
