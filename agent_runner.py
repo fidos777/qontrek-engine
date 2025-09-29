@@ -3,11 +3,27 @@
 # SAFE BY DEFAULT: DRY_RUN=1 (no real sends). Switch to live later.
 
 from __future__ import annotations
+import argparse
 import os
+import sys
 import uuid
-import requests
+from pathlib import Path
+try:
+    import requests  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - lightweight stub for tests
+    class _RequestsStub:
+        get = post = patch = delete = None
+
+        def __getattr__(self, name):
+            raise ModuleNotFoundError("requests module is required for network calls")
+
+    requests = _RequestsStub()  # type: ignore
+try:  # Optional YAML parser for CLI demos
+    import yaml  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    yaml = None  # type: ignore
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, Tuple, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # =========================
 # Environment configuration
@@ -299,10 +315,95 @@ def maybe_fire_formb_helper(lead: Dict[str, Any]):
         return run_flow("formb_helper", lead, guards_formb_helper(lead), exec_formb_helper)
     return "skipped", "when_not_matched"
 
-# ===========
-# Demo / CLI
-# ===========
-if __name__ == "__main__":
+def _load_flow_meta(flow_path: Path) -> Dict[str, Any]:
+    try:
+        text = flow_path.read_text()
+    except FileNotFoundError:
+        raise
+
+    if yaml:
+        try:
+            data = yaml.safe_load(text) or {}
+            if isinstance(data, dict):
+                meta_section = data.get("meta")
+                if isinstance(meta_section, dict):
+                    return {str(key): meta_section[key] for key in meta_section}
+                # fall back to top-level hints
+                return {
+                    key: data[key]
+                    for key in ("flow_name", "description", "owner")
+                    if key in data
+                }
+        except Exception:  # pragma: no cover - best effort parser
+            pass
+
+    meta: Dict[str, Any] = {}
+    in_meta = False
+    for raw in text.splitlines():
+        stripped = raw.strip()
+        if stripped.startswith("meta:"):
+            in_meta = True
+            continue
+        if in_meta:
+            if raw.startswith("  ") and ":" in raw:
+                key, value = stripped.split(":", 1)
+                meta[key.strip()] = value.strip().strip('"')
+            elif stripped and not raw.startswith("  "):
+                break
+
+    if not meta:
+        for raw in text.splitlines():
+            if ":" not in raw:
+                continue
+            key, value = raw.split(":", 1)
+            key = key.strip()
+            if key in {"flow_name", "description"}:
+                meta[key] = value.strip().strip('"')
+    return meta
+
+
+def run_flow_demo(flow_path: str, brand: str, dry_run_flag: bool, tenant_id: Optional[str]) -> None:
+    target = Path(flow_path)
+    if not target.exists():
+        raise FileNotFoundError(flow_path)
+
+    meta = _load_flow_meta(target)
+    flow_name = str(meta.get("flow_name") or target.stem)
+    owner = meta.get("owner")
+    description = meta.get("description")
+
+    print("=== Flow Demo ===")
+    print(f"Flow: {flow_name}")
+    print(f"Brand: {brand} | Dry run: {dry_run_flag}")
+    if tenant_id:
+        print(f"Tenant context: {tenant_id}")
+    if owner:
+        print(f"Owner: {owner}")
+    if description:
+        print(f"Description: {description}")
+    print(f"Source file: {target}")
+    print("This preview reads the flow metadata only; import the YAML into n8n Flow B to execute sends.")
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    parser = argparse.ArgumentParser(description="Voltek agent runner demos")
+    parser.add_argument("--flow", help="Path to a YAML flow to preview")
+    parser.add_argument("--brand", default=os.getenv("BRAND", "Voltek"))
+    parser.add_argument("--tenant-id", help="Optional tenant identifier for demo output")
+    parser.add_argument("--dry-run", dest="dry_run_flag", action="store_true", help="Force dry-run mode")
+    parser.add_argument("--live", dest="dry_run_flag", action="store_false", help="Override dry-run for previews")
+    parser.set_defaults(dry_run_flag=DRY_RUN)
+
+    args = parser.parse_args(argv)
+
+    if args.flow:
+        try:
+            run_flow_demo(args.flow, args.brand, args.dry_run_flag, args.tenant_id)
+        except FileNotFoundError:
+            print(f"Flow definition not found: {args.flow}", file=sys.stderr)
+            return 1
+        return 0
+
     demo_lead = {
         "id": "00000000-0000-0000-0000-000000000001",
         "name": "Ali",
@@ -323,4 +424,12 @@ if __name__ == "__main__":
     print(maybe_fire_survey_pending_alert(demo_lead))
     print(">> Fire formb_helper:")
     print(maybe_fire_formb_helper(demo_lead))
+    return 0
+
+
+# ===========
+# Demo / CLI
+# ===========
+if __name__ == "__main__":
+    sys.exit(main())
 

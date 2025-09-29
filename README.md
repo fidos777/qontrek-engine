@@ -1,23 +1,55 @@
 # Qontrek Engine
 
-Core runtime & agent configs powering **SME AutoBiz OS**.  
-This repo hosts the engine (agents, retrievers, configs, scripts) and links to runbook flows via a submodule.
+Core runtime & agent configs for SME AutoBiz OS.  
+This repo manages the **engine** logic while offloading flows into a submodule (`qontrek-flows`).  
 
 ---
 
-## 📂 Structure
+## 🔹 Structure
 
-- `agents/` → AI agent prompt configs
-- `config/` → matrices & pricing maps
-- `scripts/` → runtime tools (loggers, loaders, etc.)
-- `flows/` → **submodule** pointing to [qontrek-flows](https://github.com/fidos777/qontrek-flows)
+
+qontrek-engine/
+├─ agents/ # Prompt configs per agent
+├─ batch/ # Batch scripts (codex loader, runtime sync)
+├─ config/ # Persona, credentials, pricing
+├─ retriever/ # Agent selector + config
+├─ scripts/ # Utility scripts (csv loader, log writer, etc.)
+├─ taskmeta/ # Task JSON metadata
+├─ flows/ (submodule) # Linked to qontrek-flows repo
+├─ .github/workflows/ # CI workflows
+└─ README.md
+
 
 ---
 
-## 🚀 Getting Started
+## 🔹 Flows as Submodule
 
-### Clone with submodules
+The `flows/` directory is tracked as a **git submodule** → points to [fidos777/qontrek-flows](https://github.com/fidos777/qontrek-flows).  
+
+Clone with submodules:
+
 ```bash
 git clone --recurse-submodules git@github.com:fidos777/qontrek-engine.git
-cd qontrek-engine
 
+
+If already cloned:
+
+git submodule update --init --recursive
+
+🔹 CI/CD
+
+GitHub Actions workflow (.github/workflows/ci.yml) ensures:
+
+Repo + submodules checkout correctly (using CI_GITHUB_TOKEN)
+
+Lint / test steps can be extended
+
+🔹 Test Branch Protection
+
+This dummy section was added to test branch protection rules:
+
+## Test Branch Protection
+This is a dummy line to test pull request workflow.
+
+
+✅ Clean & ready — no merge conflict markers.
