@@ -1,0 +1,43 @@
+name: Qontrek CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout repo + submodules
+    - name: Checkout repo
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+        fetch-depth: 0
+
+    # 2. Setup Python (boleh tukar version kalau perlu)
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    # 3. Install dependencies (kalau ada requirements.txt)
+    - name: Install dependencies
+      run: |
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    # 4. Verify submodule contents
+    - name: Verify flows submodule
+      run: |
+        echo "Contents of flows/:"
+        ls -la flows
+        test -f flows/survey_pending_alert.yaml
+
+    # 5. Run basic lint/test (optional)
+    - name: Run tests
+      run: |
+        echo "✅ Repo + submodule checkout success"
+
