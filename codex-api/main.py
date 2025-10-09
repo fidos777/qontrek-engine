@@ -1,0 +1,156 @@
+from dotenv import load_dotenv
+load_dotenv()
+
+import os
+from fastapi.middleware.cors import CORSMiddleware
+
+
+
+import os, hmac, base64, hashlib, time, uuid
+from typing import List, Optional, Dict, Any
+from datetime import datetime, timedelta, timezone
+
+from fastapi import FastAPI, Header, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+
+# ─────────────────────────────────────────────────────────────
+# Config / CORS
+# ─────────────────────────────────────────────────────────────
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+SIGNING_SECRET  = (os.getenv("SIGNING_SECRET") or "demo-secret").encode()
+
+app = FastAPI(title="Codex Shim", version="0.1.0")
+
+# ── Config / CORS ─────────────────────────────────────────
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"] if "*" in ALLOWED_ORIGINS else [o.strip() for o in ALLOWED_ORIGINS],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"] if "*" in ALLOWED_ORIGINS else ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ─────────────────────────────────────────────────────────────
+# In-memory logs (mock mode)
+# ─────────────────────────────────────────────────────────────
+LOGS: List[Dict[str, Any]] = []
+
+def log_event(event: Dict[str, Any]) -> None:
+    event["created_at"] = datetime.now(timezone.utc).isoformat()
+    LOGS.append(event)
+
+# ─────────────────────────────────────────────────────────────
+# Models
+# ─────────────────────────────────────────────────────────────
+class DemoRequest(BaseModel):
+    mode: str = Field(pattern="^(strict|loose)$", default="strict")
+    mock: bool = True
+    tenants: List[str]
+
+class BatchItem(BaseModel):
+    tenant: str
+    templates: List[str]
+
+class BatchRequest(BaseModel):
+    batches: List[BatchItem]
+    mock: bool = True
+
+class RuleTriggerRequest(BaseModel):
+    tenant: str
+    rule: str
+    mock: bool = True
+
+# ─────────────────────────────────────────────────────────────
+# Utils
+# ─────────────────────────────────────────────────────────────
+def sign_blob(blob: str) -> str:
+    sig = hmac.new(SIGNING_SECRET, blob.encode(), hashlib.sha256).digest()
+    return base64.urlsafe_b64encode(sig).decode().rstrip("=")
+
+# ─────────────────────────────────────────────────────────────
+# Endpoints
+# ─────────────────────────────────────────────────────────────
+@app.get("/healthz")
+def healthz():
+    return {"status": "ok"}
+
+@app.post("/ops/demo")
+def run_demo(req: DemoRequest):
+    # Preflight real check akan masuk sini nanti (WABA, webhook, template approvals)
+    demo_id = f"demo-{uuid.uuid4().hex[:6]}"
+    # Seed a few mock rows so dashboard tak kosong
+    if req.mock:
+        for t in req.tenants:
+            log_event({"type":"demo_seed", "tenant": t, "status":"delivered", "latency_ms": 120})
+            log_event({"type":"demo_seed", "tenant": t, "status":"read", "latency_ms": 180})
+    return {
+        "status":"ok",
+        "demo_run_id": demo_id,
+        "tenants": req.tenants,
+        "mode": req.mode,
+        "mock": req.mock,
+    }
+
+@app.post("/ops/templates/batch")
+def templates_batch(
+    body: BatchRequest,
+    x_idempotency_key: Optional[str] = Header(default=None)
+):
+    # In real mode: call WA API then write ops_logs (DB)
+    # For mock: just log the intent
+    batch_id = x_idempotency_key or f"batch-{uuid.uuid4().hex[:8]}"
+    count = 0
+    for item in body.batches:
+        for alias in item.templates:
+            count += 1
+            log_event({
+                "type": "template_send",
+                "tenant": item.tenant,
+                "template_alias": alias,
+                "status": "queued" if body.mock else "sent",
+                "batch_id": batch_id,
+                "latency_ms": 100 + (count % 50),
+            })
+    return {"status":"queued", "count": count, "idempotency_key": batch_id, "mock": body.mock}
+
+@app.post("/ops/rules/trigger")
+def trigger_rule(body: RuleTriggerRequest):
+    # Simulate Dormant_7d / Stalled / DocGuard dsb.
+    log_event({
+        "type": "rule_fire",
+        "tenant": body.tenant,
+        "rule": body.rule,
+        "status": "triggered",
+    })
+    return {"status":"ok", "rule": body.rule, "tenant": body.tenant}
+
+@app.get("/cfo/pack")
+def cfo_pack(tenant: str = Query(..., description="Tenant id e.g. Voltek_MS")):
+    # Return a signed URL placeholder valid for 10 minutes
+    exp = int(time.time()) + 600
+    to_sign = f"{tenant}:{exp}"
+    sig = sign_blob(to_sign)
+    # You can swap this to real object storage later
+    file_url = f"https://files.qontrek.com/cfo/{tenant}.pdf?exp={exp}&sig={sig}"
+    return {"file_url": file_url, "ttl_sec": 600}
+
+
+from app.routes import ops
+app.include_router(ops.router)
+
+# Helper: quick view current mock logs (for testing only)
+@app.get("/ops/logs")
+def get_logs(limit: int = 50):
+    return list(reversed(LOGS[-limit:]))

@@ -1,0 +1,16 @@
+# --- codex-api local stuff ---
+codex-api/.env
+codex-api/.venv/
+codex-api/__pycache__/
+codex-api/app/__pycache__/
+codex-api/**/*.pyc
+codex-api/artifacts/
+codex-api/reports/
+codex-api/*.log
+
+# macOS / editor
+.DS_Store
+codex-api/.env
+codex-api/.venv/
+codex-api/__pycache__/
+codex-api/artifacts/

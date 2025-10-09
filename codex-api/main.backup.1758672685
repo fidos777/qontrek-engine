@@ -1,0 +1,24 @@
+from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import List
+
+app = FastAPI()
+
+@app.get("/healthz")
+def healthz():
+    return {"status": "ok"}
+
+class DemoRequest(BaseModel):
+    mode: str
+    mock: bool
+    tenants: List[str]
+
+@app.post("/ops/demo")
+def run_demo(req: DemoRequest):
+    return {
+        "status": "ok",
+        "demo_run_id": "demo-001",
+        "tenants": req.tenants,
+        "mode": req.mode,
+        "mock": req.mock,
+    }
