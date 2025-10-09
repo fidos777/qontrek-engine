@@ -1,0 +1,94 @@
+▶ http://127.0.0.1:8000
+{
+  "status": "ok"
+}
+{
+  "status": "ok",
+  "demo_run_id": "demo-fe68f2",
+  "tenants": [
+    "Voltek_EN",
+    "Voltek_MS"
+  ],
+  "mode": "strict",
+  "mock": true
+}
+{
+  "status": "queued",
+  "count": 3,
+  "idempotency_key": "demo-001",
+  "mock": true
+}
+{
+  "status": "ok",
+  "rule": "Dormant_7d",
+  "tenant": "Voltek_MS"
+}
+[
+  {
+    "type": "rule_fire",
+    "tenant": "Voltek_MS",
+    "rule": "Dormant_7d",
+    "status": "triggered",
+    "created_at": "2025-10-09T00:44:07.747135+00:00"
+  },
+  {
+    "type": "template_send",
+    "tenant": "Voltek_EN",
+    "template_alias": "VOLTEK_GREETING_EN",
+    "status": "queued",
+    "batch_id": "demo-001",
+    "latency_ms": 103,
+    "created_at": "2025-10-09T00:44:07.739792+00:00"
+  },
+  {
+    "type": "template_send",
+    "tenant": "Voltek_MS",
+    "template_alias": "VOLTEK_DOC_CHECKLIST_MS",
+    "status": "queued",
+    "batch_id": "demo-001",
+    "latency_ms": 102,
+    "created_at": "2025-10-09T00:44:07.739791+00:00"
+  },
+  {
+    "type": "template_send",
+    "tenant": "Voltek_MS",
+    "template_alias": "VOLTEK_GREETING_MS",
+    "status": "queued",
+    "batch_id": "demo-001",
+    "latency_ms": 101,
+    "created_at": "2025-10-09T00:44:07.739785+00:00"
+  },
+  {
+    "type": "demo_seed",
+    "tenant": "Voltek_MS",
+    "status": "read",
+    "latency_ms": 180,
+    "created_at": "2025-10-09T00:44:07.732651+00:00"
+  },
+  {
+    "type": "demo_seed",
+    "tenant": "Voltek_MS",
+    "status": "delivered",
+    "latency_ms": 120,
+    "created_at": "2025-10-09T00:44:07.732650+00:00"
+  },
+  {
+    "type": "demo_seed",
+    "tenant": "Voltek_EN",
+    "status": "read",
+    "latency_ms": 180,
+    "created_at": "2025-10-09T00:44:07.732648+00:00"
+  },
+  {
+    "type": "demo_seed",
+    "tenant": "Voltek_EN",
+    "status": "delivered",
+    "latency_ms": 120,
+    "created_at": "2025-10-09T00:44:07.732642+00:00"
+  }
+]
+{
+  "file_url": "https://files.qontrek.com/cfo/Voltek_MS.pdf?exp=1759971247&sig=cG97hPSPJsawVjKDxr8Sb-6zoGt8KadOeMCHLm_DZQg",
+  "ttl_sec": 600
+}
+✅ smoke ok
