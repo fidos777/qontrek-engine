@@ -10,3 +10,7 @@ codex-api/*.log
 
 # macOS / editor
 .DS_Store
+codex-api/.env
+codex-api/.venv/
+codex-api/__pycache__/
+codex-api/artifacts/
