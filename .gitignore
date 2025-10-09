@@ -1,0 +1,9 @@
+cat > .gitignore <<'EOF'
+# venv & caches
+.venv/
+__pycache__/
+.pytest_cache/logs/
+config/persona_matrix.csv
+codex-api/
+*.zip
+.DS_Store
