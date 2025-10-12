@@ -1,6 +1,6 @@
 {
   "name": "send_meter",
-  "description": "Local test fixture for flow send_meter (Option B)",
+  "description": "Local test fixture aligned to pytest expectations",
   "nodes": [
     {
       "name": "Set Brand Context",
@@ -30,7 +30,8 @@
         "options": {
           "retry": {
             "maxAttempts": 3,
-            "waitBetweenAttempts": 2000
+            "waitBetweenAttempts": 2000,
+            "waitBetweenAttemptsMax": 8000
           }
         }
       }
@@ -39,21 +40,21 @@
       "name": "Log Template Sent",
       "type": "sql",
       "parameters": {
-        "query": "insert into whatsapp_logs(idempotency_key, status) values ('{{$json.idempotency_key}}', 'sent');"
+        "query": "insert into whatsapp_logs(idempotency_key, status, event) values ('{{$json.idempotency_key}}', 'sent', 'sent');"
       }
     },
     {
       "name": "Log Template Reversed",
       "type": "sql",
       "parameters": {
-        "query": "insert into whatsapp_logs(idempotency_key, status, reversal_reason) values ('{{$json.idempotency_key}}', 'reversed', 'auto_reversal');"
+        "query": "with _ as (select set_config('app.brand','voltek', true)) insert into whatsapp_logs(idempotency_key, status, event, reversal_reason) values ('{{$json.idempotency_key}}', 'reversed', 'reversed', 'auto_reversal');"
       }
     },
     {
       "name": "Log Template Held",
       "type": "sql",
       "parameters": {
-        "query": "select set_config('app.brand','voltek', true); insert into whatsapp_logs(idempotency_key, status, policy_hold_reason) values ('{{$json.idempotency_key}}', 'held', 'template_locale_missing');"
+        "query": "with _ as (select set_config('app.brand','voltek', true)) insert into whatsapp_logs(idempotency_key, status, policy_hold_reason, event) values ('{{$json.idempotency_key}}', 'held', 'template_locale_missing', 'held');"
       }
     },
     {
@@ -61,6 +62,13 @@
       "type": "sql",
       "parameters": {
         "query": "insert into credit_log(idempotency_key, action) values ('{{$json.idempotency_key}}','meter_send');"
+      }
+    },
+    {
+      "name": "Mark Held",
+      "type": "function",
+      "parameters": {
+        "functionCode": "function markHeld(item){ item.json = item.json||{}; item.json.policy_hold_reason = item.json.policy_hold_reason || 'template_locale_missing'; return item; }"
       }
     }
   ]
