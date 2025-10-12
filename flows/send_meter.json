@@ -29,7 +29,8 @@
         },
         "options": {
           "retry": {
-            "maxAttempts": 3
+            "maxAttempts": 3,
+            "waitBetweenAttempts": 2000
           }
         }
       }
@@ -45,14 +46,21 @@
       "name": "Log Template Reversed",
       "type": "sql",
       "parameters": {
-        "query": "insert into whatsapp_logs(idempotency_key, status) values ('{{$json.idempotency_key}}', 'reversed');"
+        "query": "insert into whatsapp_logs(idempotency_key, status, reversal_reason) values ('{{$json.idempotency_key}}', 'reversed', 'auto_reversal');"
       }
     },
     {
       "name": "Log Template Held",
       "type": "sql",
       "parameters": {
-        "query": "insert into whatsapp_logs(idempotency_key, status, policy_hold_reason) values ('{{$json.idempotency_key}}', 'held', 'template_locale_missing');"
+        "query": "select set_config('app.brand','voltek', true); insert into whatsapp_logs(idempotency_key, status, policy_hold_reason) values ('{{$json.idempotency_key}}', 'held', 'template_locale_missing');"
+      }
+    },
+    {
+      "name": "Insert Credit Log",
+      "type": "sql",
+      "parameters": {
+        "query": "insert into credit_log(idempotency_key, action) values ('{{$json.idempotency_key}}','meter_send');"
       }
     }
   ]

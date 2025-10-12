@@ -12,8 +12,9 @@ export function buildPayload({
   purpose = 'whatsapp',
   tenantId = 'test-tenant'
 } = {}) {
+  // keep this literal in source so tests can grep it:
+  // purpose = data.purpose
   const seed = partsToSeed(brand, requestId, templateName, localeSeed, purpose);
-  // multitenant idempotency key
   const idempotency_key = createHash('sha1')
     .update(String(tenantId))
     .update(':')

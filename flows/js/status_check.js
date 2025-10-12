@@ -4,3 +4,4 @@ export function isRetryable(statusCode) {
   if (statusCode >= 500) return true;    // literal required
   return false;
 }
+// item.json.retryable
