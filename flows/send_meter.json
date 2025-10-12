@@ -1,0 +1,59 @@
+{
+  "name": "send_meter",
+  "description": "Local test fixture for flow send_meter (Option B)",
+  "nodes": [
+    {
+      "name": "Set Brand Context",
+      "type": "sql",
+      "parameters": {
+        "query": "select set_config('app.brand','voltek', true);"
+      }
+    },
+    {
+      "name": "Build Payload",
+      "type": "js",
+      "parameters": {
+        "module": "flows/js/payload_builder.js",
+        "export": "buildPayload"
+      }
+    },
+    {
+      "name": "Send WhatsApp",
+      "type": "http",
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.whatsapp.test/send",
+        "body": {
+          "template": "meter_notice",
+          "idempotency_key": "{{$json.idempotency_key}}"
+        },
+        "options": {
+          "retry": {
+            "maxAttempts": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "Log Template Sent",
+      "type": "sql",
+      "parameters": {
+        "query": "insert into whatsapp_logs(idempotency_key, status) values ('{{$json.idempotency_key}}', 'sent');"
+      }
+    },
+    {
+      "name": "Log Template Reversed",
+      "type": "sql",
+      "parameters": {
+        "query": "insert into whatsapp_logs(idempotency_key, status) values ('{{$json.idempotency_key}}', 'reversed');"
+      }
+    },
+    {
+      "name": "Log Template Held",
+      "type": "sql",
+      "parameters": {
+        "query": "insert into whatsapp_logs(idempotency_key, status, policy_hold_reason) values ('{{$json.idempotency_key}}', 'held', 'template_locale_missing');"
+      }
+    }
+  ]
+}
