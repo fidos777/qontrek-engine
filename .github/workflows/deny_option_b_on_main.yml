@@ -1,0 +1,21 @@
+name: Block Option B fixtures on main
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail if flows local fixtures are present
+        run: |
+          set -e
+          HIT=0
+          ls flows/js/*.js >/dev/null 2>&1 && HIT=1 || true
+          test -f flows/send_meter.json && HIT=1 || true
+          if [ "$HIT" = "1" ]; then
+            echo "::error ::Option B fixtures detected (flows/js/*.js or flows/send_meter.json). Migrate to submodule (Option A) before merging."
+            exit 1
+          fi

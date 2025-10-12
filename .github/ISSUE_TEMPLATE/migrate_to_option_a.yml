@@ -1,0 +1,31 @@
+name: Migrate flows fixtures to Option A (submodule)
+description: Replace local Option B fixtures with official flows submodule
+title: "Migrate: flows fixtures → submodule (Option A)"
+labels: ["tech-debt","governance","G7"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This ticket replaces local **Option B** fixtures with the official **flows** submodule.
+  - type: checkboxes
+    id: tasks
+    attributes:
+      label: Tasks
+      options:
+        - label: "Create/point .gitmodules → flows repo URL"
+        - label: "git submodule add/update & checkout GOOD_SHA"
+        - label: "Remove local fixtures (flows/js/*.js, flows/send_meter.json)"
+        - label: "Run pytest -q (expect green)"
+        - label: "Verify Action ‘Block Option B fixtures’ passes"
+        - label: "Close ticket & link PR"
+  - type: input
+    id: repo
+    attributes:
+      label: flows repo URL
+      placeholder: "git@github.com:<org>/<flows-repo>.git"
+  - type: input
+    id: sha
+    attributes:
+      label: GOOD_SHA (commit containing fixtures)
+      placeholder: "abcdef123456…"
