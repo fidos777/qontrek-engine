@@ -1,9 +1,15 @@
-cat > .gitignore <<'EOF'
 # venv & caches
 .venv/
 __pycache__/
-.pytest_cache/logs/
+.pytest_cache/
+
+# logs & local data
+logs/
 config/persona_matrix.csv
+
+# local tooling
 codex-api/
 *.zip
+
+# macOS
 .DS_Store
