@@ -1,4 +1,0 @@
-[submodule "flows"]
-	path = flows
-	url = git@github.com:fidos777/qontrek-flows.git
-	branch = main
