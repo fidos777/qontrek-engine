@@ -1,0 +1,10 @@
+# QONTREK CONTROL TOWER — EFFICIENCY METRICS (v10.7 Dual Apex)
+# Mode: Manual-first Proof Chain
+# Gate: G8 (Efficiency & Sustainability)
+# Version: v10.7-DualApex
+# Owner: @firdaus_ismail
+# Date: 2025-10-14
+
+tenant_id,run_id,phase,total_tokens,total_kWh,tokens_per_kWh,runtime_cost_rm,credits_burned,rm_per_credit,cost_per_kToken,baseline_cost_per_kToken,baseline_tokens_per_kWh,latency_ms_p95,baseline_latency_ms,eval_score,parity_pct,compliance_pass,efficiency_score,energy_improvement_pct,cost_reduction_pct,latency_reduction_pct,eval_target_pass,parity_target_pass,compliance_target_pass,gate_g8_status,remarks
+voltek_demo,G7R001,Phase_1,12500,0.34,36764.7,0.87,54,0.016,69.60,77.33,33422,1840,2140,0.83,0.9,TRUE,1.10,10.0,10.0,14.0,TRUE,TRUE,TRUE,GREEN,Passed all efficiency thresholds
+
