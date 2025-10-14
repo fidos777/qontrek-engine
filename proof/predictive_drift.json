@@ -1,0 +1,9 @@
+{
+  "timestamp": "2025-10-15T07:56:27.089580",
+  "model": "LightweightRegressor-v12.2",
+  "predictions": {
+    "6h": 4.33,
+    "12h": 4.21
+  },
+  "confidence": 0.95
+}
