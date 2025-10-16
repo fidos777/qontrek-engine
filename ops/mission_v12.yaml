@@ -1,0 +1,131 @@
+# 🗼 QONTREK CONTROL TOWER — mission_v12.yaml
+# Dual Apex Mode (G7 Functional + G8 Efficiency)
+# Status: ACTIVE
+# Owner: @firdaus_ismail
+# Last Updated: 2025-10-14
+
+meta:
+  version: "v12.0-dual-apex"
+  mode: "manual-first"
+  duration_days: 7
+  goal: "Deliver G7 functional proof + G8 efficiency readiness"
+  philosophy: "Proof before Power → Power with Purpose"
+
+layers:
+  - name: C1
+    role: Codex
+    owner: "@ai_codex"
+    deliverables: [test_results.csv, energy_estimator.py]
+    metrics:
+      eval_score: ">= 0.8"
+      parity_pct: "<= 1.0"
+
+  - name: C2
+    role: DevOps
+    owner: "@devops_megat"
+    deliverables: [telemetry_sample.json, power_kWh]
+    metrics:
+      latency_ms_p95: "<= baseline * 0.85"
+
+  - name: C3
+    role: Cockpit
+    owner: "@frontend_danish"
+    deliverables: [EfficiencyRow.json]
+    metrics:
+      ui_ready: true
+
+  - name: C4
+    role: Ledger
+    owner: "@backend_zeyti"
+    deliverables: [ledger_cfo_view_v2.sql]
+    metrics:
+      tokens_per_kWh: ">= baseline * 1.10"
+      cost_per_kToken: "<= baseline * 0.90"
+
+  - name: Tower
+    role: Governance
+    owner: "@firdaus_ismail"
+    deliverables: [G7_Audit_Report.pdf, G8_Efficiency_Report.pdf]
+    metrics:
+      efficiency_gate: "green"
+
+
+c2_bridge:
+  last_run: "2025-10-14T08:48:38.854827Z"
+  avg_eval: 0.828
+  artifacts:
+    - artifacts/agentkit_runs/
+
+c2_parity:
+  last_run: "2025-10-14T08:57:36.386001Z"
+  drift_pct: 5.13
+  eval_stdev: 0.0092
+  status: WARN
+
+c2_bridge:
+  last_run: "2025-10-14T09:15:48.132145Z"
+  avg_eval: 0.835
+  artifacts:
+    - artifacts/agentkit_runs/
+
+c2_parity:
+  last_run: "2025-10-14T09:15:52.895721Z"
+  drift_pct: 14.48
+  eval_stdev: 0.0093
+  status: WARN
+
+c2_bridge:
+  last_run: "2025-10-14T09:38:18.526404Z"
+  avg_eval: 0.847
+  artifacts:
+    - artifacts/agentkit_runs/
+
+c2_parity:
+  last_run: "2025-10-14T09:38:23.532933Z"
+  drift_pct: 12.43
+  eval_stdev: 0.0131
+  status: WARN
+
+c2_bridge:
+  last_run: "2025-10-14T09:45:56.560444Z"
+  avg_eval: 0.839
+  artifacts:
+    - artifacts/agentkit_runs/
+
+c2_parity:
+  last_run: "2025-10-14T09:46:01.527620Z"
+  drift_pct: 11.25
+  eval_stdev: 0.012
+  status: WARN
+
+c2_bridge:
+  last_run: "2025-10-14T09:49:13.974137Z"
+  avg_eval: 0.841
+  artifacts:
+    - artifacts/agentkit_runs/
+
+c2_parity:
+  last_run: "2025-10-14T09:49:18.914133Z"
+  drift_pct: 9.61
+  eval_stdev: 0.0117
+  status: WARN
+
+c2_bridge:
+  last_run: "2025-10-14T09:51:54.432371Z"
+  avg_eval: 0.837
+  artifacts:
+    - artifacts/agentkit_runs/
+
+c2_parity:
+  last_run: "2025-10-14T09:51:58.584786Z"
+  drift_pct: 8.5
+  eval_stdev: 0.0121
+  status: WARN
+
+# Bridge Eval Sync v10.7.6-p3 completed 2025-10-14T10:40:13.970596Z
+
+# Bridge Eval Sync v10.7.6-p3 completed 2025-10-14T10:41:01.098672Z
+
+# Bridge Eval Sync v10.7.6-p4 completed 2025-10-14T10:46:57.596101Z
+certified_at: 2025-10-14T10:46:57.596101Z
+certified_by: firdaus_ismail
