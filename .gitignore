@@ -13,3 +13,6 @@ codex-api/
 
 # macOS
 .DS_Store
+
+artifacts/
+frontend/data/efficiency_trend_data.json
