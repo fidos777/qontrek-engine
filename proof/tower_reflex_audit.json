@@ -1,0 +1,10 @@
+{
+  "version": "13.1-A4",
+  "timestamp": "2025-10-16T16:59:22.419485",
+  "canary_percent": 0.1,
+  "sample_size": 621,
+  "conversion_rate_change": 0.021,
+  "refund_rate": 0.031,
+  "efficiency_ratio": 0.879,
+  "status": "PASS"
+}
