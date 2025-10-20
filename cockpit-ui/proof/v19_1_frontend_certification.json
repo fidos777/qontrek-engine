@@ -1,0 +1,20 @@
+{
+  "gate": "G19.1",
+  "phase": "certify",
+  "status": "sealed",
+  "sealed_at": "2025-10-20T12:53:36Z",
+  "sealed_by": "commander@tower",
+  "seal_hash": "a651f4de6427670bf39ae9f8ad5367f3c98276845e8f800b52fb19590b468aff",
+  "manifest_path": "manifest_frontend_v19_1.yaml",
+  "sha256": null,
+  "lineage": {
+    "parent_proof": "proof/ui_build_v19_1.json",
+    "parent_hash": null
+  },
+  "merkle": {
+    "root": null,
+    "leaves": []
+  },
+  "generated_at": "2025-10-20T06:00:17Z",
+  "reason": "fallback used"
+}
