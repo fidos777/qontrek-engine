@@ -252,12 +252,56 @@ For governance-level questions, consult the system architect (GPT-5).
 
 **Implemented:**
 - ✅ Gate 0: Lead Qualification Dashboard (G19.4)
+- ✅ Gate 1: Decision Engine (G19.5)
 - ✅ Gate 2: Payment Recovery Dashboard (G19.2)
 - ✅ CFO Lens: 5-Tab Financial Dashboard (G19.3)
 
 **Pending:**
-- ⏳ Gate 1: Decision Engine
 - ⏳ Document Tracker
+
+---
+
+## 🧠 Gate 1 – Decision Engine (G19.5)
+
+The Gate 1 dashboard provides comprehensive analytics for automated decision-making systems.
+
+### Features
+
+**Route:** `/gates/g1`
+
+**5 Analysis Tabs:**
+1. **Decisions Summary** - Overview of approved/rejected/pending decisions with breakdown percentages
+2. **Variance Matrix** - Comparison of predicted vs actual approval rates by segment
+3. **Trigger Audit** - Performance metrics for automated decision rules and triggers
+4. **Review History** - Detailed decision log with entity details, amounts, and confidence scores
+5. **Forecast Drift** - Accuracy tracking over time with chart placeholder
+
+**Summary KPIs:**
+- Total Decisions
+- Approval Rate
+- Average Decision Time
+- Drift Index
+- Manual Override Ratio
+
+**Technical Implementation:**
+- Tab-based navigation with aria-labels for accessibility
+- Color-coded decision statuses (Green/Red/Yellow badges)
+- Variance indicators showing positive/negative deltas
+- Responsive table layouts with proper semantic HTML
+- Chart placeholder for future Recharts integration
+- Same dev-only fixture fallback pattern as other gates
+
+**Endpoint:** `/api/gates/g1/summary` → Returns `G1Response` (BaseEnvelope<G1Payload>)
+
+**Tests:**
+- Mapping contract tests (envelope + structure validation)
+- Fixture contract tests (type validation)
+- 6/6 tests passing
+
+**Expected Telemetry:**
+```json
+{"event":"proof_load","rel":"g1_decision_v19_5.json","source":"real","timestamp":"2025-10-21T13:19:45.000Z"}
+```
 
 ---
 
@@ -348,5 +392,5 @@ The CFO Lens provides a comprehensive financial overview with 5 specialized tabs
 ---
 
 **Last Updated:** 2025-10-21
-**Version:** G19.4
+**Version:** G19.5
 **Status:** Production-ready structure, awaiting backend integration

@@ -1,0 +1,155 @@
+{
+  "ok": true,
+  "rel": "g1_decision_v19_5.json",
+  "source": "real",
+  "schemaVersion": "1.0.0",
+  "data": {
+    "summary": {
+      "total_decisions": 2847,
+      "approved": 1893,
+      "rejected": 684,
+      "pending": 270,
+      "approval_rate": 0.665,
+      "avg_decision_time": 8.3,
+      "drift_index": 0.04,
+      "manual_override_ratio": 0.12
+    },
+    "top_items": [
+      {
+        "id": "DEC-2847",
+        "entity": "Alpha Engineering Sdn Bhd",
+        "decision": "approved",
+        "amount": 45000,
+        "confidence": 0.94,
+        "trigger": "credit_score_high",
+        "decided_by": "AutoEngine",
+        "decided_at": "2025-10-21T08:15:00.000Z",
+        "decision_time": 4.2
+      },
+      {
+        "id": "DEC-2846",
+        "entity": "Metro Construction Ltd",
+        "decision": "rejected",
+        "amount": 82000,
+        "confidence": 0.89,
+        "trigger": "payment_history_poor",
+        "decided_by": "AutoEngine",
+        "decided_at": "2025-10-21T07:45:00.000Z",
+        "decision_time": 6.8
+      },
+      {
+        "id": "DEC-2845",
+        "entity": "TechVenture Sdn Bhd",
+        "decision": "approved",
+        "amount": 23500,
+        "confidence": 0.87,
+        "trigger": "referral_trusted",
+        "decided_by": "Sarah Ahmad",
+        "decided_at": "2025-10-21T06:30:00.000Z",
+        "decision_time": 12.5
+      },
+      {
+        "id": "DEC-2844",
+        "entity": "Bright Future Trading",
+        "decision": "pending",
+        "amount": 67000,
+        "confidence": 0.65,
+        "trigger": "manual_review_required",
+        "decided_by": null,
+        "decided_at": null,
+        "decision_time": null
+      },
+      {
+        "id": "DEC-2843",
+        "entity": "Green Logistics Sdn Bhd",
+        "decision": "approved",
+        "amount": 38000,
+        "confidence": 0.92,
+        "trigger": "existing_customer_good_history",
+        "decided_by": "AutoEngine",
+        "decided_at": "2025-10-20T16:20:00.000Z",
+        "decision_time": 3.9
+      }
+    ],
+    "variance_matrix": [
+      {
+        "segment": "High Credit Score",
+        "predicted_approval": 0.90,
+        "actual_approval": 0.88,
+        "variance": -0.02
+      },
+      {
+        "segment": "Medium Credit Score",
+        "predicted_approval": 0.65,
+        "actual_approval": 0.71,
+        "variance": 0.06
+      },
+      {
+        "segment": "Low Credit Score",
+        "predicted_approval": 0.25,
+        "actual_approval": 0.22,
+        "variance": -0.03
+      },
+      {
+        "segment": "Existing Customer",
+        "predicted_approval": 0.85,
+        "actual_approval": 0.83,
+        "variance": -0.02
+      }
+    ],
+    "trigger_audit": [
+      {
+        "trigger_name": "credit_score_high",
+        "fire_count": 1247,
+        "approval_rate": 0.94,
+        "avg_confidence": 0.91
+      },
+      {
+        "trigger_name": "payment_history_poor",
+        "fire_count": 523,
+        "approval_rate": 0.08,
+        "avg_confidence": 0.88
+      },
+      {
+        "trigger_name": "manual_review_required",
+        "fire_count": 387,
+        "approval_rate": 0.45,
+        "avg_confidence": 0.62
+      },
+      {
+        "trigger_name": "referral_trusted",
+        "fire_count": 294,
+        "approval_rate": 0.89,
+        "avg_confidence": 0.85
+      },
+      {
+        "trigger_name": "existing_customer_good_history",
+        "fire_count": 396,
+        "approval_rate": 0.92,
+        "avg_confidence": 0.90
+      }
+    ],
+    "forecast_drift": [
+      {
+        "period": "Week 1",
+        "predicted_accuracy": 0.92,
+        "actual_accuracy": 0.89
+      },
+      {
+        "period": "Week 2",
+        "predicted_accuracy": 0.91,
+        "actual_accuracy": 0.93
+      },
+      {
+        "period": "Week 3",
+        "predicted_accuracy": 0.93,
+        "actual_accuracy": 0.91
+      },
+      {
+        "period": "Week 4",
+        "predicted_accuracy": 0.94,
+        "actual_accuracy": 0.96
+      }
+    ]
+  }
+}

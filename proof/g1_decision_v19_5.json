@@ -1,0 +1,34 @@
+{
+  "gate": "G19.5",
+  "phase": "ui_build",
+  "component": "DecisionEngine",
+  "status": "sealed",
+  "generated_at": "2025-10-21T13:19:45Z",
+  "deliverables": {
+    "page": "app/gates/g1/page.tsx",
+    "fixture": "tests/fixtures/g1.summary.json",
+    "tests": [
+      "__tests__/g1.mapping.test.ts",
+      "__tests__/g1.fixture.contract.test.ts"
+    ]
+  },
+  "features": [
+    "5-tab decision analytics dashboard",
+    "Decision summary with approval/rejection/pending counts",
+    "Variance matrix comparing predicted vs actual approval rates",
+    "Trigger audit showing automated decision rule performance",
+    "Review history table with full decision details",
+    "Forecast drift analysis with chart placeholder"
+  ],
+  "telemetry": {
+    "rel": "g1_decision_v19_5.json",
+    "function": "logProofLoad",
+    "deduplication": "useRef guard"
+  },
+  "verification": {
+    "typescript": "passes",
+    "tests": "passes",
+    "accessibility": "aria-labels + scope attributes",
+    "production_safety": "dev fixture guarded with NODE_ENV"
+  }
+}
