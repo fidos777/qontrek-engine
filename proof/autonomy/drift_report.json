@@ -1,0 +1,39 @@
+{
+  "phase": "autonomy",
+  "generated_at": "2025-10-18T08:45:34Z",
+  "baseline_ref": "proof/tower_sync_summary.json",
+  "current_ref": "proof/autonomy/metrics_snapshot.json",
+  "entries": [
+    {
+      "tenant_id": "tenant-west",
+      "channel": "slack",
+      "status": "ok",
+      "delta_success_rate": 0.0,
+      "delta_retry_rate": 0.0,
+      "delta_dlq_depth": 0,
+      "baseline_recorded_at": "2025-10-18T08:45:04Z",
+      "current_recorded_at": "2025-10-18T08:45:04Z"
+    },
+    {
+      "tenant_id": "tenant-apac",
+      "channel": "whatsapp",
+      "status": "ok",
+      "delta_success_rate": 0.0,
+      "delta_retry_rate": 0.0,
+      "delta_dlq_depth": 0,
+      "baseline_recorded_at": "2025-10-18T08:45:04Z",
+      "current_recorded_at": "2025-10-18T08:45:04Z"
+    },
+    {
+      "tenant_id": "tenant-emea",
+      "channel": "email",
+      "status": "ok",
+      "delta_success_rate": 0.0,
+      "delta_retry_rate": 0.0,
+      "delta_dlq_depth": 0,
+      "baseline_recorded_at": "2025-10-18T08:45:04Z",
+      "current_recorded_at": "2025-10-18T08:45:04Z"
+    }
+  ],
+  "sha256": "2ceb8efd76916d029f457489b9f63f87778d19d08bd722130c176d91c1517697"
+}

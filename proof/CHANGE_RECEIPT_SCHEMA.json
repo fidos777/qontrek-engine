@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeReceipt",
+  "type": "object",
+  "required": [
+    "receipt_id",
+    "issued_at",
+    "issuer",
+    "change_type",
+    "summary",
+    "diff_hash"
+  ],
+  "properties": {
+    "receipt_id": {
+      "type": "string",
+      "description": "Monotonic identifier for the change receipt."
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when the change receipt was generated (UTC)."
+    },
+    "issuer": {
+      "type": "string",
+      "description": "Actor or system that issued the receipt."
+    },
+    "change_type": {
+      "type": "string",
+      "enum": ["policy", "runtime", "transport", "other"]
+    },
+    "summary": {
+      "type": "string",
+      "description": "Human-readable summary of the change."
+    },
+    "diff_hash": {
+      "type": "string",
+      "description": "SHA256 hash of the change diff payload."
+    },
+    "notes": {
+      "type": "string"
+    },
+    "approver": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional metadata block for downstream automation."
+    }
+  },
+  "additionalProperties": false
+}

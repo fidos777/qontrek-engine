@@ -1,0 +1,55 @@
+{
+  "funnel": {
+    "quotes_sent": 42,
+    "faq_opened": 33,
+    "social_proof_clicked": 27,
+    "site_visit_booked": 18,
+    "conversion_rate": 43
+  },
+  "hot_leads": [
+    {
+      "id": "LD-2281",
+      "name": "Damansara Heights Collective",
+      "intent_score": 95,
+      "last_activity": "2025-02-11T03:35:00.000Z",
+      "next_action": "Call immediately · CFO requested numbers",
+      "stage": "Site Visit Scheduled"
+    },
+    {
+      "id": "LD-2287",
+      "name": "Northern Logistics Hub",
+      "intent_score": 92,
+      "last_activity": "2025-02-11T03:05:00.000Z",
+      "next_action": "Send revised ROI pack",
+      "stage": "Proposal Sent"
+    },
+    {
+      "id": "LD-2292",
+      "name": "Putrajaya Civic Centre",
+      "intent_score": 90,
+      "last_activity": "2025-02-11T02:40:00.000Z",
+      "next_action": "Confirm walkthrough for Friday",
+      "stage": "FAQ Opened"
+    }
+  ],
+  "scheduled_nudges": [
+    {
+      "time": "2025-02-11T04:00:00.000Z",
+      "lead_name": "Damansara Heights Collective",
+      "nudge_type": "WhatsApp · FAQ follow-up",
+      "status": "scheduled"
+    },
+    {
+      "time": "2025-02-11T05:15:00.000Z",
+      "lead_name": "Northern Logistics Hub",
+      "nudge_type": "Email · Social proof",
+      "status": "scheduled"
+    },
+    {
+      "time": "2025-02-11T06:00:00.000Z",
+      "lead_name": "Putrajaya Civic Centre",
+      "nudge_type": "WhatsApp · Site visit reminder",
+      "status": "scheduled"
+    }
+  ]
+}

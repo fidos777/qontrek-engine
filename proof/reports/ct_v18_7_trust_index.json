@@ -1,0 +1,12 @@
+{
+  "version": "v18.7",
+  "gate": "G18.7",
+  "title": "Trust Index Certified",
+  "metric": {
+    "trust_index": 100.0,
+    "formula": "100 * verified_ok / (verified_ok + verified_mismatch + verified_missing_sha)",
+    "source": "proof/cloud_sync_verify.json"
+  },
+  "status": "certified",
+  "timestamp_utc": "2025-10-19T03:29:48Z"
+}

@@ -1,0 +1,73 @@
+{
+  "phase": "tower_sync",
+  "generated_at": "2025-10-18T09:20:35Z",
+  "kpis": {
+    "ack_rate_24h": 1.0,
+    "ack_rate_24h_slack": 1.0,
+    "ack_rate_24h_wa": 1.0,
+    "ack_rate_24h_email": 1.0,
+    "alert_action_latency_ms_p50": 1132,
+    "alert_action_latency_ms_p95": 1860,
+    "latency_p95_ms_slack": 1808,
+    "latency_p95_ms_wa": 1952,
+    "latency_p95_ms_email": 1918,
+    "dlq_depth": 1,
+    "dlq_age_max_h": 0,
+    "dlq_replayed_24h": 1,
+    "replay_success_rate": 0.966,
+    "replay_batch_max": 1733,
+    "replay_time_ms_p95": 166964,
+    "ntp_offset_ms": -82,
+    "policy_diff_class": "cosmetic",
+    "last_change_receipt_id": "CR-2025-10-18-001",
+    "autotune_guard_active": true
+  },
+  "by_tenant_channel": [
+    {
+      "tenant_id": "tenant-west",
+      "channel": "slack",
+      "success_rate": 1.0,
+      "retry_rate": 0.0,
+      "dlq_depth": 0,
+      "jitter_ms_avg": 5000,
+      "recorded_at": "2025-10-18T08:45:04Z"
+    },
+    {
+      "tenant_id": "tenant-apac",
+      "channel": "whatsapp",
+      "success_rate": 1.0,
+      "retry_rate": 0.0,
+      "dlq_depth": 0,
+      "jitter_ms_avg": 5000,
+      "recorded_at": "2025-10-18T08:45:04Z"
+    },
+    {
+      "tenant_id": "tenant-emea",
+      "channel": "email",
+      "success_rate": 1.0,
+      "retry_rate": 0.0,
+      "dlq_depth": 1,
+      "jitter_ms_avg": 5000,
+      "recorded_at": "2025-10-18T08:45:04Z"
+    }
+  ],
+  "channels": {
+    "slack": {
+      "ack_rate": 1.0,
+      "latency_p95_ms": 1808
+    },
+    "whatsapp": {
+      "ack_rate": 1.0,
+      "latency_p95_ms": 1952
+    },
+    "email": {
+      "ack_rate": 1.0,
+      "latency_p95_ms": 1918
+    }
+  },
+  "latency_source": "synthetic",
+  "sha256": "1dd222100e510126af05810017860998176a9d6480bef23424290db9ca31a054",
+  "cloud_parity_ok": false,
+  "cloud_parity_checked_at": "2025-10-19T01:56:27Z",
+  "cloud_checked_at": "2025-10-19T02:14:44Z"
+}

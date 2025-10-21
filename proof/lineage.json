@@ -1,0 +1,4 @@
+[
+  { "gate":"G19.1","phase":"ui_update","proof":"proof/ui_build_v19_1.json","parent_proof":null },
+  { "gate":"G19.1","phase":"certify","proof":"proof/v19_1_frontend_certification.json","parent_proof":"proof/ui_build_v19_1.json","merkle":{"root":null}}
+]

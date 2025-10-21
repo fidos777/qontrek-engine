@@ -1,0 +1,13 @@
+{
+  "version": "v18.8",
+  "gate": "G18.8",
+  "title": "CFO Lens Parity Uptime",
+  "mission": "Maintain >99% parity stability over 24h interval.",
+  "metric": {
+    "trust_index": 100.0,
+    "timestamp_utc": "2025-10-19T03:29:48Z",
+    "tenant_id": "fb7f7b40-ffb4-4c69-8693-4317c9b166a8"
+  },
+  "status": "recorded",
+  "source": "public.proofs_parity_log"
+}

@@ -1,0 +1,63 @@
+{
+  "summary": {
+    "pending_80_count": 6,
+    "pending_80_value": 201600.0,
+    "pending_20_count": 4,
+    "pending_20_value": 31200.0,
+    "pending_handover_count": 3,
+    "pending_handover_value": 24600.0,
+    "total_recoverable": 257400.0
+  },
+  "critical_leads": [
+    {
+      "id": "FIN-1180",
+      "name": "Aurora Residences",
+      "stage": "PENDING_80",
+      "amount": 41600.0,
+      "days_overdue": 19,
+      "last_contact": "8d ago",
+      "next_action": "Personal call · CFO escalation"
+    },
+    {
+      "id": "FIN-1186",
+      "name": "EcoFab Manufacturing",
+      "stage": "PENDING_20",
+      "amount": 12200.0,
+      "days_overdue": 23,
+      "last_contact": "11d ago",
+      "next_action": "Legal reminder · Draft LOD"
+    }
+  ],
+  "active_reminders": [
+    {
+      "id": "FIN-1191",
+      "name": "Vista Hotels Bhd",
+      "stage": "PENDING_20",
+      "amount": 9600.0,
+      "days_overdue": 9,
+      "next_action": "Day 9 SMS reminder queued"
+    },
+    {
+      "id": "FIN-1194",
+      "name": "Seri Impian Residence",
+      "stage": "PENDING_HANDOVER",
+      "amount": 6600.0,
+      "days_overdue": 6,
+      "next_action": "Site handover scheduling"
+    }
+  ],
+  "recent_success": [
+    {
+      "name": "Golden Bay Logistics",
+      "stage": "PENDING_80",
+      "amount": 43200.0,
+      "days_to_pay": 3
+    },
+    {
+      "name": "Majestic Realty",
+      "stage": "PENDING_HANDOVER",
+      "amount": 7600.0,
+      "days_to_pay": 5
+    }
+  ]
+}

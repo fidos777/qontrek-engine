@@ -1,0 +1,16 @@
+{
+  "phase": "runtime",
+  "generated_at": "2025-10-18T06:25:13Z",
+  "sha256": "df523854c9937c770a9908d6eeaac33b76a2937fd91071a66682c474b9fae598",
+  "checks": {
+    "advisory_lock_guard": {
+      "query": "select pg_try_advisory_lock($1)",
+      "result": "true"
+    },
+    "dlq_replay": {
+      "processed": 4,
+      "remaining": 0
+    },
+    "jitter_window_ms": 5000
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "version": "v18.1",
+  "phase": "reflex_autonomy_loop",
+  "gate": "G16",
+  "generated_at": "2025-10-18T09:21:59Z",
+  "bundle": {
+    "path": "proof/bundles/v17_tower_sync_bundle.json",
+    "sha256": "7588841ed204fba0637088b753d1f972a96cbcb0270865fd515a6cba56a499b8",
+    "file_sha256": "7f773df677ab83f45b3b7ad36441586f3253f8dd28195d884a131548f3a5c5c1",
+    "proofs": [
+      {
+        "name": "proof/tower_dashboard_refresh.json",
+        "sha256": "43d99457d4c536e64ce6a2c4a0e943a6d3b33944d83383e3300a534bcc9cbc18",
+        "generated_at": "2025-10-18T06:41:06Z",
+        "phase": "tower_sync"
+      },
+      {
+        "name": "proof/tower_sync_ingest.json",
+        "sha256": "58a2b1ec23f60bdf8ea18370c61e52efbac4ced2e582de6b700f4c6a8cbbc69e",
+        "generated_at": "2025-10-18T08:45:04Z",
+        "phase": "tower_sync"
+      },
+      {
+        "name": "proof/tower_sync_summary.json",
+        "sha256": "6bced682c21f18584b70058913d6bad2209e9505a2836b5a56dd5ff0a6bf6404",
+        "generated_at": "2025-10-18T09:20:35Z",
+        "phase": "tower_sync"
+      },
+      {
+        "name": "proof/tower_sync_validation.json",
+        "sha256": "04b8aff6f4781c3e51116b82158c49c19fec30fccefac2e63cc135380fe3aa38",
+        "generated_at": "2025-10-18T09:20:35Z",
+        "phase": "tower_sync"
+      }
+    ]
+  },
+  "summary": {
+    "path": "proof/tower_sync_summary.json",
+    "sha256": "374e71cbd60c6aa4557ef6ac252adee0403c5775cce71c7548b4672b5dca9214",
+    "kpis": {
+      "ack_rate_24h": 1.0,
+      "ack_rate_24h_slack": 1.0,
+      "ack_rate_24h_wa": 1.0,
+      "ack_rate_24h_email": 1.0,
+      "alert_action_latency_ms_p50": 1132,
+      "alert_action_latency_ms_p95": 1860,
+      "latency_p95_ms_slack": 1808,
+      "latency_p95_ms_wa": 1952,
+      "latency_p95_ms_email": 1918,
+      "dlq_depth": 1,
+      "dlq_age_max_h": 0,
+      "dlq_replayed_24h": 1,
+      "replay_success_rate": 0.966,
+      "replay_batch_max": 1733,
+      "replay_time_ms_p95": 166964,
+      "ntp_offset_ms": -82,
+      "policy_diff_class": "cosmetic",
+      "last_change_receipt_id": "CR-2025-10-18-001",
+      "autotune_guard_active": true
+    }
+  },
+  "meta_hash": "8a64cc09ced756fcdf2377643831a000926b3e13c3ff45f0a6247edb99c43e58"
+}

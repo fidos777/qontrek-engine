@@ -1,0 +1,16 @@
+{
+  "phase": "autonomy",
+  "generated_at": "2025-10-18T08:45:34Z",
+  "inputs": {
+    "score": "proof/autonomy/drift_score.json",
+    "report": "proof/autonomy/drift_report.json",
+    "policy_diff": "proof/policy_diff.json"
+  },
+  "decision": {
+    "severity": 0.0,
+    "classification": "normal",
+    "policy_diff": "cosmetic",
+    "action": "noop",
+    "notes": "No corrective action required."
+  }
+}

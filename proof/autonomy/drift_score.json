@@ -1,0 +1,9 @@
+{
+  "phase": "autonomy",
+  "generated_at": "2025-10-18T08:45:34Z",
+  "severity": 0.0,
+  "classification": "normal",
+  "report_ref": "proof/autonomy/drift_report.json",
+  "entries": 3,
+  "sha256": "f898ba0890f5e2406d90c1f917eba7864b8c6d4539fcf0b3b6d4d7eca59a9ade"
+}

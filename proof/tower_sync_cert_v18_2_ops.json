@@ -1,0 +1,38 @@
+{
+  "version": "v17.1",
+  "phase": "tower_certify",
+  "gate": "G13",
+  "generated_at": "2025-10-19T01:02:44Z",
+  "bundle": {
+    "path": "proof/bundles/v18_2_ops_bundle.json",
+    "sha256": "2d760a575bb064fa935fcb0b360fe99557833a97258b38c470dfdb60d23e6579",
+    "file_sha256": "629f4c42d44603f3267f7c7dc4683893134380b22c9ee79da8ce6c336a42329c",
+    "proofs": []
+  },
+  "summary": {
+    "path": "proof/tower_sync_summary.json",
+    "sha256": "07ac8a7ca53388c2d51acace568ac5ac4715dca66df12969e10939f11eb07445",
+    "kpis": {
+      "ack_rate_24h": 1.0,
+      "ack_rate_24h_slack": 1.0,
+      "ack_rate_24h_wa": 1.0,
+      "ack_rate_24h_email": 1.0,
+      "alert_action_latency_ms_p50": 1132,
+      "alert_action_latency_ms_p95": 1860,
+      "latency_p95_ms_slack": 1808,
+      "latency_p95_ms_wa": 1952,
+      "latency_p95_ms_email": 1918,
+      "dlq_depth": 1,
+      "dlq_age_max_h": 0,
+      "dlq_replayed_24h": 1,
+      "replay_success_rate": 0.966,
+      "replay_batch_max": 1733,
+      "replay_time_ms_p95": 166964,
+      "ntp_offset_ms": -82,
+      "policy_diff_class": "cosmetic",
+      "last_change_receipt_id": "CR-2025-10-18-001",
+      "autotune_guard_active": true
+    }
+  },
+  "meta_hash": "b773204890f14fc6effa78f869e3466d8e81fa23b1c3d50d45fe2468b92d1bd3"
+}

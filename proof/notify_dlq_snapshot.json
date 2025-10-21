@@ -1,0 +1,16 @@
+{
+  "phase": "runtime",
+  "generated_at": "2025-10-18T06:25:13Z",
+  "sha256": "fbbeeb79ae75063ad86324f8cee3fba53fca814b62a586541410669459ba2258",
+  "entries": [
+    {
+      "dlq_id": "dlq-evt-email-001",
+      "event_id": "evt-email-hard",
+      "channel": "email",
+      "retry_count": 3,
+      "last_error": "SMTP 550 mailbox unavailable",
+      "next_attempt_at": "2025-10-18T06:22:45Z",
+      "payload_checksum": "3b4e8fc70925d5a0dc6c7e05d5f08b265601ea934dbb31c8b6d8f87e95b18b55"
+    }
+  ]
+}

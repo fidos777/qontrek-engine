@@ -1,0 +1,47 @@
+{
+  "version": "v17.0-alpha",
+  "phase": "meta-cert",
+  "gate": "G11",
+  "generated_at": "2025-10-18T06:25:34Z",
+  "inputs": {
+    "bundle": {
+      "path": "proof/bundles/v16_5_runtime_bundle.json",
+      "sha256": "6d1e191e0a887f650d4dbcafc4f76c5f9f564fe9615fe873cf8bfeba9157e497",
+      "created_at": "2025-10-18T06:25:19Z"
+    },
+    "pre_cert": {
+      "path": "proof/pre_cert_v16_6.json",
+      "sha256": "1b606fd2e9a33f6f4f0304a066cee7267c197f2f3783436de5706c2ba0439e1e",
+      "seal": "001bf80a1d9b9b16fea76d4a811c3103d6e528a68ffffa9a20633c2c987bc704",
+      "generated_at": "2025-10-18T06:25:27Z"
+    }
+  },
+  "lineage": {
+    "proofs": [
+      {
+        "name": "proof/notify_dlq_snapshot.json",
+        "sha256": "8a9d16c5c584632b9beb146935bd914c87d693914cadd39608d0601d93de6784",
+        "phase": "runtime",
+        "generated_at": "2025-10-18T06:25:13Z"
+      },
+      {
+        "name": "proof/notify_events.json",
+        "sha256": "f3ad178ea9288e549bb49cbd0e7594629d35c1faa655e99e55751eb71f09cb20",
+        "phase": "runtime",
+        "generated_at": "2025-10-18T06:25:13Z"
+      },
+      {
+        "name": "proof/scheduler_hardening.json",
+        "sha256": "5deddc7657da876b9383d78efd6db27e99d62528f1f6a5e61f10e26194bff3a2",
+        "phase": "runtime",
+        "generated_at": "2025-10-18T06:25:13Z"
+      }
+    ],
+    "phases": [
+      "runtime"
+    ],
+    "timestamp_window_seconds": 0,
+    "within_5m": true
+  },
+  "meta_hash": "4f37fce1e6f0ea6c8ec1e89bef096753836c5f2fc38a8879de69dff9b26161ca"
+}

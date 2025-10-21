@@ -1,0 +1,14 @@
+rate_limits:
+  slack_per_min: 30
+  whatsapp_per_min: 20
+  email_per_min: 120
+quiet_hours:
+  start_local: "22:00"
+  end_local: "07:00"
+retry_policy:
+  max_attempts: 3
+  backoff_strategy: exponential
+coalesce_window_min: 15
+channels:
+  slack_webhook_env: SLACK_WEBHOOK
+  whatsapp_token_env: WA_API_KEY
