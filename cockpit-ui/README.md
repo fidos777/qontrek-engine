@@ -129,6 +129,18 @@ if (resp?.rel && resp?.source) {
 
 This logs proof load events to the console (and eventually to `proof/logs/trace.jsonl` in production).
 
+**Expected telemetry output:**
+
+```json
+{"event":"proof_load","rel":"g2_dashboard_v19.1.json","source":"real","timestamp":"2025-10-21T08:30:00.000Z"}
+```
+
+Or with fallback source:
+
+```json
+{"event":"proof_load","rel":"g2_dashboard_v19.1.json","source":"fallback","timestamp":"2025-10-21T08:30:00.000Z"}
+```
+
 ---
 
 ## 🎨 Design System

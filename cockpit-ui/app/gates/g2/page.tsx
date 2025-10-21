@@ -11,7 +11,9 @@ async function fetchGate(url: string): Promise<G2Response> {
     if (!res.ok) throw new Error("not ok");
     return await res.json();
   } catch {
-    // DEV-ONLY fallback to fixture (will not be bundled in production)
+    // DEV-ONLY fallback to fixture
+    // NOTE: This branch is dead code in production builds.
+    // Next.js will tree-shake this entire block when NODE_ENV=production
     if (process.env.NODE_ENV !== "production") {
       const mod = await import("@/tests/fixtures/g2.summary.json");
       return mod.default as G2Response;
@@ -92,11 +94,11 @@ export default function Gate2Dashboard() {
               <table className="w-full text-sm">
                 <thead className="text-left">
                   <tr>
-                    <th className="py-2 pr-4">Name</th>
-                    <th className="py-2 pr-4">Stage</th>
-                    <th className="py-2 pr-4">Amount</th>
-                    <th className="py-2 pr-4">Overdue</th>
-                    <th className="py-2">Last Reminder</th>
+                    <th scope="col" className="py-2 pr-4">Name</th>
+                    <th scope="col" className="py-2 pr-4">Stage</th>
+                    <th scope="col" className="py-2 pr-4">Amount</th>
+                    <th scope="col" className="py-2 pr-4">Overdue</th>
+                    <th scope="col" className="py-2">Last Reminder</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -122,7 +124,7 @@ export default function Gate2Dashboard() {
             {data.active_reminders.length === 0 ? (
               <p className="text-sm text-gray-500">No active reminders scheduled.</p>
             ) : (
-              <ul className="space-y-2">
+              <ul aria-label="Active reminders" className="space-y-2">
                 {data.active_reminders.map((r: any, i: number) => (
                   <li key={i} className="flex items-center justify-between border rounded px-3 py-2">
                     <div>
@@ -141,7 +143,7 @@ export default function Gate2Dashboard() {
             {data.recent_success.length === 0 ? (
               <p className="text-sm text-gray-500">No recent payments.</p>
             ) : (
-              <ul className="space-y-2">
+              <ul aria-label="Recent payments" className="space-y-2">
                 {data.recent_success.map((r: any, i: number) => (
                   <li key={i} className="flex items-center justify-between border rounded px-3 py-2">
                     <div>
