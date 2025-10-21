@@ -1,4 +1,7 @@
-// lib/telemetry.ts (USE THIS - Don't modify)
+// lib/telemetry.ts
+// ⚠️ FROZEN - DO NOT MODIFY
+// This file contains the telemetry utility for proof load tracking.
+// Changes must be approved by Commander (GPT-5).
 
 export function logProofLoad(
   rel: string,
