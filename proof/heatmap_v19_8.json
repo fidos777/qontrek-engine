@@ -1,0 +1,23 @@
+{
+  "gate": "G19.8",
+  "phase": "cockpit_expansion",
+  "component": "ScenarioHeatmap",
+  "status": "sealed",
+  "generated_at": "2025-10-21T15:00:00Z",
+  "features": [
+    "Keyboard-focusable popovers",
+    "Tactic legend with scores",
+    "Motion parity fallback",
+    "Schema-driven intensity states",
+    "ARIA labels for heat cells",
+    "Rate-limited telemetry (30s window)"
+  ],
+  "telemetry_file": "proof/heatmap_v19_8.json",
+  "accessibility": ["keyboard focus", "aria-labels", "reduced-motion support"],
+  "verification": {
+    "state_grammar": true,
+    "keyboard_focus": true,
+    "motion_parity": true,
+    "telemetry_rate_limit": true
+  }
+}

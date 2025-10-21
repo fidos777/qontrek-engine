@@ -1,0 +1,23 @@
+{
+  "gate": "G19.8",
+  "phase": "cockpit_expansion",
+  "component": "MobileHotCards",
+  "status": "sealed",
+  "generated_at": "2025-10-21T15:00:00Z",
+  "features": [
+    "≥ 44px touch targets",
+    "Default WhatsApp CTA",
+    "aria-label on all CTAs",
+    "Motion fade with parity fallback",
+    "Schema-driven score badges",
+    "Rate-limited telemetry (30s window)"
+  ],
+  "telemetry_file": "proof/mobile_cards_v19_8.json",
+  "accessibility": ["touch targets", "aria-labels", "reduced-motion support"],
+  "verification": {
+    "state_grammar": true,
+    "touch_targets": true,
+    "aria_labels": true,
+    "telemetry_rate_limit": true
+  }
+}

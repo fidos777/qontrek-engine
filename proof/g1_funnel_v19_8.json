@@ -1,0 +1,23 @@
+{
+  "gate": "G19.8",
+  "phase": "cockpit_expansion",
+  "component": "GateFunnel",
+  "status": "sealed",
+  "generated_at": "2025-10-21T15:00:00Z",
+  "features": [
+    "Click-to-filter list functionality",
+    "Ctrl+1..4 step shortcuts",
+    "Schema badge in header",
+    "Recharts bar chart integration",
+    "Reduced-motion fallback",
+    "Rate-limited telemetry (30s window)"
+  ],
+  "telemetry_file": "proof/g1_funnel_v19_8.json",
+  "accessibility": ["keyboard shortcuts", "clickable filters", "reduced-motion support"],
+  "verification": {
+    "state_grammar": true,
+    "keyboard_nav": true,
+    "motion_parity": true,
+    "telemetry_rate_limit": true
+  }
+}

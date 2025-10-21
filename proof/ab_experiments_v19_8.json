@@ -1,0 +1,22 @@
+{
+  "gate": "G19.8",
+  "phase": "cockpit_expansion",
+  "component": "ABExperiments",
+  "status": "sealed",
+  "generated_at": "2025-10-21T15:00:00Z",
+  "features": [
+    "Winner chip with confidence score",
+    "CI range display",
+    "View Design Doc link",
+    "EmptyState component",
+    "Schema-driven status badges",
+    "Rate-limited telemetry (30s window)"
+  ],
+  "telemetry_file": "proof/ab_experiments_v19_8.json",
+  "accessibility": ["semantic links", "status badges", "empty states"],
+  "verification": {
+    "state_grammar": true,
+    "empty_state": true,
+    "telemetry_rate_limit": true
+  }
+}

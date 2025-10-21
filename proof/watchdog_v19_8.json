@@ -1,0 +1,23 @@
+{
+  "gate": "G19.8",
+  "phase": "cockpit_expansion",
+  "component": "TimelineWatchdog",
+  "status": "sealed",
+  "generated_at": "2025-10-21T15:00:00Z",
+  "features": [
+    "Escalation drawer (D3/D7/D21 rules)",
+    "aria-live confirmation messages",
+    "focusReturn on drawer close",
+    "Rate-limited telemetry (30s window)",
+    "Schema-driven severity states",
+    "Keyboard Esc to close drawer"
+  ],
+  "telemetry_file": "proof/watchdog_v19_8.json",
+  "accessibility": ["aria-live", "focus management", "keyboard navigation"],
+  "verification": {
+    "state_grammar": true,
+    "focus_return": true,
+    "telemetry_rate_limit": true,
+    "aria_live": true
+  }
+}

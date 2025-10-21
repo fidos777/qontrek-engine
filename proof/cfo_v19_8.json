@@ -1,0 +1,23 @@
+{
+  "gate": "G19.8",
+  "phase": "cockpit_expansion",
+  "component": "CfoTabs",
+  "status": "sealed",
+  "generated_at": "2025-10-21T15:00:00Z",
+  "features": [
+    "TowerEval strip (Eval ≥ 0.8, Parity ≤ 1%)",
+    "Ctrl+1..5 tab shortcuts",
+    "useSoftEnter() reduced-motion parity",
+    "Schema-driven state badges",
+    "EmptyState component integration",
+    "Rate-limited telemetry (30s window)"
+  ],
+  "telemetry_file": "proof/cfo_v19_8.json",
+  "accessibility": ["aria-labels", "keyboard shortcuts", "reduced-motion support"],
+  "verification": {
+    "state_grammar": true,
+    "motion_parity": true,
+    "keyboard_nav": true,
+    "telemetry_rate_limit": true
+  }
+}

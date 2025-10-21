@@ -256,6 +256,7 @@ For governance-level questions, consult the system architect (GPT-5).
 - ✅ Gate 2: Payment Recovery Dashboard (G19.2)
 - ✅ CFO Lens: 5-Tab Financial Dashboard (G19.3)
 - ✅ Document Tracker: Proof Lineage Viewer (G19.6)
+- ✅ Cockpit Expansion Delta (G19.8)
 
 **Pending:**
 - ⏳ Tower Trend Integration
@@ -354,6 +355,164 @@ The Document Tracker dashboard provides a unified view of proof lineage and seal
 
 ---
 
+## 🏭 Gate G19.8 – Cockpit Expansion Delta
+
+Enhancement pack completing the Cockpit ecosystem with unified grammar, Tower integration, and accessibility parity.
+
+### Features
+
+**Core Utilities:**
+- `lib/stateGrammar.ts` - Central grammar for system states (ok/warn/fail/pending/sealed/reflex)
+- `lib/metrics.schema.ts` - KPI schema + resolveSeverity + mapKpiToState
+- `lib/motion.ts` - useSoftEnter() + reduced-motion parity hooks
+- `lib/keys.ts` - Keyboard utilities (Ctrl+N switch, Esc close, focusReturn)
+- `lib/types.ts` - Shared TypeScript interfaces for all components
+
+**Tower Integration:**
+- `app/tower/seal-review/route.ts` - Secure, idempotent POST route for sealing proofs
+- `proof/lineage.json` - Stable lineage anchor for Tower map integration
+- Deterministic seal_hash computation
+- CSRF token guard & role validation
+- In-memory single-flight guard (prevents double-click race)
+
+**Accessibility Enhancements:**
+- Schema-driven tiles (all color & icon states from stateGrammar.ts)
+- Reduced motion support (gradient + ring-1 fallback)
+- Keyboard parity (Ctrl+N shortcuts, Esc closes drawers/modals)
+- ARIA standards (aria-label, aria-live="polite", role=list/listitem)
+- Focus return patterns (restoreFocus to trigger element)
+- AA contrast compliance (pending state ring added)
+
+**Telemetry:**
+- Rate-limited proof load events (once per 30s window)
+- Prevents telemetry spam in StrictMode
+- Logs to console with Tower-compatible format
+
+**Production Safety:**
+- All fixtures wrapped in `process.env.NODE_ENV !== "production"` guards
+- Mock guards ensure no test data in production bundles
+- SSR-safe hooks (check for window before media query access)
+
+### Component Updates
+
+**CFO Tabs:**
+- TowerEval strip (Eval ≥ 0.8, Parity ≤ 1%)
+- Ctrl+1..5 tab shortcuts
+- Schema-driven state badges
+- EmptyState component integration
+
+**Timeline Watchdog:**
+- Escalation drawer (D3/D7/D21 rules)
+- aria-live confirmation messages
+- Focus return on drawer close
+
+**Gate Funnel:**
+- Click-to-filter list functionality
+- Ctrl+1..4 step shortcuts
+- Recharts bar chart integration
+
+**Scenario Heatmap:**
+- Keyboard-focusable popovers
+- Tactic legend with scores
+- Motion parity fallback
+
+**Lead Timeline:**
+- role=list/listitem semantic HTML
+- Intent sparkline visualization
+- State badge via grammar
+
+**Mobile Hot Cards:**
+- ≥ 44px touch targets
+- Default WhatsApp CTA
+- aria-label on all CTAs
+
+**A/B Experiments:**
+- Winner chip + CI range
+- "View Design Doc" link
+- EmptyState component
+
+### Technical Implementation
+
+**State Grammar Pattern:**
+```typescript
+import { getStateConfig, getStateBadgeClasses } from "@/lib/stateGrammar";
+
+const state = mapKpiToState("outstanding", value);
+const config = getStateConfig(state);
+const classes = getStateBadgeClasses(state); // "bg-green-100 text-green-800 border-green-500"
+```
+
+**Reduced Motion Hook:**
+```typescript
+import { useSoftEnter, useReducedMotion } from "@/lib/motion";
+
+const softEnterClasses = useSoftEnter(); // "animate-fade-in" or "ring-1 ring-gray-200"
+const reducedMotion = useReducedMotion(); // boolean
+```
+
+**Keyboard Navigation:**
+```typescript
+import { useCtrlNumberSwitch, useEscapeClose, useFocusReturn } from "@/lib/keys";
+
+useCtrlNumberSwitch(4, (index) => setActiveTab(index)); // Ctrl+1..5
+useEscapeClose(() => setDrawerOpen(false)); // Esc to close
+const { triggerRef, restoreFocus } = useFocusReturn(); // Focus management
+```
+
+**Tower Seal Review:**
+```bash
+POST /tower/seal-review
+Content-Type: application/json
+X-User-Role: admin
+X-CSRF-Token: <token>
+
+{
+  "manifest_path": "proof/ui_build_v19_8.json",
+  "gate": "G19.8",
+  "generated_at": "2025-10-21T15:00:00Z"
+}
+```
+
+Response:
+```json
+{
+  "sealed": true,
+  "duplicate": false,
+  "sealed_at": "2025-10-21T15:00:05Z",
+  "seal_hash": "sha256(manifest_path|gate|generated_at)",
+  "sealed_by": "admin",
+  "parent_hash": null
+}
+```
+
+### Proof Artifacts
+
+All cockpit components now have proof artifacts:
+- `proof/cfo_v19_8.json` - CFO Tabs enhancements
+- `proof/watchdog_v19_8.json` - Timeline Watchdog
+- `proof/g1_funnel_v19_8.json` - Gate Funnel
+- `proof/heatmap_v19_8.json` - Scenario Heatmap
+- `proof/lead_timeline_v19_8.json` - Lead Timeline
+- `proof/mobile_cards_v19_8.json` - Mobile Hot Cards
+- `proof/ab_experiments_v19_8.json` - A/B Experiments
+- `proof/lineage.json` - Lineage anchor for Tower map
+
+### Verification
+
+**TypeScript:** All utilities type-safe with strict mode
+**State Grammar:** Centralized, deterministic state mapping
+**Motion Parity:** Respects prefers-reduced-motion media query
+**Keyboard Nav:** Full Ctrl+N and Esc support
+**Telemetry:** Rate-limited to prevent spam
+**Seal Security:** CSRF + role validation + single-flight guard
+**Production Safety:** All mocks guarded with NODE_ENV checks
+
+**Status:** ✅ Production-Ready (TypeScript + Tests + Proof Integration)
+**Version:** G19.8-Delta
+**Tower Readiness:** G7 Demo-Ready, G8 Trend-Stable
+
+---
+
 ## 🎯 Gate 0 – Lead Qualification (G19.4)
 
 The Gate 0 dashboard helps sales teams manage and qualify inbound leads effectively.
@@ -441,5 +600,5 @@ The CFO Lens provides a comprehensive financial overview with 5 specialized tabs
 ---
 
 **Last Updated:** 2025-10-21
-**Version:** G19.6
-**Status:** Production-ready structure, awaiting backend integration
+**Version:** G19.8-Delta
+**Status:** Production-ready with Tower integration, schema-driven grammar, and full accessibility parity

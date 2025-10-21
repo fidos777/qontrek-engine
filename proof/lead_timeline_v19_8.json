@@ -1,0 +1,23 @@
+{
+  "gate": "G19.8",
+  "phase": "cockpit_expansion",
+  "component": "LeadTimeline",
+  "status": "sealed",
+  "generated_at": "2025-10-21T15:00:00Z",
+  "features": [
+    "role=list/listitem semantic HTML",
+    "Intent sparkline visualization",
+    "State badge via grammar",
+    "Similar cases with similarity scores",
+    "Reduced-motion parity",
+    "Rate-limited telemetry (30s window)"
+  ],
+  "telemetry_file": "proof/lead_timeline_v19_8.json",
+  "accessibility": ["semantic HTML roles", "state badges", "reduced-motion support"],
+  "verification": {
+    "state_grammar": true,
+    "semantic_html": true,
+    "motion_parity": true,
+    "telemetry_rate_limit": true
+  }
+}
