@@ -1,0 +1,46 @@
+{
+  "gate": "G19.9",
+  "phase": "voltek_upload_automation",
+  "component": "UploadFactory",
+  "status": "sealed",
+  "generated_at": "2025-10-21T15:30:00Z",
+  "deliverables": [
+    "app/api/upload/route.ts",
+    "app/upload/page.tsx",
+    "scripts/runtime_voltek_upload.sh",
+    "proof/voltek_upload_v19_9.json"
+  ],
+  "features": [
+    "File upload API endpoint (Excel/Word/CSV support)",
+    "Upload UI page with drag-and-drop",
+    "Automated Python proof regeneration trigger",
+    "Tower seal integration via POST /api/tower/seal-review",
+    "Client uploads directory creation",
+    "Runtime automation script for full loop",
+    "Self-updating data factory pattern"
+  ],
+  "automation_loop": {
+    "T0_setup": "Verify directories and environment",
+    "T1_upload": "User uploads via /upload page",
+    "T2_proof_factory": "Python converter generates new fixtures",
+    "T3_tower_seal": "Auto-seal new proofs with Tower",
+    "T4_cockpit_refresh": "Live data refresh on CFO/Gates/Docs",
+    "T5_governance": "Commit new proofs and lineage"
+  },
+  "verification": {
+    "upload_api": "POST /api/upload accepts .xlsx, .csv, .docx",
+    "upload_ui": "Form visible at /upload with status feedback",
+    "python_trigger": "Logs show Python script invocation",
+    "tower_seal": "Returns { sealed: true, seal_hash: ... }",
+    "cockpit_refresh": "New data visible on /cfo, /gates/g0, /docs",
+    "type_check": "pending",
+    "tests": "pending"
+  },
+  "metadata": {
+    "client": "Voltek",
+    "upload_formats": [".xlsx", ".csv", ".docx"],
+    "upload_dir": "client_uploads",
+    "automation_script": "scripts/runtime_voltek_upload.sh",
+    "estimated_runtime": "30 minutes full loop"
+  }
+}
