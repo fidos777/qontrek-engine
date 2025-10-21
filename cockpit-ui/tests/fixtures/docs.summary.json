@@ -1,0 +1,64 @@
+{
+  "ok": true,
+  "rel": "docs_tracker_v19_6.json",
+  "source": "fallback",
+  "schemaVersion": "1.0.0",
+  "data": {
+    "items": [],
+    "total_proofs": 4,
+    "sealed": 4,
+    "unsealed": 0,
+    "lineage": [
+      {
+        "gate": "G19.2",
+        "phase": "ui_build",
+        "proof": "proof/g2_payment_v19_2.json",
+        "status": "sealed",
+        "timestamp": "2025-10-18T11:30:00Z"
+      },
+      {
+        "gate": "G19.3",
+        "phase": "cfo_lens",
+        "proof": "proof/cfo_v19_3.json",
+        "status": "sealed",
+        "timestamp": "2025-10-19T10:10:00Z"
+      },
+      {
+        "gate": "G19.4",
+        "phase": "lead_qualification",
+        "proof": "proof/g0_leads_v19_4.json",
+        "status": "sealed",
+        "timestamp": "2025-10-20T14:20:00Z"
+      },
+      {
+        "gate": "G19.5",
+        "phase": "decision_engine",
+        "proof": "proof/g1_decision_v19_5.json",
+        "status": "sealed",
+        "timestamp": "2025-10-21T13:19:00Z"
+      }
+    ],
+    "integrity": {
+      "valid": 4,
+      "invalid": 0
+    },
+    "timeline": [
+      {
+        "timestamp": "2025-10-18T11:30:00Z",
+        "event": "g2_payment_v19_2.json"
+      },
+      {
+        "timestamp": "2025-10-19T10:10:00Z",
+        "event": "cfo_v19_3.json"
+      },
+      {
+        "timestamp": "2025-10-20T14:20:00Z",
+        "event": "g0_leads_v19_4.json"
+      },
+      {
+        "timestamp": "2025-10-21T13:19:00Z",
+        "event": "g1_decision_v19_5.json"
+      }
+    ]
+  }
+}

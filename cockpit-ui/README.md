@@ -255,9 +255,10 @@ For governance-level questions, consult the system architect (GPT-5).
 - ✅ Gate 1: Decision Engine (G19.5)
 - ✅ Gate 2: Payment Recovery Dashboard (G19.2)
 - ✅ CFO Lens: 5-Tab Financial Dashboard (G19.3)
+- ✅ Document Tracker: Proof Lineage Viewer (G19.6)
 
 **Pending:**
-- ⏳ Document Tracker
+- ⏳ Tower Trend Integration
 
 ---
 
@@ -302,6 +303,54 @@ The Gate 1 dashboard provides comprehensive analytics for automated decision-mak
 ```json
 {"event":"proof_load","rel":"g1_decision_v19_5.json","source":"real","timestamp":"2025-10-21T13:19:45.000Z"}
 ```
+
+---
+
+## 📁 Gate G19.6 – Document Tracker
+
+The Document Tracker dashboard provides a unified view of proof lineage and seal integrity across all operational gates.
+
+### Features
+
+**Route:** `/docs`
+
+**4 Analysis Tabs:**
+1. **Overview** - Summary of total proofs, sealed/unsealed counts, and recent proof activity
+2. **Lineage Map** - Hierarchical view of gates and their associated proofs (Gate → Phase → Proof)
+3. **Integrity Check** - SHA comparison results and seal verification status with visual indicators
+4. **Timeline** - Proof generation history with timestamps and event tracking
+
+**Summary KPIs:**
+- Total Proofs
+- Sealed Count
+- Unsealed Count
+- Integrity Status (Valid/Invalid)
+
+**Technical Implementation:**
+- Tab-based navigation with aria-labels for accessibility
+- Color-coded status badges (Green for sealed, Yellow for unsealed)
+- Hierarchical proof lineage display with border styling
+- Integrity verification table with checkmark icons
+- Timeline event list with chart placeholder for Recharts
+- Same dev-only fixture fallback pattern as other gates
+
+**Endpoint:** `/api/docs/summary` → Returns `DocsResponse` (BaseEnvelope<DocsPayload>)
+
+**Tests:**
+- Mapping contract tests (envelope + extended properties validation)
+- Fixture contract tests (type validation + lineage structure)
+- 6/6 tests passing
+
+**Expected Telemetry:**
+```json
+{"event":"proof_load","rel":"docs_tracker_v19_6.json","source":"real","timestamp":"2025-10-21T14:30:00.000Z"}
+```
+
+**Tracked Gates:**
+- G19.2: Payment Recovery (sealed)
+- G19.3: CFO Lens (sealed)
+- G19.4: Lead Qualification (sealed)
+- G19.5: Decision Engine (sealed)
 
 ---
 
@@ -392,5 +441,5 @@ The CFO Lens provides a comprehensive financial overview with 5 specialized tabs
 ---
 
 **Last Updated:** 2025-10-21
-**Version:** G19.5
+**Version:** G19.6
 **Status:** Production-ready structure, awaiting backend integration
