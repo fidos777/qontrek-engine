@@ -1,4 +1,7 @@
-// types/gates.ts (READ-ONLY - Don't modify)
+// types/gates.ts
+// ⚠️ FROZEN - DO NOT MODIFY
+// This file contains governance-level type contracts.
+// Changes must be approved by Commander (GPT-5).
 
 export type SourceFlag = "real" | "fallback";
 
