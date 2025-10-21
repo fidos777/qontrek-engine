@@ -1,9 +1,6 @@
 {
   "parent_proof": "proof/ui_build_v19_1.json",
   "parent_hash": null,
-  "merkle": {
-    "root": null,
-    "leaves": []
-  },
-  "notes": "Populated by Tower during seal review. This lineage anchor links G19.8 Delta to the initial UI build proof, establishing a verifiable chain of custody for all cockpit enhancements."
+  "merkle": { "root": null, "leaves": [] },
+  "notes": "Populated by Tower during seal review."
 }

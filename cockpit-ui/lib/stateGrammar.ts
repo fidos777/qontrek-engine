@@ -118,3 +118,15 @@ export function isTerminalState(state: SystemState): boolean {
 export function requiresAction(state: SystemState): boolean {
   return state === "warn" || state === "fail" || state === "pending";
 }
+
+/**
+ * Telemetry throttle to prevent log spam
+ * Logs once per minute per file
+ */
+const logCache = new Map<string, number>();
+export function logProofLoad(file: string, src: string) {
+  const now = Date.now();
+  if ((now - (logCache.get(file) || 0)) < 60000) return;
+  logCache.set(file, now);
+  console.log(`📈 logProofLoad(${file}, ${src})`);
+}
