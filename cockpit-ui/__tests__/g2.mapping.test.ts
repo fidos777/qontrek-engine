@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import type { G2Response } from "@/types/gates";
 import sample from "@/tests/fixtures/g2.summary.json";
 
