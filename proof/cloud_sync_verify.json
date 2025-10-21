@@ -1,0 +1,43 @@
+{
+  "phase": "cloud_sync_verify",
+  "generated_at": "2025-10-19T03:24:11+00:00",
+  "passed": true,
+  "counters": {
+    "verified_ok": 4,
+    "verified_mismatch": 0,
+    "verified_missing_sha": 0,
+    "not_found": 0,
+    "errors": 0
+  },
+  "results": [
+    {
+      "filename": "tower_sync_summary.json",
+      "status": "ok",
+      "local_sha": "2703c607df842f30a95f33de17788c00c6c085b07ff364a046e44c6317b654b6",
+      "cloud_sha": "2703c607df842f30a95f33de17788c00c6c085b07ff364a046e44c6317b654b6",
+      "issue": null
+    },
+    {
+      "filename": "notify_events.json",
+      "status": "ok",
+      "local_sha": "3c884b9fde5c3dfbbf8d5fb9ce8bc1e75d60dd37c4c545a2457b2ac20fc5dd3a",
+      "cloud_sha": "3c884b9fde5c3dfbbf8d5fb9ce8bc1e75d60dd37c4c545a2457b2ac20fc5dd3a",
+      "issue": null
+    },
+    {
+      "filename": "tower_sync_cert_v18_3.json",
+      "status": "ok",
+      "local_sha": "fea07e16d63d7dbf8cdb3ba2a128c474363fc73e034bbd5f15efe8acaf7d2ab8",
+      "cloud_sha": "fea07e16d63d7dbf8cdb3ba2a128c474363fc73e034bbd5f15efe8acaf7d2ab8",
+      "issue": null
+    },
+    {
+      "filename": "tower_sync_cert_v18_2_ops.json",
+      "status": "ok",
+      "local_sha": "9bede0b12498c8d4c65443e7e426ac417ede6cf09ceff732a12782eb1d0d043d",
+      "cloud_sha": "9bede0b12498c8d4c65443e7e426ac417ede6cf09ceff732a12782eb1d0d043d",
+      "issue": null
+    }
+  ],
+  "trust_index": 100.0
+}

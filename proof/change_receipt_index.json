@@ -1,0 +1,13 @@
+{
+  "last_receipt_id": "CR-2025-10-18-001",
+  "autotune_guard_active": true,
+  "receipts": [
+    {
+      "receipt_id": "CR-2025-10-18-001",
+      "issued_at": "2025-10-18T08:40:00Z",
+      "change_type": "policy",
+      "summary": "Reflex throttle guard increased ack tolerance",
+      "diff_hash": "c4f0fb2f6634a19b73b455f406a1791b939ffcc76b20eddaa95b5ddc5c39b229"
+    }
+  ]
+}

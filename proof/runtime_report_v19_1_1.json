@@ -1,0 +1,17 @@
+{
+  "layer": "C3-Runtime",
+  "version": "v19.1.1",
+  "gate": "G19.1",
+  "proofs": {
+    "ui_build": {
+      "path": "proof/ui_build_v19_1.json",
+      "sha256": "942d93ffee679f2b9ea3496bf08aef9ff1de58616fce4489a33a08f252855030"
+    },
+    "cert": {
+      "path": "proof/v19_1_frontend_certification.json",
+      "sha256": "2a181f54764eaa17423d5cbc7af4eecb904e92d385a3f9d9865db904fcd27f9e"
+    }
+  },
+  "result": "ok",
+  "generated_at": "2025-10-20T09:29:41Z"
+}

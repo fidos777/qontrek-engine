@@ -1,0 +1,28 @@
+{
+  "generated_at": "2025-02-11T03:45:00.000Z",
+  "margins": [
+    { "month": "Oct 24", "margin": 24, "revenue": 510000, "gross_profit": 122400 },
+    { "month": "Nov 24", "margin": 27, "revenue": 535000, "gross_profit": 144450 },
+    { "month": "Dec 24", "margin": 30, "revenue": 560000, "gross_profit": 168000 },
+    { "month": "Jan 25", "margin": 32, "revenue": 585000, "gross_profit": 187200 },
+    { "month": "Feb 25", "margin": 34, "revenue": 612000, "gross_profit": 208080 }
+  ],
+  "breakdown": {
+    "costs": [
+      { "category": "Hardware procurement", "value": 212000 },
+      { "category": "Installation & labor", "value": 118000 },
+      { "category": "Engineering & QA", "value": 64000 },
+      { "category": "Ops & support", "value": 38000 }
+    ],
+    "unit_economics": [
+      { "metric": "CAC", "value": 2800, "unit": "RM" },
+      { "metric": "Payback", "value": 12, "unit": "months" },
+      { "metric": "Gross margin", "value": 34, "unit": "%" }
+    ],
+    "runway": {
+      "months": 11,
+      "burn_rate": 186000,
+      "cash_on_hand": 2076000
+    }
+  }
+}

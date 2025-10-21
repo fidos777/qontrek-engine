@@ -1,0 +1,11 @@
+{
+  "generated_at": "2025-10-19T04:15:58.089152Z",
+  "tenant_id": "fb7f7b40-ffb4-4c69-8693-4317c9b166a8",
+  "source": "fallback_local_doc_tracker_summary",
+  "counters": {
+    "breach_7": 0,
+    "breach_14": 2,
+    "breach_21": 3
+  },
+  "documents_sampled": 5
+}

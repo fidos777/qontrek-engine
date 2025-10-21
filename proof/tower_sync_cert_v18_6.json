@@ -1,0 +1,14 @@
+{
+  "version": "2025-10-18",
+  "phase": "tower_meta_rotation",
+  "gate": "G16",
+  "cadence": "daily",
+  "rotated_at": "2025-10-19T03:24:11Z",
+  "bundle": {
+    "path": "proof/bundles/v17_tower_sync_bundle.json",
+    "sha256": "7588841ed204fba0637088b753d1f972a96cbcb0270865fd515a6cba56a499b8"
+  },
+  "summary_sha256": "1dd222100e510126af05810017860998176a9d6480bef23424290db9ca31a054",
+  "integrity_report_sha": "403c8b447ff6dc6c16446075bd63f66a7376b18cf495f6d17b732f508ebc8138",
+  "meta_hash": "c20e197280d9a7194598af68766d3b2712166895f1276bba71a3dbe6d70d5aed"
+}

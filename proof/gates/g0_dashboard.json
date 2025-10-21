@@ -1,0 +1,79 @@
+{
+  "summary": {
+    "auto_approved": 9,
+    "pending_review": 3,
+    "auto_rejected": 2,
+    "today_total": 14
+  },
+  "pending_review": [
+    {
+      "id": "LD-2401",
+      "name": "Greenhaven Industries",
+      "score": 64,
+      "decision": "MANUAL_REVIEW",
+      "flags": [
+        "tnb_bill_mismatch",
+        "first-installment_pending"
+      ],
+      "tnb_bill": 1880,
+      "source": "Referral · Sarawak",
+      "created_at": "2025-02-11T03:15:00.000Z"
+    },
+    {
+      "id": "LD-2402",
+      "name": "NeoSolar JV",
+      "score": 59,
+      "decision": "MANUAL_REVIEW",
+      "flags": [
+        "site_survey_required"
+      ],
+      "tnb_bill": 2250,
+      "source": "B2B Landing",
+      "created_at": "2025-02-11T02:45:00.000Z"
+    },
+    {
+      "id": "LD-2403",
+      "name": "Urban Sky Residence",
+      "score": 52,
+      "decision": "MANUAL_REVIEW",
+      "flags": [
+        "cashflow_variance"
+      ],
+      "tnb_bill": 430,
+      "source": "Meta Ads",
+      "created_at": "2025-02-11T02:15:00.000Z"
+    }
+  ],
+  "recent_approvals": [
+    {
+      "id": "LD-2338",
+      "name": "Sunrise Retail Hub",
+      "score": 91,
+      "decision": "AUTO_APPROVE",
+      "flags": [],
+      "tnb_bill": 3120,
+      "source": "Referral",
+      "created_at": "2025-02-11T03:40:00.000Z"
+    },
+    {
+      "id": "LD-2339",
+      "name": "Everblue Manufacturing",
+      "score": 88,
+      "decision": "AUTO_APPROVE",
+      "flags": [],
+      "tnb_bill": 2750,
+      "source": "Partner API",
+      "created_at": "2025-02-11T03:25:00.000Z"
+    },
+    {
+      "id": "LD-2340",
+      "name": "Solaris Retail Group",
+      "score": 86,
+      "decision": "AUTO_APPROVE",
+      "flags": [],
+      "tnb_bill": 2480,
+      "source": "Partner API",
+      "created_at": "2025-02-11T03:10:00.000Z"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "phase": "cloud_sync_verify",
+  "generated_at": "2025-10-19T01:56:27Z",
+  "decision": {
+    "severity": "high",
+    "classification": "cloud_parity_mismatch",
+    "action": "notify",
+    "notes": "Supabase parity mismatch detected"
+  }
+}

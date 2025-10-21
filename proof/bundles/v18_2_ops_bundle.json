@@ -1,0 +1,11 @@
+{
+  "version": "v18.3-OPS",
+  "generated_at": "2025-10-18T15:14:44Z",
+  "artifacts": [
+    "proof/tower_sync_summary.json",
+    "proof/dlq_replay_proof.json",
+    "proof/autonomy/corrective_action.json",
+    "proof/notify_events.json"
+  ],
+  "bundle_sha256": "2d760a575bb064fa935fcb0b360fe99557833a97258b38c470dfdb60d23e6579"
+}

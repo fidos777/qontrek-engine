@@ -1,0 +1,19 @@
+{
+  "trust_index": 99.4,
+  "uptime_7d": 99.87,
+  "generated_at": "2025-02-11T03:35:00.000Z",
+  "history": [
+    { "time": "T-11h", "trust": 99.1 },
+    { "time": "T-10h", "trust": 99.2 },
+    { "time": "T-9h", "trust": 99.0 },
+    { "time": "T-8h", "trust": 99.3 },
+    { "time": "T-7h", "trust": 99.4 },
+    { "time": "T-6h", "trust": 99.5 },
+    { "time": "T-5h", "trust": 99.6 },
+    { "time": "T-4h", "trust": 99.5 },
+    { "time": "T-3h", "trust": 99.7 },
+    { "time": "T-2h", "trust": 99.6 },
+    { "time": "T-1h", "trust": 99.5 },
+    { "time": "Now", "trust": 99.4 }
+  ]
+}

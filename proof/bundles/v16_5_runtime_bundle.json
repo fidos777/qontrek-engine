@@ -1,0 +1,26 @@
+{
+  "version": "v16.5",
+  "phase": "runtime",
+  "bundle_created_at": "2025-10-18T08:47:25Z",
+  "bundle_sha256": "4698a8ba929f6d19926ec046419f1e545ef60cd2123ccff85485298c2eeaa9d6",
+  "proofs": [
+    {
+      "name": "proof/notify_dlq_snapshot.json",
+      "sha256": "8a9d16c5c584632b9beb146935bd914c87d693914cadd39608d0601d93de6784",
+      "phase": "runtime",
+      "generated_at": "2025-10-18T06:25:13Z"
+    },
+    {
+      "name": "proof/notify_events.json",
+      "sha256": "d661a5ccd7ef1b53d0c89d1b10eede491b681949bc88b6cd924bf815f90e28f1",
+      "phase": "runtime",
+      "generated_at": "2025-10-18T06:25:13Z"
+    },
+    {
+      "name": "proof/scheduler_hardening.json",
+      "sha256": "5deddc7657da876b9383d78efd6db27e99d62528f1f6a5e61f10e26194bff3a2",
+      "phase": "runtime",
+      "generated_at": "2025-10-18T06:25:13Z"
+    }
+  ]
+}

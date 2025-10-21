@@ -1,0 +1,11 @@
+{
+  "phase": "autonomy",
+  "generated_at": "2025-10-18T09:21:25Z",
+  "severity": 0.0,
+  "classification": "normal",
+  "threshold": 0.2,
+  "triggered": false,
+  "score_ref": "proof/autonomy/drift_score.json",
+  "bundle_ref": "proof/bundles/v17_tower_sync_bundle.json",
+  "sha256": "0200d938b8b3de42738e3476365f7ba9f8526ed821635e37369ba8ff0302435d"
+}

@@ -1,0 +1,174 @@
+{
+  "phase": "doc_tracker",
+  "generated_at": "2025-10-18T16:07:18Z",
+  "tenant_id": "fb7f7b40-ffb4-4c69-8693-4317c9b166a8",
+  "summary": {
+    "total_documents": 5,
+    "escalated": 3,
+    "warnings": 2,
+    "sla_health_index": 90.0,
+    "next_review_at": "2025-10-18T16:07:18Z"
+  },
+  "documents": [
+    {
+      "doc_id": "DOC-39BB99",
+      "document": "KYC Packet",
+      "tenant": "tenant-emea",
+      "project": "preboarding",
+      "owner": "A. Hassan",
+      "age_days": 31,
+      "sla_tiers": [
+        7,
+        14,
+        21,
+        30
+      ],
+      "sla_breached": [
+        7,
+        14,
+        21,
+        30
+      ],
+      "status": "escalated",
+      "severity": "red",
+      "next_action": "Escalate to finance control tower",
+      "channel": "whatsapp"
+    },
+    {
+      "doc_id": "DOC-0B4B27",
+      "document": "Vendor Contract",
+      "tenant": "tenant-apac",
+      "project": "renewal",
+      "owner": "S. Chen",
+      "age_days": 23,
+      "sla_tiers": [
+        7,
+        14,
+        21,
+        30
+      ],
+      "sla_breached": [
+        7,
+        14,
+        21
+      ],
+      "status": "escalated",
+      "severity": "red",
+      "next_action": "Legal review in progress",
+      "channel": "whatsapp"
+    },
+    {
+      "doc_id": "DOC-B001E1",
+      "document": "Policy Update",
+      "tenant": "tenant-west",
+      "project": "compliance",
+      "owner": "L. Rivera",
+      "age_days": 35,
+      "sla_tiers": [
+        7,
+        14,
+        21,
+        30
+      ],
+      "sla_breached": [
+        7,
+        14,
+        21,
+        30
+      ],
+      "status": "escalated",
+      "severity": "red",
+      "next_action": "Legal review in progress",
+      "channel": "whatsapp"
+    },
+    {
+      "doc_id": "DOC-CE046F",
+      "document": "Security Questionnaire",
+      "tenant": "tenant-emea",
+      "project": "risk",
+      "owner": "M. Patel",
+      "age_days": 20,
+      "sla_tiers": [
+        7,
+        14,
+        21,
+        30
+      ],
+      "sla_breached": [
+        7,
+        14
+      ],
+      "status": "warning",
+      "severity": "amber",
+      "next_action": "Legal review in progress",
+      "channel": "slack"
+    },
+    {
+      "doc_id": "DOC-CCA9E2",
+      "document": "Change Order",
+      "tenant": "tenant-apac",
+      "project": "expansion",
+      "owner": "D. Silva",
+      "age_days": 15,
+      "sla_tiers": [
+        7,
+        14,
+        21,
+        30
+      ],
+      "sla_breached": [
+        7,
+        14
+      ],
+      "status": "warning",
+      "severity": "amber",
+      "next_action": "Resend reminder via WhatsApp",
+      "channel": "slack"
+    }
+  ],
+  "alerts": [
+    {
+      "generated_at": "2025-10-18T08:45:34Z",
+      "channel": "whatsapp",
+      "severity": 0.0,
+      "action": "noop",
+      "result": "DRY_RUN"
+    },
+    {
+      "generated_at": "2025-10-18T08:45:34Z",
+      "channel": "whatsapp",
+      "severity": 0.0,
+      "action": "noop",
+      "result": "DRY_RUN"
+    },
+    {
+      "generated_at": null,
+      "channel": "email",
+      "severity": null,
+      "action": null,
+      "result": null
+    },
+    {
+      "generated_at": null,
+      "channel": "whatsapp",
+      "severity": null,
+      "action": null,
+      "result": null
+    },
+    {
+      "generated_at": null,
+      "channel": "slack",
+      "severity": null,
+      "action": null,
+      "result": null
+    }
+  ],
+  "meta": {
+    "source": "scripts/gen_doc_tracker_summary.py",
+    "inputs": [
+      "proof/tower_sync_summary.json",
+      "proof/notify_events.json"
+    ]
+  },
+  "sha256": "e491d9503bdfadd6c29bdec80a7f17f909d64e8aa2fe2af08849f8d114cff816"
+}
