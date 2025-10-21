@@ -1,0 +1,71 @@
+{
+  "ok": true,
+  "rel": "cfo_fulltabs_v19.1.json",
+  "source": "real",
+  "schemaVersion": "1.0.0",
+  "data": {
+    "summary": {
+      "total_revenue": 2850000,
+      "total_outstanding": 485000,
+      "collection_rate": 0.87,
+      "avg_margin": 0.42
+    },
+    "tabs": [
+      {
+        "id": "cashflow",
+        "title": "Cashflow",
+        "metrics": {
+          "cash_in_30d": 425000,
+          "cash_out_30d": 198000,
+          "net_cashflow": 227000,
+          "runway_months": 18,
+          "burn_rate": 12500
+        }
+      },
+      {
+        "id": "recovery",
+        "title": "Recovery",
+        "metrics": {
+          "total_recoverable": 152500,
+          "recovered_mtd": 89000,
+          "recovery_rate": 0.58,
+          "avg_days_to_pay": 11,
+          "active_cases": 14
+        }
+      },
+      {
+        "id": "margin",
+        "title": "Margin",
+        "metrics": {
+          "gross_margin": 0.42,
+          "net_margin": 0.28,
+          "avg_deal_margin": 0.35,
+          "margin_trend": 0.03,
+          "top_margin_segment": "Enterprise"
+        }
+      },
+      {
+        "id": "forecast",
+        "title": "Forecast",
+        "metrics": {
+          "q_forecast": 875000,
+          "q_actual": 425000,
+          "forecast_accuracy": 0.89,
+          "revenue_at_risk": 45000,
+          "pipeline_value": 1250000
+        }
+      },
+      {
+        "id": "variance",
+        "title": "Variance",
+        "metrics": {
+          "revenue_variance": 0.05,
+          "cost_variance": -0.08,
+          "margin_variance": 0.12,
+          "headcount_variance": 2,
+          "budget_utilization": 0.78
+        }
+      }
+    ]
+  }
+}
