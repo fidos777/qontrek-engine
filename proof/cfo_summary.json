@@ -1,0 +1,93 @@
+{
+  "phase": "cfo_lens",
+  "generated_at": "2025-10-18T15:59:56Z",
+  "trust_index": {
+    "score": 13.9,
+    "cloud_parity_ok": false,
+    "cloud_verified_at": null
+  },
+  "ar_aging": {
+    "buckets": [
+      {
+        "label": "0-30",
+        "amount": 1248715.15,
+        "invoice_count": 111
+      },
+      {
+        "label": "31-60",
+        "amount": 595179.42,
+        "invoice_count": 65
+      },
+      {
+        "label": "61-90",
+        "amount": 515553.66,
+        "invoice_count": 57
+      },
+      {
+        "label": "90+",
+        "amount": 249172.62,
+        "invoice_count": 28
+      }
+    ],
+    "total_outstanding": 2608620.85
+  },
+  "dso": {
+    "current": 41.63,
+    "trend_7d": -0.15,
+    "trend_30d": -2.32,
+    "projected_90d": 40.71
+  },
+  "recovery_cohorts": [
+    {
+      "cohort": "2025-W42",
+      "collected_pct": 0.838,
+      "open_exceptions": 0
+    },
+    {
+      "cohort": "2025-W41",
+      "collected_pct": 0.942,
+      "open_exceptions": 3
+    },
+    {
+      "cohort": "2025-W40",
+      "collected_pct": 0.876,
+      "open_exceptions": 2
+    },
+    {
+      "cohort": "2025-W39",
+      "collected_pct": 0.824,
+      "open_exceptions": 2
+    }
+  ],
+  "exceptions": [
+    {
+      "id": "AR-1018-1",
+      "tenant": "tenant-emea",
+      "amount": 128413.71,
+      "reason": "Bank routing mismatch",
+      "status": "escalated"
+    },
+    {
+      "id": "AR-1018-2",
+      "tenant": "tenant-apac",
+      "amount": 148130.91,
+      "reason": "Bank routing mismatch",
+      "status": "investigating"
+    },
+    {
+      "id": "AR-1018-3",
+      "tenant": "tenant-apac",
+      "amount": 144086.97,
+      "reason": "Bank routing mismatch",
+      "status": "awaiting-customer"
+    }
+  ],
+  "meta": {
+    "source": "scripts/gen_cfo_summary.py",
+    "inputs": [
+      "proof/tower_sync_summary.json",
+      "proof/cloud_sync_verify.json"
+    ]
+  },
+  "sha256": "15c4d0e4e77fcd9c4cd3c5920f2a94f345f457004ee9d0cfe65d39946e5c3f73"
+}

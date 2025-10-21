@@ -1,0 +1,56 @@
+{
+  "version": "v18.6",
+  "gate": "G18.6",
+  "title": "Cloud Parity Sealed",
+  "mission": "Supabase is source-of-truth for proof hashes; local proofs must match cloud before meta-seal rotation.",
+  "steps": [
+    {
+      "id": "schema_migration",
+      "status": "done",
+      "note": "sha256 column + unique (tenant_id, filename, meta_hash)"
+    },
+    {
+      "id": "uploader_patch",
+      "status": "done",
+      "note": "proof_push_supabase computes + upserts sha256"
+    },
+    {
+      "id": "verifier_patch",
+      "status": "done",
+      "note": "structured counters + per-file diffs"
+    },
+    {
+      "id": "cloud_verification",
+      "status": "done",
+      "note": "verified_ok=4"
+    },
+    {
+      "id": "backfill_sha",
+      "status": "done",
+      "note": "historical rows populated"
+    }
+  ],
+  "env": {
+    "SUPABASE_URL": "https://gbqirfivttuemiyxzaqo.supabase.co",
+    "SUPABASE_TENANT_ID": "fb7f7b40-ffb4-4c69-8693-4317c9b166a8"
+  },
+  "parity": {
+    "verified_ok": 4,
+    "verified_mismatch": 0,
+    "verified_missing_sha": 0,
+    "not_found": 0,
+    "errors": 0
+  },
+  "proofs": [
+    "proof/tower_sync_summary.json",
+    "proof/notify_events.json",
+    "proof/tower_sync_cert_v18_3.json",
+    "proof/tower_sync_cert_v18_2_ops.json"
+  ],
+  "seal": {
+    "file": "proof/tower_sync_cert_v18_6.json",
+    "meta_hash": "c20e197280d9a7194598af68766d3b2712166895f1276bba71a3dbe6d70d5aed",
+    "status": "rotated"
+  },
+  "timestamp_utc": "2025-10-19T03:24:11Z"
+}

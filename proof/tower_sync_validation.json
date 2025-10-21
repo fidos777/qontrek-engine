@@ -1,0 +1,31 @@
+{
+  "phase": "tower_sync",
+  "generated_at": "2025-10-18T09:20:35Z",
+  "http_ok": true,
+  "has_rows": true,
+  "summary_seal_ok": true,
+  "expected_http": 200,
+  "kpis": {
+    "ack_rate_24h": 1.0,
+    "ack_rate_24h_slack": 1.0,
+    "ack_rate_24h_wa": 1.0,
+    "ack_rate_24h_email": 1.0,
+    "alert_action_latency_ms_p50": 1132,
+    "alert_action_latency_ms_p95": 1860,
+    "latency_p95_ms_slack": 1808,
+    "latency_p95_ms_wa": 1952,
+    "latency_p95_ms_email": 1918,
+    "dlq_depth": 1,
+    "dlq_age_max_h": 0,
+    "dlq_replayed_24h": 1,
+    "replay_success_rate": 0.966,
+    "replay_batch_max": 1733,
+    "replay_time_ms_p95": 166964,
+    "ntp_offset_ms": -82,
+    "policy_diff_class": "cosmetic",
+    "last_change_receipt_id": "CR-2025-10-18-001",
+    "autotune_guard_active": true
+  },
+  "warnings": false,
+  "sha256": "9a2f69e7948b662cc57b1fab4ab9e23f1be64e14bf255e231e5581d7f85d34dc"
+}

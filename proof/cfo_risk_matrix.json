@@ -1,0 +1,39 @@
+{
+  "generated_at": "2025-02-11T03:50:00.000Z",
+  "stages": ["pending_80", "pending_20", "pending_handover"],
+  "risks": [
+    {
+      "id": "RISK-3201",
+      "customer": "Aurora Residences",
+      "stage": "pending_80",
+      "severity": "HIGH",
+      "impact_rm": 41600,
+      "probability": 0.7,
+      "owner": "Finance",
+      "days_exposed": 19,
+      "next_action": "Escalate to CFO · prepare legal draft"
+    },
+    {
+      "id": "RISK-3202",
+      "customer": "EcoFab Manufacturing",
+      "stage": "pending_20",
+      "severity": "MEDIUM",
+      "impact_rm": 12200,
+      "probability": 0.45,
+      "owner": "Collections",
+      "days_exposed": 12,
+      "next_action": "Schedule CFO call · align with ops"
+    },
+    {
+      "id": "RISK-3203",
+      "customer": "Seri Impian Residence",
+      "stage": "pending_handover",
+      "severity": "LOW",
+      "impact_rm": 6600,
+      "probability": 0.25,
+      "owner": "Operations",
+      "days_exposed": 6,
+      "next_action": "Confirm handover checklist · ready site"
+    }
+  ]
+}

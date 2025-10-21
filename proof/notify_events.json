@@ -1,0 +1,203 @@
+{
+  "phase": "runtime",
+  "generated_at": "2025-10-18T06:25:13Z",
+  "sha256": "ac2e48d3cd660eaf29252230cf1c5077468c3d1c31a4318c47af34db11fa5701",
+  "events": [
+    {
+      "event_id": "evt-slack-001",
+      "tenant_id": "tenant-west",
+      "channel": "slack",
+      "status": "sent",
+      "attempts": 1,
+      "rate_limited": false,
+      "payload_checksum": "dfb6d69296f02ee70b5b43db17ccbfc5dc2e68999a9f875433687b24ca0c0451"
+    },
+    {
+      "event_id": "evt-wa-quiet",
+      "tenant_id": "tenant-apac",
+      "channel": "whatsapp",
+      "status": "sent",
+      "attempts": 1,
+      "rate_limited": false,
+      "payload_checksum": "b789e5dbcfba7e97edaaae7d87e0689933c43eb76b128e7ad96ff47568cf812a",
+      "reason": "quiet_hours"
+    },
+    {
+      "event_id": "evt-email-rl",
+      "tenant_id": "tenant-emea",
+      "channel": "email",
+      "status": "sent",
+      "attempts": 1,
+      "rate_limited": false,
+      "payload_checksum": "5f7491a25a601c2c516d3f7f08f0336a814b21db8bcb5b78ffc6a7dbe0ebee32"
+    },
+    {
+      "generated_at": "2025-10-18T08:45:34Z",
+      "channel": "whatsapp",
+      "severity": 0.0,
+      "action": "noop",
+      "dry_run": true,
+      "result": {
+        "status": "DRY_RUN",
+        "code": 200,
+        "response": "dry-run"
+      }
+    },
+    {
+      "generated_at": "2025-10-18T08:45:34Z",
+      "channel": "whatsapp",
+      "severity": 0.0,
+      "action": "noop",
+      "dry_run": true,
+      "result": {
+        "status": "DRY_RUN",
+        "code": 200,
+        "response": "dry-run"
+      }
+    },
+    {
+      "generated_at": "2025-10-18T08:45:34Z",
+      "channel": "whatsapp",
+      "severity": 0.0,
+      "action": "noop",
+      "dry_run": true,
+      "result": {
+        "status": "DRY_RUN",
+        "code": 200,
+        "response": "dry-run"
+      }
+    },
+    {
+      "generated_at": "2025-10-18T08:45:34Z",
+      "channel": "whatsapp",
+      "severity": 0.0,
+      "action": "noop",
+      "dry_run": true,
+      "result": {
+        "status": "DRY_RUN",
+        "code": 200,
+        "response": "dry-run"
+      }
+    },
+    {
+      "generated_at": "2025-10-19T00:49:00Z",
+      "channel": "whatsapp",
+      "severity": "high",
+      "action": "notify",
+      "dry_run": false,
+      "result": {
+        "status": "SENT",
+        "code": 200,
+        "response": "{\"status\":\"0\",\"message\":\"The parameter to is required.\"}"
+      }
+    },
+    {
+      "generated_at": "2025-10-18T08:45:34Z",
+      "channel": "whatsapp",
+      "severity": 0.0,
+      "action": "noop",
+      "dry_run": true,
+      "result": {
+        "status": "DRY_RUN",
+        "code": 200,
+        "response": "dry-run"
+      }
+    },
+    {
+      "generated_at": "2025-10-19T01:02:46Z",
+      "channel": "whatsapp",
+      "severity": "high",
+      "action": "notify",
+      "dry_run": false,
+      "result": {
+        "status": "SENT",
+        "code": 200,
+        "response": "{\"status\":\"0\",\"message\":\"The parameter to is required.\"}"
+      }
+    },
+    {
+      "generated_at": "2025-10-19T01:06:13Z",
+      "channel": "whatsapp",
+      "severity": "high",
+      "action": "notify",
+      "dry_run": false,
+      "result": {
+        "status": "SENT",
+        "code": 200,
+        "response": "{\"status\":\"0\",\"message\":\"The parameter to is required.\"}"
+      }
+    },
+    {
+      "generated_at": "2025-10-19T01:12:00Z",
+      "channel": "whatsapp",
+      "severity": "high",
+      "action": "notify",
+      "dry_run": false,
+      "result": {
+        "status": "SENT",
+        "code": 200,
+        "response": "{\"status\":\"0\",\"message\":\"The parameter to is required.\"}"
+      }
+    },
+    {
+      "generated_at": "2025-10-19T01:48:06Z",
+      "channel": "whatsapp",
+      "severity": "high",
+      "action": "notify",
+      "dry_run": false,
+      "result": {
+        "status": "SENT",
+        "code": 200,
+        "response": "{\"status\":\"0\",\"message\":\"The parameter to is required.\"}"
+      }
+    },
+    {
+      "generated_at": "2025-10-19T01:50:24Z",
+      "channel": "whatsapp",
+      "severity": "high",
+      "action": "notify",
+      "dry_run": false,
+      "result": {
+        "status": "SENT",
+        "code": 200,
+        "response": "{\"status\":\"0\",\"message\":\"The parameter to is required.\"}"
+      }
+    },
+    {
+      "generated_at": "2025-10-19T01:54:03Z",
+      "channel": "whatsapp",
+      "severity": "high",
+      "action": "notify",
+      "dry_run": false,
+      "result": {
+        "status": "SENT",
+        "code": 200,
+        "response": "{\"status\":\"0\",\"message\":\"The parameter to is required.\"}"
+      }
+    },
+    {
+      "generated_at": "2025-10-19T01:55:31Z",
+      "channel": "whatsapp",
+      "severity": "high",
+      "action": "notify",
+      "dry_run": false,
+      "result": {
+        "status": "SENT",
+        "code": 200,
+        "response": "{\"status\":\"0\",\"message\":\"The parameter to is required.\"}"
+      }
+    },
+    {
+      "generated_at": "2025-10-19T01:56:27Z",
+      "channel": "whatsapp",
+      "severity": "high",
+      "action": "notify",
+      "dry_run": false,
+      "result": {
+        "status": "SENT",
+        "code": 200,
+        "response": "{\"status\":\"0\",\"message\":\"The parameter to is required.\"}"
+      }
+    }
+  ]
+}

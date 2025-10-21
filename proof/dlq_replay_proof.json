@@ -1,0 +1,8 @@
+{
+  "phase": "tower_sync",
+  "generated_at": "2025-10-19T01:02:44Z",
+  "dlq_replayed_24h": 3,
+  "replay_success_rate": 0.979,
+  "replay_batch_max": 4348,
+  "replay_time_ms_p95": 174490
+}

@@ -1,0 +1,6 @@
+{
+  "phase": "tower_sync",
+  "previous": "reflex_governance_map_prev.json",
+  "current": "reflex_governance_map.json",
+  "class": "cosmetic"
+}
