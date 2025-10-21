@@ -1,0 +1,5 @@
+{
+  "rate_limit_threshold": 0.85,
+  "latency_guard_rule": "p95<=1800ms",
+  "ntp_max_offset_ms": 950
+}

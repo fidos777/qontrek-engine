@@ -1,0 +1,9 @@
+# codex/blueprints/log_run_order.yml
+name: log_run_order
+steps:
+  - run: >
+      bash -lc 'mkdir -p proof/logs &&
+      printf "%s\n" "{\"ts\":\"$(date -u +%FT%TZ)\",\"token\":\"RUN_ORDER\",
+      \"steps\":\"PR1 Foundations -> PR2 SealReview -> PR3 Lore/Lenses -> PR4 Map\"}" >>
+      proof/logs/trace.jsonl'
+

@@ -1,0 +1,83 @@
+# ================================================================
+# QONTREK v16.5 – PHASE WATCHDOG (Day 2)
+# Goal: Activate Reflex Autonomy Layer → SLA Escalation → Governance Proofs
+# Duration: ~5h (3h SLA Logic + 2h Governance Bundles)
+# ================================================================
+
+meta:
+  version: v16.5
+  phase: watchdog
+  gate: G11
+  owner: C2_Governance
+  created: 2025-10-18
+
+# ----------- Setup -----------
+init:
+  - cmd: codex env:assert SUPABASE_URL SUPABASE_SERVICE_ROLE SLACK_WEBHOOK_URL WA_API_KEY
+  - cmd: mkdir -p sql/watchdog lib/watchdog proof/config
+
+# ----------- Schema seeds -----------
+files:
+  - path: sql/watchdog_sla_rules.sql
+    content: |
+      create table if not exists watchdog_sla_rules (
+        rule_id uuid primary key default gen_random_uuid(),
+        gate text not null,
+        day_threshold int not null,
+        role text not null,
+        channel text not null check (channel in ('slack','whatsapp','email')),
+        template_id text not null,
+        cooldown_min int not null default 120,
+        created_at timestamptz default now()
+      );
+
+  - path: config/sla_rules.yaml
+    content: |
+      rules:
+        - gate: g0
+          day_threshold: 7
+          role: rep
+          channel: slack
+          template_id: G0_7D_ALERT
+        - gate: g1
+          day_threshold: 14
+          role: manager
+          channel: whatsapp
+          template_id: G1_14D_ALERT
+        - gate: g2
+          day_threshold: 21
+          role: finance
+          channel: email
+          template_id: G2_21D_REMINDER
+        - gate: docs
+          day_threshold: 30
+          role: exec
+          channel: slack
+          template_id: DOC_30D_ESCALATION
+
+# ----------- Tasks -----------
+tasks:
+  - name: Configure Watchdog SLA escalation logic
+    path: lib/watchdog/autonomy.ts
+    run: |
+      codex db:migrate sql/watchdog_sla_rules.sql --apply
+      codex generate module lib/watchdog/autonomy.ts --from config/sla_rules.yaml
+    proof: proof/watchdog_sla_matrix.json
+
+  - name: Generate SLA Proof Validation
+    run: codex test --suite watchdog
+    proof: proof/sla_validation_results.json
+
+  - name: Bundle Governance Artifacts
+    run: codex run "node scripts/gen_governance_proofs.js --out proof/bundles/gov_v16_5.json"
+
+  - name: Generate Reflex ↔ Governance Map
+    run: codex run "node scripts/gen_reflex_governance_map.js --out proof/reflex_governance_map.json"
+
+# ----------- Expected Output -----------
+proofs:
+  - proof/watchdog_sla_matrix.json
+  - proof/sla_validation_results.json
+  - proof/bundles/gov_v16_5.json
+  - proof/reflex_governance_map.json
+

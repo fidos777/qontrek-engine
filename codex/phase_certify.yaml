@@ -1,0 +1,31 @@
+# ============================================================
+# QONTREK v16.6 – PHASE CERTIFY (G11)
+# Goal: Bundle, verify, and seal runtime proofs for meta-cert handoff.
+# ============================================================
+
+meta:
+  version: v16.6
+  phase: certify
+  gate: G11
+  owner: C2_Runtime
+  created: 2025-10-18
+
+tasks:
+  - name: Bundle runtime proofs
+    path: proof/
+    include:
+      - notify_events.json
+      - notify_dlq_snapshot.json
+      - scheduler_hardening.json
+    output: proof/bundles/v16_5_runtime_bundle.json
+
+  - name: Verify hash lineage
+    script: scripts/verify_sha_chain.py
+    expect: "sha256 chain verified ✅"
+
+  - name: Seal and emit certification
+    output: proof/pre_cert_v16_6.json
+    criteria:
+      - all hashes valid
+      - all timestamps within ±5m
+      - all phases marked runtime

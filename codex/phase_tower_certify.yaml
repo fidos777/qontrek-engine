@@ -1,0 +1,37 @@
+# ============================================================
+# QONTREK v17.1 – PHASE TOWER CERTIFY (G13)
+# Goal: Bundle Tower Sync governance proofs and emit certification seal.
+# ============================================================
+
+meta:
+  version: v17.1
+  phase: tower_certify
+  gate: G13
+  owner: C5_Governance
+  created: 2025-10-18
+
+# ---------- Tasks ----------
+tasks:
+  - name: Bundle Tower Sync proofs
+    path: proof/
+    include:
+      - tower_sync_ingest.json
+      - tower_sync_summary.json
+      - tower_sync_validation.json
+      - tower_dashboard_refresh.json
+    output: proof/bundles/v17_tower_sync_bundle.json
+
+  - name: Verify bundle lineage
+    script: scripts/verify_sha_chain.py
+    expect: "sha256 chain verified ✅"
+
+  - name: Emit Tower Sync Certification
+    script: scripts/tower_sync_certify.py
+    output: proof/tower_sync_cert_v17.json
+    expect: "tower governance certified ✅"
+
+# ---------- Acceptance ----------
+acceptance:
+  - All 4 Tower Sync proofs hashed and sealed
+  - SHA256 lineage verified
+  - proof/tower_sync_cert_v17.json contains governance summary seal

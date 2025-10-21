@@ -1,0 +1,66 @@
+# ============================================================
+# QONTREK v18.0 – REFLEX AUTONOMY LOOP (Blueprint)
+# Goal: Automate runtime metric re-evaluation, drift detection, and self-triggered re-certification.
+# ============================================================
+
+meta:
+  version: v18.0
+  phase: reflex_autonomy_loop
+  gate: G14
+  owner: C5_Governance
+  cadence: "cron(0 */4 * * *)" # every 4 hours
+  created: 2025-10-18
+
+# ---------- Setup ----------
+init:
+  - cmd: codex env:assert SUPABASE_URL SUPABASE_SERVICE_ROLE SUPABASE_ANON_KEY
+  - cmd: mkdir -p logs/autonomy proof/autonomy
+
+# ---------- Tasks ----------
+tasks:
+  - name: Ingest + Summary
+    mission: Refresh Supabase metrics and emit governance KPIs.
+    steps:
+      - cmd: codex run "python3 scripts/push_metrics_runtime.py proof/bundles/v16_5_runtime_bundle.json"
+      - cmd: codex run "python3 scripts/dlq_replay_job.py"
+      - cmd: codex run "python3 scripts/gen_tower_sync_summary.py"
+    outputs:
+      - proof/tower_sync_ingest.json
+      - proof/dlq_replay_proof.json
+      - proof/tower_sync_summary.json
+
+  - name: Verification
+    mission: Enforce v18.1 Reflex audit guardrails before certification.
+    steps:
+      - cmd: codex run "python3 scripts/verify_tower_sync.py"
+    outputs:
+      - proof/tower_sync_validation.json
+
+  - name: Autonomy Decision
+    mission: Compare latest metrics against baseline and trigger re-certification when needed.
+    steps:
+      - cmd: codex run "python3 scripts/autonomy_fetch_metrics.py --window 6h --out proof/autonomy/metrics_snapshot.json"
+      - cmd: codex run "python3 scripts/autonomy_compare_baseline.py --current proof/autonomy/metrics_snapshot.json --baseline proof/tower_sync_summary.json --out proof/autonomy/drift_report.json"
+      - cmd: codex run "python3 scripts/autonomy_score_drift.py --report proof/autonomy/drift_report.json --out proof/autonomy/drift_score.json"
+      - cmd: codex run "python3 scripts/autonomy_trigger_recert.py --score proof/autonomy/drift_score.json --threshold 0.2 --bundle proof/bundles/v17_tower_sync_bundle.json"
+      - cmd: codex run "python3 scripts/tower_sync_certify.py --bundle proof/bundles/v17_tower_sync_bundle.json --summary proof/tower_sync_summary.json --out proof/tower_sync_cert_v18.json --version v18.1 --gate G16 --phase reflex_autonomy_loop"
+      - cmd: codex run "python3 scripts/validate_change_receipts.py"
+      - cmd: codex run "python3 scripts/rotate_meta_seal.py --out proof/tower_sync_cert_v18.2.json --cadence daily"
+    outputs:
+      - proof/autonomy/metrics_snapshot.json
+      - proof/autonomy/drift_report.json
+      - proof/autonomy/drift_score.json
+      - proof/autonomy/recert_trigger.json
+      - proof/tower_sync_cert_v18.json
+      - proof/tower_sync_cert_v18.2.json
+
+# ---------- Verification ----------
+verify:
+  - cmd: jq '.severity' proof/autonomy/drift_score.json
+  - cmd: grep -R \"meta_hash\" proof/tower_sync_cert_v18.json || echo \"⚠️ missing meta-hash\"
+
+# ---------- Acceptance ----------
+acceptance:
+  - G15 Effectiveness: ack_rate_24h ≥ 0.8 and latency_p95 ≤ 1h
+  - G16 Stability: dlq_age_max_h ≤ 24 and replay_success_rate ≥ 0.95
+  - G17 Integrity: |ntp_offset_ms| ≤ 1000 and policy_diff_class != material

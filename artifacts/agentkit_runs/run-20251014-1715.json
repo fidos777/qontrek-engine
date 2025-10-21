@@ -1,0 +1,31 @@
+{
+  "timestamp": "2025-10-14T09:15:48.131957Z",
+  "proof_ref": [],
+  "avg_eval": 0.835,
+  "runs": [
+    {
+      "run_id": "run_1_091548",
+      "phase": "runtime",
+      "eval_score": 0.839,
+      "tokens_used": 10118,
+      "latency_ms": 106,
+      "energy_cost": 0.0255
+    },
+    {
+      "run_id": "run_2_091548",
+      "phase": "runtime",
+      "eval_score": 0.842,
+      "tokens_used": 11087,
+      "latency_ms": 111,
+      "energy_cost": 0.0253
+    },
+    {
+      "run_id": "run_3_091548",
+      "phase": "runtime",
+      "eval_score": 0.824,
+      "tokens_used": 11368,
+      "latency_ms": 107,
+      "energy_cost": 0.0213
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+# ================================================================
+# QONTREK v16.5 – PHASE CERTIFY (Day 4)
+# Goal: Finalize governance + ops proofs, certify G11 → G12, and deploy to prod
+# Duration: ~4h (2h verification + 1h attestation + 1h deployment)
+# ================================================================
+
+meta:
+  version: v16.5
+  phase: certify
+  gate: G12
+  owner: C4_Ledger
+  created: 2025-10-18
+
+# ---------- Setup ----------
+init:
+  - cmd: codex env:assert SUPABASE_URL SUPABASE_SERVICE_ROLE VERCEL_TOKEN
+  - cmd: mkdir -p proof/attestations proof/reports sql/ledger
+
+# ---------- Schema Enhancements ----------
+files:
+  - path: sql/ledger_attestation.sql
+    content: |
+      create table if not exists ledger_attestation (
+        attest_id uuid primary key default gen_random_uuid(),
+        version text not null,
+        gate text not null,
+        proof_hash text not null,
+        created_at timestamptz not null default now(),
+        certified_by text,
+        notes text
+      );
+      comment on table ledger_attestation is 'Stores certified proof hashes per gate/version.';
+
+  - path: sql/proof_hash_view.sql
+    content: |
+      create or replace view vw_proof_hash_summary as
+      select
+        version,
+        proof_name,
+        sha256(proof_content::text) as proof_hash,
+        now() as verified_at
+      from proof_audit;
+
+# ---------- Certification Tasks ----------
+tasks:
+  - name: Validate Proof Integrity (hash + schema)
+    cmd: |
+      codex validate proof/pre_cert_v16_5.json
+      codex validate proof/doc_tracker_snapshot.json
+      codex validate proof/reports/tower_intelligence_report.md
+    proof: proof/attestations/validation_report.json
+
+  - name: Ledger Attestation
+    cmd: |
+      node scripts/attest_ledger_v16_5.js \
+        --in proof/pre_cert_v16_5.json \
+        --out proof/attestations/ledger_attestation_v16_5.json \
+        --version v16.5 --gate G12
+    proof: proof/attestations/ledger_attestation_v16_5.json
+
+  - name: Tower Certification Report
+    cmd: |
+      python3 scripts/gen_certification_summary.py \
+        --attest proof/attestations/ledger_attestation_v16_5.json \
+        --out proof/reports/tower_certification_summary.md
+    proof: proof/reports/tower_certification_summary.md
+
+  - name: Production Deploy
+    cmd: |
+      codex deploy vercel --prod
+    proof: proof/attestations/deploy_snapshot.json
+
+# ---------- Validation ----------
+validate:
+  - cmd: codex validate proof/attestations/ledger_attestation_v16_5.json
+  - cmd: codex validate proof/reports/tower_certification_summary.md
+
+# ---------- Expected Results ----------
+expected:
+  - All proof hashes match between bundle and attestation
+  - Ledger entries recorded for v16.5 and G12
+  - Tower certification summary generated and published
+  - Vercel build deployed successfully (200 OK)
+
+# ---------- Metrics & Proofs ----------
+proofs:
+  - name: proof/attestations/validation_report.json
+    desc: Proof validation summary of all artifacts
+  - name: proof/attestations/ledger_attestation_v16_5.json
+    desc: Hash-sealed ledger attestation record for G12
+  - name: proof/reports/tower_certification_summary.md
+    desc: Final Tower governance and Reflex Ops certification report
+  - name: proof/attestations/deploy_snapshot.json
+    desc: Confirmed production deployment snapshot
+

@@ -1,0 +1,107 @@
+# ============================================================
+# QONTREK v16.5 – PHASE RUNTIME (Day 1)
+# Goal: Establish Reflex Runtime Base → Notification Gateway + DLQ + Scheduler locks.
+# Duration: ~6h (3h Gateway, 3h Scheduler)
+# ============================================================
+
+meta:
+  version: v16.5
+  phase: runtime
+  gate: G11
+  owner: C2_Runtime
+  created: 2025-10-18
+
+# ---------- Setup ----------
+init:
+  - cmd: codex env:assert SUPABASE_URL SUPABASE_SERVICE_ROLE WA_API_KEY SLACK_WEBHOOK
+  - cmd: mkdir -p sql lib/notify lib/runtime proof config
+
+# ---------- Schema seeds ----------
+files:
+  - path: sql/dlq.sql
+    content: |
+      create extension if not exists pgcrypto;
+      create table if not exists notify_dlq (
+        dlq_id uuid primary key default gen_random_uuid(),
+        event_id uuid not null,
+        channel text not null check (channel in ('slack','whatsapp','email')),
+        payload jsonb not null,
+        retry_count int not null default 0,
+        last_error text,
+        next_attempt_at timestamptz not null default now(),
+        payload_checksum text not null,
+        created_at timestamptz not null default now()
+      );
+      create index if not exists idx_notify_dlq_next on notify_dlq(next_attempt_at);
+
+  - path: config/notify.yaml
+    content: |
+      rate_limits:
+        slack_per_min: 30
+        whatsapp_per_min: 20
+        email_per_min: 120
+      quiet_hours:
+        start_local: "22:00"
+        end_local: "07:00"
+      retry_policy:
+        max_attempts: 3
+        backoff_strategy: exponential
+      coalesce_window_min: 15
+      channels:
+        slack_webhook_env: SLACK_WEBHOOK
+        whatsapp_token_env: WA_API_KEY
+
+# ---------- Tasks ----------
+tasks:
+  - name: Tower Notification Gateway
+    mission: Multi-channel alert system with dedupe, retry→DLQ, and rate limits.
+    layer: C3 Cockpit → C5 Governance
+    outputs:
+      - lib/notify/tower_gateway.ts
+      - proof/notify_events.json
+      - proof/notify_dlq_snapshot.json
+    steps:
+      - cmd: codex db:migrate sql/dlq.sql --apply
+      - cmd: codex create api /api/notify/emit
+      - cmd: codex generate module lib/notify/tower_gateway.ts --from config/notify.yaml
+      - cmd: codex test --suite notify
+    acceptance:
+      - 3-strike retry then DLQ row created with checksum
+      - per-tenant/channel rate limit + quiet hours enforced
+      - proof/notify_events.json + proof/notify_dlq_snapshot.json exist + hash-sealed
+
+  - name: Scheduler Hardening
+    mission: Add advisory locks, jittered cron, and DLQ replay for failed runs.
+    layer: C2 Runtime
+    outputs:
+      - lib/runtime/reflex_scheduler.ts
+      - proof/scheduler_hardening.json
+    steps:
+      - cmd: codex generate module lib/runtime/reflex_scheduler.patch.ts
+      - cmd: codex run "node scripts/patch_scheduler.js"
+      - cmd: codex test --suite runtime
+    acceptance:
+      - uses pg_try_advisory_lock with jitter delay
+      - exponential backoff + DLQ replay confirmed
+      - no duplicate runs detected in test logs
+      - proof/scheduler_hardening.json present + hash-sealed
+
+# ---------- Proof bundling ----------
+post:
+  - name: Bundle runtime proofs
+    steps:
+      - cmd: codex bundle proof/ proof/bundles/runtime_v16.5.json
+      - cmd: codex run "node scripts/pre_cert_v16_5.js --out proof/pre_cert_runtime.json"
+
+# ---------- Verification guards ----------
+verify:
+  - cmd: grep -R "pg_try_advisory_lock" lib/runtime || echo "⚠️ advisory_lock missing"
+  - cmd: grep -R "retry\|backoff" lib/notify || echo "⚠️ retry/backoff missing"
+  - cmd: grep -R "event_id" lib/notify || echo "⚠️ event_id dedupe missing"
+  - cmd: grep -R "sha256" proof || echo "⚠️ proof hash seal missing"
+
+acceptance:
+  - DLQ table populated after 3 failed sends
+  - scheduler logs show 0 duplicate cron runs
+  - runtime proofs bundled + pre-cert hash sealed
+

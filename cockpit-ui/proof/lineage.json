@@ -1,0 +1,14 @@
+[
+  {
+    "gate": "G19.1",
+    "proof": "proof/v19_1_frontend_certification.json",
+    "sealed_at": "2025-10-21T05:43:07.959Z",
+    "sealed_by": "Commander"
+  },
+  {
+    "gate": "G19.1",
+    "proof": "proof/v19_1_frontend_certification.json",
+    "sealed_at": "2025-10-21T05:43:09.390Z",
+    "sealed_by": "Commander"
+  }
+]

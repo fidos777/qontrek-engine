@@ -1,0 +1,13 @@
+run_id,phase,eval_score,latency_ms,tokens_used,energy_cost,manifest_drift,baseline_efficiency,proof_timestamp,drift_log_excerpt,eval_log_ref
+,,,,,,,,2025-10-14T10:46:57.595699,"[2025-10-14T08:57:36.386001Z] avg_eval=0.828 drift=5.13% status=WARN
+[2025-10-14",
+,,,,,,,,2025-10-14T10:46:57.595960,"[2025-10-14T08:57:36.386001Z] avg_eval=0.828 drift=5.13% status=WARN
+[2025-10-14",
+,,,,,,,,2025-10-14T10:46:57.595962,"[2025-10-14T08:57:36.386001Z] avg_eval=0.828 drift=5.13% status=WARN
+[2025-10-14",
+,,,,,,,,2025-10-14T10:46:57.595964,"[2025-10-14T08:57:36.386001Z] avg_eval=0.828 drift=5.13% status=WARN
+[2025-10-14",
+,,,,,,,,2025-10-14T10:46:57.595965,"[2025-10-14T08:57:36.386001Z] avg_eval=0.828 drift=5.13% status=WARN
+[2025-10-14",
+,,,,,,,,2025-10-14T10:46:57.595967,"[2025-10-14T08:57:36.386001Z] avg_eval=0.828 drift=5.13% status=WARN
+[2025-10-14",

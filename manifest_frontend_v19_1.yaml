@@ -1,0 +1,35 @@
+version: "v19.1"
+gate: "G19.1"
+title: "Frontend Completion Sprint — Operational UI 100% Readiness"
+
+phases:
+  - name: ui_update
+    description: "Implement final UI elements for Gates, CFO, Docs, and PWA"
+    steps:
+      - cmd: npm run dev --workspace cockpit-ui
+      - cmd: npm run build --workspace cockpit-ui
+      - cmd: echo '{"status":"ui_updated","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' > proof/ui_build_v19_1.json
+
+  - name: qa_proof
+    description: "Validate UI renders + accessibility + REST data binding"
+    steps:
+      - cmd: npm run test -- --watchAll=false
+      - cmd: echo '{"status":"verified","phase":"qa_proof"}' > proof/qa_v19_1.json
+
+  - name: certify
+    description: "Combine UI subproofs into final certification JSON"
+    steps:
+      - cmd: python3 scripts/proof_embed_shas.py --manifest manifest_frontend_v19_1.yaml --output proof/v19_1_frontend_certification.json
+      - cmd: jq '. + {status:"sealed", gate:"G19.1"}' proof/v19_1_frontend_certification.json | sponge proof/v19_1_frontend_certification.json
+
+outputs:
+  proof_files:
+    - proof/ui_build_v19_1.json
+    - proof/qa_v19_1.json
+    - proof/v19_1_frontend_certification.json
+
+governance:
+  seal_policy: "one_time"
+  ledger_append: true
+  signature: "codex_frontend_v19_1"
+

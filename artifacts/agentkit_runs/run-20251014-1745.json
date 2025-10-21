@@ -1,0 +1,71 @@
+{
+  "timestamp": "2025-10-14T09:45:56.560240Z",
+  "proof_ref": [],
+  "avg_eval": 0.839,
+  "runs": [
+    {
+      "run_id": "run_1_094556",
+      "phase": "runtime",
+      "eval_score": 0.845,
+      "tokens_used": 10806,
+      "latency_ms": 107,
+      "energy_cost": 0.0274
+    },
+    {
+      "run_id": "run_2_094556",
+      "phase": "runtime",
+      "eval_score": 0.829,
+      "tokens_used": 9930,
+      "latency_ms": 108,
+      "energy_cost": 0.0233
+    },
+    {
+      "run_id": "run_3_094556",
+      "phase": "runtime",
+      "eval_score": 0.831,
+      "tokens_used": 11658,
+      "latency_ms": 111,
+      "energy_cost": 0.0272
+    },
+    {
+      "run_id": "run_4_094556",
+      "phase": "runtime",
+      "eval_score": 0.827,
+      "tokens_used": 11307,
+      "latency_ms": 108,
+      "energy_cost": 0.0243
+    },
+    {
+      "run_id": "run_5_094556",
+      "phase": "runtime",
+      "eval_score": 0.826,
+      "tokens_used": 11161,
+      "latency_ms": 108,
+      "energy_cost": 0.025
+    },
+    {
+      "run_id": "run_6_094556",
+      "phase": "runtime",
+      "eval_score": 0.851,
+      "tokens_used": 10251,
+      "latency_ms": 109,
+      "energy_cost": 0.0262
+    },
+    {
+      "run_id": "run_7_094556",
+      "phase": "runtime",
+      "eval_score": 0.847,
+      "tokens_used": 10954,
+      "latency_ms": 113,
+      "energy_cost": 0.023
+    },
+    {
+      "run_id": "run_8_094556",
+      "phase": "runtime",
+      "eval_score": 0.853,
+      "tokens_used": 10321,
+      "latency_ms": 109,
+      "energy_cost": 0.0267
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+# ================================================================
+# QONTREK v16.5 – MASTER SPRINT MANIFEST (G11 → G12)
+# Goal: Automate full Reflex Autonomy Ops sprint from runtime to certification
+# Includes: Runtime Base, Watchdog SLA, UI Ops, Ledger Certification
+# Duration: ~14h (multi-phase / parallelizable in Codex UI)
+# ================================================================
+
+meta:
+  version: v16.5
+  sprint: Reflex_Autonomy_Ops
+  gates:
+    - G11
+    - G12
+  created: 2025-10-18
+  owner: Tower_Control
+  orchestrator: Codex_UI + Supabase + Vercel
+
+# ---------- Overview ----------
+description: |
+  This master sprint manifest coordinates all sub-phase YAMLs:
+  1️⃣ phase_runtime.yaml → Sets Reflex runtime base (Gateway + DLQ + Scheduler)
+  2️⃣ phase_watchdog.yaml → Implements SLA escalation logic (7/14/21/30)
+  3️⃣ phase_ui_ops.yaml → Builds CFO Lens + Docs dashboard + Proof bundle
+  4️⃣ phase_certify.yaml → Validates, attests, and deploys v16.5 to production
+
+# ---------- Phases ----------
+phases:
+  - name: Phase 1 – Runtime Setup
+    file: codex/phase_runtime.yaml
+    goal: Establish Reflex Runtime (Gateway + DLQ + Scheduler)
+    duration: 6h
+    proof_targets:
+      - proof/notify_dlq_snapshot.json
+      - proof/scheduler_hardening.json
+
+  - name: Phase 2 – Watchdog SLA
+    file: codex/phase_watchdog.yaml
+    goal: Implement SLA escalation matrix + audit trails
+    duration: 3h
+    proof_targets:
+      - proof/watchdog_sla_matrix.json
+      - proof/alerts_audit.json
+
+  - name: Phase 3 – UI & Ops
+    file: codex/phase_ui_ops.yaml
+    goal: Build CFO Lens, Document Tracker, and pre-cert bundle
+    duration: 5h
+    proof_targets:
+      - proof/cfo_cohorts.json
+      - proof/doc_tracker_snapshot.json
+      - proof/pre_cert_v16_5.json
+      - proof/reports/tower_intelligence_report.md
+
+  - name: Phase 4 – Certification & Deploy
+    file: codex/phase_certify.yaml
+    goal: Validate proofs, attest ledger, and deploy to production
+    duration: 4h
+    proof_targets:
+      - proof/attestations/ledger_attestation_v16_5.json
+      - proof/reports/tower_certification_summary.md
+      - proof/attestations/deploy_snapshot.json
+
+# ---------- Execution Macros ----------
+tasks:
+  - name: Run Full Sprint (Sequential)
+    cmd: |
+      codex run codex/phase_runtime.yaml --auto
+      codex run codex/phase_watchdog.yaml --auto
+      codex run codex/phase_ui_ops.yaml --auto
+      codex run codex/phase_certify.yaml --auto
+    proof: proof/attestations/sprint_v16_5_full_run.json
+
+  - name: Run All Phases in Codex UI (Parallel)
+    cmd: |
+      codex ui:run phase_runtime.yaml &
+      codex ui:run phase_watchdog.yaml &
+      codex ui:run phase_ui_ops.yaml &
+      wait
+      codex run codex/phase_certify.yaml --auto
+    proof: proof/attestations/sprint_v16_5_parallel_run.json
+
+  - name: Generate Consolidated Sprint Report
+    cmd: |
+      python3 scripts/gen_sprint_report.py \
+        --inputs proof/attestations/*.json proof/reports/*.md \
+        --out proof/reports/sprint_v16_5_master_summary.md
+    proof: proof/reports/sprint_v16_5_master_summary.md
+
+# ---------- Validation ----------
+validate:
+  - cmd: codex validate proof/reports/sprint_v16_5_master_summary.md
+  - cmd: codex validate proof/attestations/sprint_v16_5_full_run.json
+
+# ---------- Expected Results ----------
+expected:
+  - All four phases execute successfully with zero schema drift
+  - Proofs emitted for every G11–G12 gate with hash verification
+  - Final Tower Certification summary reflects end-to-end operational readiness
+  - Vercel deployment verified (200 OK)
+
+# ---------- Outputs ----------
+proofs:
+  - name: proof/attestations/sprint_v16_5_full_run.json
+    desc: Full sequential sprint execution log
+  - name: proof/attestations/sprint_v16_5_parallel_run.json
+    desc: Parallel Codex UI execution log
+  - name: proof/reports/sprint_v16_5_master_summary.md
+    desc: Combined intelligence + certification sprint summary
+

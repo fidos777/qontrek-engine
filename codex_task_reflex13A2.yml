@@ -1,0 +1,109 @@
+# codex_task_reflex13A2.yml
+# 🔧 QONTREK ENGINE — Reflex 13.1-A2 Governance + CI Bundle
+# Purpose: Standardize Reflex mission, CI enforcement, and governance contracts.
+
+tasks:
+  - name: 🧩 Create mission_v13.yaml
+    path: ops/mission_v13.yaml
+    action: create
+    content: |
+      mission: v13.0-reflex
+      inherits: ./mission_v12.yaml
+      reflex:
+        mode: shadow          # shadow | canary | live
+        canary_percent: 0.10
+        min_sample: 500
+        metric_primary: conversion_rate
+        metric_guardrails:
+          refund_rate_max: 0.05
+          efficiency_ratio_min: 0.85
+        max_daily_weight_delta: 0.15
+        rollback_if:
+          - kpi: conversion_rate; change: "< -3% abs"
+          - kpi: refund_rate;     change: "> +1.5% abs"
+      cost_model_id: v2
+      efficiency_formula_id: v13-default
+      fairness_policy_id: v2
+
+  - name: 🧰 Add Makefile for Reflex build pipeline
+    path: Makefile
+    action: create
+    content: |
+      .PHONY: setup pre-cert reflex-run reflex-report fmt test lint
+
+      setup:
+      	pnpm i || npm i
+
+      pre-cert: lint test
+      	node scripts/pre_cert_reflex.js --mission ops/mission_v13.yaml
+
+      reflex-run:
+      	python scripts/run_reflex_macro.py --mission ops/mission_v13.yaml --mode shadow
+
+      reflex-report:
+      	node scripts/gen_reflex_report.js --out proof/tower_audit_v13.json
+
+      lint:
+      	npx eslint . --max-warnings=0
+
+      test:
+      	npx jest --runInBand
+
+  - name: 🤖 Add Reflex Pre-Cert GitHub Action
+    path: .github/workflows/reflex.yml
+    action: create
+    content: |
+      name: Reflex Pre-Cert
+      on: [pull_request]
+      jobs:
+        precert:
+          runs-on: ubuntu-latest
+          steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                node-version: '20'
+            - run: make setup
+            - run: make pre-cert
+
+  - name: 📘 Add Reflex Contract Doc
+    path: docs/reflex_contract.yaml
+    action: create
+    content: |
+      reward_engine:
+        input:  ledger_feedback_memory (window), tactic_space.json
+        output: tactic_weights.json {policy_rev, code_rev, data_rev, expected_uplift, constraints}
+
+      reflex_tracker:
+        input:  tactic_weights.json, exposure_logs
+        output: reflex_tracker_log.json, segment_kpis.json
+
+      self_eval:
+        input:  tracker+baseline, mission_v13.yaml
+        output: reflex_self_eval.json {srm, cuped_p, guardrails, verdict}
+
+  - name: 🧾 Add PR Template for Reflex merges
+    path: .github/PULL_REQUEST_TEMPLATE.md
+    action: create
+    content: |
+      ### Reflex Checklist
+      - [ ] Attached: reflex_self_eval.json (SRM pass, CUPED p<0.05)
+      - [ ] Attached: tactic_weights.json (code_rev, data_rev present)
+      - [ ] Mode: shadow/canary (not live) unless last cycle PASS
+      - [ ] Rollback simulation attached
+
+  - name: 🧩 Add CODEOWNERS for Reflex governance
+    path: CODEOWNERS
+    action: create
+    content: |
+      ops/mission_v13.yaml   @governance
+      proof/**               @governance
+      ai/**                  @ai_codex
+      rpc/** sql/**          @c2_runtime
+
+  - name: 🪪 Add VERSION file
+    path: VERSION
+    action: create
+    content: |
+      13.1-A2
+

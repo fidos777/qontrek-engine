@@ -1,0 +1,109 @@
+# ============================================================
+# 📄 Phase 3 — Document Tracker + Trust/Uptime Chart
+# Purpose: Build operational visibility for document SLA + trust trend
+# ============================================================
+
+tasks:
+
+  # 1️⃣  Fetch document SLA counters (breach 7/14/21)
+  - name: "doc_tracker_sla_counters"
+    description: "Compute SLA breaches from Supabase 'documents' table"
+    run: |
+      python3 - <<'EOF'
+      import os, json, requests, datetime
+      url = f"{os.getenv('SUPABASE_URL')}/rest/v1/documents"
+      headers = {
+          "apikey": os.getenv('SUPABASE_SERVICE_KEY'),
+          "Authorization": f"Bearer {os.getenv('SUPABASE_SERVICE_KEY')}"
+      }
+      params = "?select=id,days_overdue&tenant_id=eq." + os.getenv("SUPABASE_TENANT_ID")
+      r = requests.get(url + params, headers=headers)
+      r.raise_for_status()
+      docs = r.json()
+      counters = {"breach_7":0,"breach_14":0,"breach_21":0}
+      for d in docs:
+          dd = d.get("days_overdue",0)
+          if 7 <= dd < 14: counters["breach_7"] += 1
+          elif 14 <= dd < 21: counters["breach_14"] += 1
+          elif dd >= 21: counters["breach_21"] += 1
+      out = {
+          "generated_at": datetime.datetime.utcnow().isoformat()+"Z",
+          "tenant_id": os.getenv("SUPABASE_TENANT_ID"),
+          "counters": counters
+      }
+      os.makedirs("proof/dashboard", exist_ok=True)
+      with open("proof/dashboard/doc_sla_breakdown.json","w") as f:
+          json.dump(out,f,indent=2)
+      print("✅ doc_sla_breakdown.json written", counters)
+      EOF
+    proof: "proof/dashboard/doc_sla_breakdown.json"
+
+  # 2️⃣  Fetch trust/uptime trend (7-day)
+  - name: "fetch_trust_timeseries"
+    description: "Pull 7-day trust trend from proofs_parity_log for cockpit chart"
+    run: "python3 scripts/fetch_trust_timeseries.py"
+    proof: "proof/dashboard/trust_timeseries.json"
+
+  # 3️⃣  Build cockpit tiles (React)
+  - name: "build_cockpit_tiles"
+    description: "Generate and bundle Document Tracker + Trust/Uptime tiles"
+    run: |
+      echo "🧩 Building Cockpit components..."
+      mkdir -p cockpit/components/tiles
+      cat > cockpit/components/tiles/DocTrackerTile.tsx <<'EOT'
+      import { useEffect, useState } from "react";
+      export default function DocTrackerTile() {
+        const [sla,setSla]=useState<{breach_7:number,breach_14:number,breach_21:number}>({breach_7:0,breach_14:0,breach_21:0});
+        useEffect(()=>{
+          fetch("/proof/dashboard/doc_sla_breakdown.json").then(r=>r.json()).then(d=>setSla(d.counters||{}));
+        },[]);
+        return (
+          <div className="card">
+            <h3 className="font-bold mb-2">Document Tracker</h3>
+            <p>≥7d overdue: {sla.breach_7}</p>
+            <p>≥14d overdue: {sla.breach_14}</p>
+            <p>≥21d overdue: {sla.breach_21}</p>
+          </div>
+        );
+      }
+      EOT
+
+      cat > cockpit/components/tiles/TrustChartTile.tsx <<'EOT'
+      import { useEffect, useState } from "react";
+      import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+      export default function TrustChartTile() {
+        const [points,setPoints]=useState<any[]>([]);
+        useEffect(()=>{
+          fetch("/proof/dashboard/trust_timeseries.json").then(r=>r.json()).then(d=>setPoints(d.points||[]));
+        },[]);
+        return (
+          <div className="card">
+            <h3 className="font-bold mb-2">Trust / Uptime (7 days)</h3>
+            <ResponsiveContainer width="100%" height={150}>
+              <LineChart data={points}>
+                <XAxis dataKey="t" hide />
+                <YAxis domain={[0,100]} hide />
+                <Tooltip />
+                <Line type="monotone" dataKey="trust" stroke="#22C55E" strokeWidth={2} dot={false}/>
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      }
+      EOT
+      echo "✅ Cockpit tiles generated: DocTrackerTile.tsx + TrustChartTile.tsx"
+    proof: "proof/dashboard/build_phase3_tiles.log"
+
+  # 4️⃣  Verification step
+  - name: "verify_phase3_outputs"
+    description: "Confirm all dashboard proofs exist"
+    run: |
+      ls proof/dashboard/doc_sla_breakdown.json
+      ls proof/dashboard/trust_timeseries.json
+      echo "✅ Phase 3 verification complete."
+    proof: "proof/dashboard/phase3_verification.log"
+
+# ============================================================
+# End of Phase 3 manifest
+# ============================================================
+

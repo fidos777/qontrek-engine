@@ -1,0 +1,53 @@
+[
+  {
+    "recorded_at": "2025-10-18T08:45:04Z",
+    "tenant_id": "tenant-west",
+    "channel": "slack",
+    "success_rate": 1.0,
+    "retry_rate": 0.0,
+    "dlq_depth": 0,
+    "jitter_ms_avg": 5000,
+    "proof_ref": "proof/bundles/v16_5_runtime_bundle.json",
+    "meta": {
+      "bundle_sha256": "6d1e191e0a887f650d4dbcafc4f76c5f9f564fe9615fe873cf8bfeba9157e497",
+      "events_sha256": "ac2e48d3cd660eaf29252230cf1c5077468c3d1c31a4318c47af34db11fa5701",
+      "dlq_sha256": "8a9d16c5c584632b9beb146935bd914c87d693914cadd39608d0601d93de6784",
+      "scheduler_sha256": "5deddc7657da876b9383d78efd6db27e99d62528f1f6a5e61f10e26194bff3a2"
+    },
+    "metric_id": "mock-1"
+  },
+  {
+    "recorded_at": "2025-10-18T08:45:04Z",
+    "tenant_id": "tenant-apac",
+    "channel": "whatsapp",
+    "success_rate": 1.0,
+    "retry_rate": 0.0,
+    "dlq_depth": 0,
+    "jitter_ms_avg": 5000,
+    "proof_ref": "proof/bundles/v16_5_runtime_bundle.json",
+    "meta": {
+      "bundle_sha256": "6d1e191e0a887f650d4dbcafc4f76c5f9f564fe9615fe873cf8bfeba9157e497",
+      "events_sha256": "ac2e48d3cd660eaf29252230cf1c5077468c3d1c31a4318c47af34db11fa5701",
+      "dlq_sha256": "8a9d16c5c584632b9beb146935bd914c87d693914cadd39608d0601d93de6784",
+      "scheduler_sha256": "5deddc7657da876b9383d78efd6db27e99d62528f1f6a5e61f10e26194bff3a2"
+    },
+    "metric_id": "mock-2"
+  },
+  {
+    "recorded_at": "2025-10-18T08:45:04Z",
+    "tenant_id": "tenant-emea",
+    "channel": "email",
+    "success_rate": 1.0,
+    "retry_rate": 0.0,
+    "dlq_depth": 1,
+    "jitter_ms_avg": 5000,
+    "proof_ref": "proof/bundles/v16_5_runtime_bundle.json",
+    "meta": {
+      "bundle_sha256": "6d1e191e0a887f650d4dbcafc4f76c5f9f564fe9615fe873cf8bfeba9157e497",
+      "events_sha256": "ac2e48d3cd660eaf29252230cf1c5077468c3d1c31a4318c47af34db11fa5701",
+      "dlq_sha256": "8a9d16c5c584632b9beb146935bd914c87d693914cadd39608d0601d93de6784",
+      "scheduler_sha256": "5deddc7657da876b9383d78efd6db27e99d62528f1f6a5e61f10e26194bff3a2"
+    },
+    "metric_id": "mock-3"
+  }
+]

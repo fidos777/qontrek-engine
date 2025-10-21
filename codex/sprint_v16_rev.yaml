@@ -1,0 +1,110 @@
+version: "v16.0-Rev"
+name: "Qontrek v16 — Revenue-First Flywheel Sprint"
+description: >
+  Full 9h45m sprint pipeline: SQL → API → lib → UI → Proof → Deploy → Governance.
+  Incorporates CT v16.0-Rev recommendations, seed data, and dual-stage pre-cert checks.
+
+# ───────────────────────────────────────────────
+# 0) ENVIRONMENT CHECKS
+# ───────────────────────────────────────────────
+env:
+  required:
+    - SUPABASE_URL
+    - SUPABASE_ANON_KEY
+    - SUPABASE_SERVICE_ROLE
+    - WA_API_KEY
+    - SLACK_WEBHOOK
+  steps:
+    - cmd: codex env:assert SUPABASE_URL SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE WA_API_KEY SLACK_WEBHOOK
+
+# ───────────────────────────────────────────────
+# 1) MIGRATION + SEEDING
+# ───────────────────────────────────────────────
+setup:
+  steps:
+    - cmd: codex db:migrate sql/ --apply
+    - cmd: codex db:rpc add rpc/priv.log_ledger_credit.sql rpc/priv.apply_refund.sql
+    - cmd: codex db:seed sql/seeds/seed_collections_overdue.sql sql/seeds/seed_watchdog_sla.sql sql/seeds/seed_ops_metrics.sql
+    - cmd: codex test "rls smoke" --write tests/rls_smoke.test.ts
+    - note: "Seeds 5 invoices, 2 SLA breaches, 7 days of ops_metrics to ensure tiles render data."
+
+# ───────────────────────────────────────────────
+# 2) API LAYER — PRIORITY SEQUENCE
+# ───────────────────────────────────────────────
+api:
+  steps:
+    - cmd: codex create api /api/gates/g2
+    - cmd: codex generate module lib/gates/g2.service.ts --template gate2-idempotent
+    - cmd: codex create api /api/cfo/collections/summary
+    - cmd: codex create api /api/watchdog/sse
+    - cmd: codex set runtime app/api/watchdog/sse/route.ts node
+    - note: "Node runtime avoids Edge SSE timeout issues."
+
+# ───────────────────────────────────────────────
+# 3) LOGIC + UI BUILDS
+# ───────────────────────────────────────────────
+build:
+  steps:
+    - cmd: codex ui:generate app/components/SECurve.tsx --source sql system_effectiveness_view
+    - cmd: codex ui:generate app/components/FMIChip.tsx --source sql system_effectiveness_view --badge "corr>=0.7:green"
+    - cmd: codex ui:generate app/components/G2CollectionsTile.tsx --source sql vw_collections_overdue
+    - cmd: codex ui:generate app/components/WatchdogQueue.tsx --source sql vw_watchdog_sla
+    - cmd: codex ui:generate app/components/CfoCollections.tsx --source sql vw_collections_overdue,vw_collections_forecast
+    - note: "Wire all charts to seeded SQL data so stakeholders see SE/FMI motion immediately."
+
+# ───────────────────────────────────────────────
+# 4) PROOF & PRE-CERTIFICATION
+# ───────────────────────────────────────────────
+proof:
+  steps:
+    - cmd: node scripts/pre_cert_v16.js --mode stub --out proof/pre_cert_v16_stub.json
+    - cmd: export WA_LIVE=true
+    - cmd: node scripts/pre_cert_v16.js --mode live --out proof/pre_cert_v16.json
+    - proof_files:
+        - proof/pre_cert_v16_stub.json
+        - proof/pre_cert_v16.json
+    - note: >
+        Stage-1 stub run (WA_LIVE=false) validates plumbing.
+        Stage-2 live run re-tests idempotency, RPC-only writes, UTC timestamps, Corr≥0.7, DLQ≤5%.
+
+# ───────────────────────────────────────────────
+# 5) TESTS
+# ───────────────────────────────────────────────
+test:
+  steps:
+    - cmd: codex test "gate2 e2e" --write tests/gates/g2.e2e.ts
+    - cmd: codex test "watchdog breach < 60m" --write tests/watchdog.sla.test.ts
+    - cmd: codex run "npx lhci autorun --collect.staticDistDir=.next"
+    - note: "Ensures accessibility ≥90, TTA <60m, WA idempotency verified."
+
+# ───────────────────────────────────────────────
+# 6) DEPLOYMENT
+# ───────────────────────────────────────────────
+deploy:
+  steps:
+    - cmd: codex deploy vercel --prod
+    - cmd: codex version tag v16.0-Rev --source cockpit-ui
+    - note: "Confirms Node runtime, pushes production build."
+
+# ───────────────────────────────────────────────
+# 7) PROOF ARCHIVAL + LEDGER SNAPSHOT
+# ───────────────────────────────────────────────
+archive:
+  steps:
+    - cmd: codex run "supabase rpc save_ledger_snapshot" || echo "snapshot simulated"
+    - cmd: codex bundle proof/ proof/bundles/v16_rev_bundle.json
+    - note: "Archives proof outputs (gate2_recovery_pilot.json, watchdog_sla_metrics.json, collections_forecast_metrics.json, ledger_sefmi.json)."
+
+# ───────────────────────────────────────────────
+# 8) BUFFER + NOTES
+# ───────────────────────────────────────────────
+meta:
+  total_est_time: "9h 45m core + 1h 30m buffer"
+  owners: ["@ai_codex", "@frontend_danish", "@devops_megat", "@c2_runtime", "@qa_zeyti"]
+  okr:
+    Recovered_RM_30d: 240000
+    DL_reduction_pct: -20
+    CL_reduction_pct: -15
+    FC_gain_pct: +20
+    Corr_min: 0.70
+

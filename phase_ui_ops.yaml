@@ -1,0 +1,117 @@
+# ================================================================
+# QONTREK v16.5 – PHASE UI_OPS (Day 2–3)
+# Goal: Build CFO Lens + Document Tracker + Proof bundle + Intelligence report
+# Duration: ~6h (3h CFO, 2h Docs, 1h Proof/Report)
+# ================================================================
+
+meta:
+  version: v16.5
+  phase: ui_ops
+  gate: G11
+  owner: C3_Cockpit
+  created: 2025-10-18
+
+# ---------- Setup ----------
+init:
+  - cmd: codex env:assert SUPABASE_URL SUPABASE_SERVICE_ROLE
+  - cmd: mkdir -p app/cfo app/docs sql proof/reports
+
+# ---------- Schema & Views ----------
+files:
+  - path: sql/vw_collections_overdue.sql
+    content: |
+      create or replace view vw_collections_overdue as
+      select
+        tenant_id,
+        invoice_id,
+        due_date,
+        amount_due,
+        case
+          when now() - due_date < interval '30 days' then '0–30d'
+          when now() - due_date < interval '60 days' then '31–60d'
+          when now() - due_date < interval '90 days' then '61–90d'
+          else '90d+'
+        end as aging_bucket,
+        status,
+        updated_at
+      from collections
+      where status != 'paid';
+
+  - path: sql/vw_collections_forecast.sql
+    content: |
+      create or replace view vw_collections_forecast as
+      select
+        tenant_id,
+        extract(month from due_date) as month,
+        sum(amount_due) as forecast_amount,
+        avg(payment_lag_days) as avg_delay,
+        stddev(payment_lag_days) as deviation,
+        count(*) as invoice_count
+      from collections
+      group by tenant_id, month;
+
+  - path: sql/vw_docs_tracker.sql
+    content: |
+      create or replace view vw_docs_tracker as
+      select
+        tenant_id,
+        doc_id,
+        category,
+        status,
+        created_at,
+        reminder_sent_at,
+        extract(day from now() - created_at) as days_open,
+        case
+          when extract(day from now() - created_at) >= 30 then 'overdue'
+          when extract(day from now() - created_at) >= 14 then 'due soon'
+          else 'ok'
+        end as sla_status
+      from documents;
+
+# ---------- UI Generation ----------
+tasks:
+  - name: Generate CFO Lens (A/R Aging + Recovery Cohorts)
+    cmd: |
+      codex ui:generate app/cfo/Aging.tsx --source sql vw_collections_overdue
+      codex ui:generate app/cfo/Cohorts.tsx --source sql vw_collections_forecast
+    proof: proof/cfo_cohorts.json
+
+  - name: Develop Document Tracker Dashboard
+    cmd: |
+      codex ui:generate app/docs/Tracker.tsx --source sql vw_docs_tracker
+    proof: proof/doc_tracker_snapshot.json
+
+  - name: Compile pre-certification and proof bundle
+    cmd: |
+      node scripts/pre_cert_v16_5.js --out proof/pre_cert_v16_5.json
+    proof: proof/pre_cert_v16_5.json
+
+  - name: Compile Tower Intelligence Report
+    cmd: |
+      python3 scripts/gen_tower_intelligence_report.py --bundle proof/pre_cert_v16_5.json
+    proof: proof/reports/tower_intelligence_report.md
+
+# ---------- Validation ----------
+validate:
+  - cmd: codex validate proof/pre_cert_v16_5.json
+  - cmd: codex validate proof/doc_tracker_snapshot.json
+  - cmd: codex validate proof/reports/tower_intelligence_report.md
+
+# ---------- Expected Results ----------
+expected:
+  - CFO Lens tiles (Aging + Cohorts) render from SQL views
+  - Document Tracker dashboard shows pending + SLA counters
+  - Pre-cert bundle generated with hash-sealed proofs
+  - Tower Intelligence report compiled and visible in Codex UI
+
+# ---------- Metrics ----------
+proofs:
+  - name: proof/cfo_cohorts.json
+    desc: Verified forecast MAE ≤ 5%
+  - name: proof/doc_tracker_snapshot.json
+    desc: Verified DL (document delay) −15% improvement
+  - name: proof/pre_cert_v16_5.json
+    desc: Verified Corr(FQ,FC) ≥ 0.7, idempotency OK
+  - name: proof/reports/tower_intelligence_report.md
+    desc: Verified governance telemetry summary compiled successfully
+

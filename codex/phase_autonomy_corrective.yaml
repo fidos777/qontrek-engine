@@ -1,0 +1,67 @@
+# ============================================================
+# QONTREK v18.2 – PHASE AUTONOMY CORRECTIVE
+# Goal: Execute corrective loop after drift scoring, decide automation vs escalation, rotate governance seals.
+# ============================================================
+
+meta:
+  version: v18.2
+  phase: autonomy_corrective
+  gate: G17
+  owner: C5_Governance
+  cadence: "cron(30 2 * * *)"
+  created: 2025-10-18
+
+# ---------- Tasks ----------
+tasks:
+  - id: ingest
+    name: Ingest
+    steps:
+      - cmd: codex run "python3 scripts/push_metrics_runtime.py proof/bundles/v16_5_runtime_bundle.json"
+      - cmd: codex run "python3 scripts/dlq_replay_job.py"
+
+  - id: summary
+    name: Summary
+    steps:
+      - cmd: codex run "python3 scripts/gen_tower_sync_summary.py"
+      - cmd: codex run "python3 scripts/policy_diff.py"
+
+  - id: verify
+    name: Verify
+    steps:
+      - cmd: codex run "python3 scripts/verify_tower_sync.py"
+
+  - id: decide
+    name: Decide corrective path
+    steps:
+      - cmd: codex run "python3 scripts/autonomy_fetch_metrics.py --window 6h --out proof/autonomy/metrics_snapshot.json"
+      - cmd: codex run "python3 scripts/autonomy_compare_baseline.py --current proof/autonomy/metrics_snapshot.json --baseline proof/tower_sync_summary.json --out proof/autonomy/drift_report.json"
+      - cmd: codex run "python3 scripts/autonomy_score_drift.py --report proof/autonomy/drift_report.json --out proof/autonomy/drift_score.json"
+      - cmd: codex run "python3 scripts/autonomy_corrective.py --out proof/autonomy/corrective_action.json"
+      - cmd: codex run "python3 scripts/autonomy_trigger_recert.py --score proof/autonomy/drift_score.json --threshold 0.2 --bundle proof/bundles/v17_tower_sync_bundle.json --out proof/autonomy/recert_trigger.json"
+
+  - id: notify
+    name: Send WhatsApp Alert
+    steps:
+      - cmd: codex run "python3 scripts/tower_notify_gateway.py"
+
+  - id: certify
+    name: Certify + Meta Seal
+    steps:
+      - cmd: codex run "python3 scripts/tower_sync_certify.py --bundle proof/bundles/v17_tower_sync_bundle.json --summary proof/tower_sync_summary.json --out proof/tower_sync_cert_v18.json --version v18.2 --gate G17 --phase autonomy_corrective"
+      - cmd: codex run "python3 scripts/validate_change_receipts.py"
+      - cmd: codex run "python3 scripts/rotate_meta_seal.py --out proof/tower_sync_cert_v18.2.json --cadence daily"
+
+  - id: refresh
+    name: Refresh dashboard
+    steps:
+      - cmd: codex run "node scripts/emit_dashboard_refresh.js --source proof/tower_sync_summary.json"
+
+# ---------- Plan ----------
+plan:
+  - ingest
+  - summary
+  - verify
+  - decide
+  - notify
+  - certify
+  - refresh

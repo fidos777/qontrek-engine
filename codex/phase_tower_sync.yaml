@@ -1,0 +1,70 @@
+# ============================================================
+# QONTREK v17.0 – PHASE TOWER SYNC (β)
+# Goal: Push runtime governance metrics into Supabase and refresh Tower dashboards.
+# ============================================================
+
+meta:
+  version: v17.0
+  phase: tower_sync
+  gate: G11
+  owner: C5_Governance
+  created: 2025-10-18
+
+# ---------- Setup ----------
+init:
+  - cmd: codex env:assert SUPABASE_URL SUPABASE_SERVICE_ROLE SUPABASE_ANON_KEY
+  - cmd: mkdir -p proof dashboards/sql
+
+# ---------- Schema ----------
+files:
+  - path: dashboards/sql/metrics_runtime.sql
+    content: |
+      create table if not exists metrics_runtime (
+        metric_id uuid primary key default gen_random_uuid(),
+        recorded_at timestamptz not null default now(),
+        tenant_id text not null,
+        channel text not null,
+        success_rate numeric(5,4),
+        retry_rate numeric(5,4),
+        dlq_depth integer,
+        jitter_ms_avg integer,
+        proof_ref text not null,
+        meta jsonb default '{}'::jsonb
+      );
+      create index if not exists idx_metrics_runtime_recorded_at on metrics_runtime(recorded_at desc);
+
+# ---------- Tasks ----------
+tasks:
+  - name: Sync runtime metrics to Supabase
+    mission: Load latest Reflex gateway + scheduler stats into metrics_runtime table.
+    steps:
+      - cmd: codex run "python3 scripts/push_metrics_runtime.py --bundle proof/bundles/v16_5_runtime_bundle.json"
+    outputs:
+      - proof/tower_sync_ingest.json
+
+  - name: Generate tower sync summary
+    mission: Produce governance summary and publish dashboard refresh marker.
+    steps:
+      - cmd: codex run "python3 scripts/gen_tower_sync_summary.py --out proof/tower_sync_summary.json"
+      - cmd: codex run "node scripts/emit_dashboard_refresh.js --source proof/tower_sync_summary.json"
+    outputs:
+      - proof/tower_sync_summary.json
+      - proof/tower_dashboard_refresh.json
+
+  - name: Dashboard validation
+    mission: Confirm Supabase rows and dashboard tiles updated.
+    steps:
+      - cmd: codex run "python3 scripts/verify_tower_sync.py --expect 200"
+    outputs:
+      - proof/tower_sync_validation.json
+
+# ---------- Verification ----------
+verify:
+  - cmd: codex db:query dashboards/sql/metrics_runtime.sql --check
+  - cmd: grep -R \"tower_sync_summary\" proof || echo \"⚠️ summary proof missing\"
+
+# ---------- Acceptance ----------
+acceptance:
+  - metrics_runtime table contains new rows for each tenant/channel
+  - proof/tower_sync_summary.json sealed with sha256
+  - dashboard refresh event emitted (Tower tiles updated <5m)
