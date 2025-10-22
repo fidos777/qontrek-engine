@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated_at": "2025-10-22T05:20:43.982Z",
+  "generated_at": "2025-10-22T06:00:20.733Z",
   "resources": [
     {
       "uri": "/proof/ab_experiments_v19_8.json",
@@ -67,10 +67,10 @@
     },
     {
       "uri": "/proof/test_proof.json",
-      "etag": "W/\"dacc07e717cf8487ee23047609f81e2c6e4d3762a6bcc314be14445c4f960d10\"",
+      "etag": "W/\"83cd1095f336ac5632adc7eb9efaafe7275128b72194157f31ffd4f60c780bce\"",
       "locale": "ms-MY",
       "size": 41,
-      "modified": "2025-10-22T05:20:43.594Z"
+      "modified": "2025-10-22T06:00:20.330Z"
     },
     {
       "uri": "/proof/tower_hardening_v19_9_1.json",
