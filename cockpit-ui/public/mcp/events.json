@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2025-10-22T04:24:23.235Z",
+  "events": [
+    {
+      "type": "proof.updated",
+      "description": "Emitted when a proof artifact's ETag changes",
+      "schema": "{ ref: string, etag: string, timestamp: number }"
+    },
+    {
+      "type": "proof.loaded",
+      "description": "Emitted when a proof is loaded via API",
+      "schema": "{ ref: string, route: string, etag?: string, schema?: string }"
+    },
+    {
+      "type": "schema.validated",
+      "description": "Emitted when a proof passes schema validation",
+      "schema": "{ ref: string, schema: string, version: string }"
+    }
+  ]
+}

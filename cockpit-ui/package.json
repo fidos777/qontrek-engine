@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "atlas:build": "node scripts/atlas_build.js"
   },
   "dependencies": {
     "next": "14.2.5",

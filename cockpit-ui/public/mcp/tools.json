@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2025-10-22T04:24:23.235Z",
+  "tools": [
+    {
+      "name": "loadProof",
+      "description": "Load and validate proof artifact with auto-upgrade from v0 to v1",
+      "endpoint": "/api/proof",
+      "method": "GET"
+    },
+    {
+      "name": "checkProofFreshness",
+      "description": "Check proof ETag without downloading full content",
+      "endpoint": "/api/proof",
+      "method": "HEAD"
+    },
+    {
+      "name": "listMCPResources",
+      "description": "List all available proof resources with ETags and schemas",
+      "endpoint": "/api/mcp/resources",
+      "method": "GET"
+    },
+    {
+      "name": "listMCPTools",
+      "description": "List all available MCP tools and endpoints",
+      "endpoint": "/api/mcp/tools",
+      "method": "GET"
+    },
+    {
+      "name": "streamMCPEvents",
+      "description": "Subscribe to proof update events",
+      "endpoint": "/api/mcp/events",
+      "method": "GET"
+    }
+  ]
+}

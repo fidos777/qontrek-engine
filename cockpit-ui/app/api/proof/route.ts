@@ -12,6 +12,34 @@ const BUCKET_MAX = 60;            // 60 requests
 const REFILL_MS = 60_000;         // per minute
 let GLOBAL_COUNT = 0;              // durable fallback counter
 
+// ETag cache for event detection
+const ETAG_CACHE = new Map<string, string>();
+
+// Emit MCP event (non-blocking)
+async function emitMCPEvent(type: string, payload: Record<string, any>) {
+  try {
+    const event = { type, ...payload, timestamp: Date.now() };
+
+    // Non-blocking event emission
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/mcp/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(event),
+    }).catch(() => {}); // Silently fail
+
+    // Optional: Tower webhook integration
+    if (process.env.TOWER_WEBHOOK_URL) {
+      fetch(process.env.TOWER_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(event),
+      }).catch(() => {}); // Silently fail
+    }
+  } catch {
+    // Non-blocking, ignore errors
+  }
+}
+
 function ipKey(req: Request) {
   // Next.js in dev: use x-forwarded-for or fallback to remote addr (opaque)
   const ip = (req.headers.get("x-forwarded-for") || "local").split(",")[0].trim();
@@ -91,10 +119,29 @@ async function handle(req: Request, headOnly = false) {
     return new NextResponse(null, { status: 304, headers: await headersFor(path, etag, origin) });
   }
 
+  // Detect ETag changes and emit proof.updated event
+  const cachedETag = ETAG_CACHE.get(ref);
+  if (cachedETag && cachedETag !== etag) {
+    // ETag changed - emit event
+    emitMCPEvent("proof.updated", {
+      ref,
+      etag,
+      previous_etag: cachedETag,
+    });
+  }
+  ETAG_CACHE.set(ref, etag);
+
   const headers = await headersFor(path, etag, origin);
   if (headOnly) {
     return new NextResponse(null, { status: 200, headers });
   }
+
+  // Emit proof.loaded event
+  emitMCPEvent("proof.loaded", {
+    ref,
+    etag,
+    method: "GET",
+  });
 
   // Stream response (avoid buffering twice on big files)
   const stream = createReadStream(path);

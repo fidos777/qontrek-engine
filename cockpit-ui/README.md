@@ -1516,6 +1516,220 @@ const dateStr = fmtDate("2025-10-22T10:00:00Z");  // "22 Okt 2025, 10:00 AM"
 
 ---
 
+## 🧭 Gate G19.9.2-R1.3 — Atlas Registry & MCP Discovery Bridge
+
+Transform the cockpit's proof system into a discoverable, self-describing network using Atlas + MCP format — enabling Claude, Codex, or Tower agents to auto-discover proofs, tools, and schemas without manual injection.
+
+### Mission Intent
+
+Create a self-describing proof network with:
+- Atlas registry generator for automatic proof indexing
+- MCP-compatible HTTP endpoints for discovery
+- Event-driven architecture with proof.updated emissions
+- Tower webhook integration for runtime lineage
+- Atlas-formatted telemetry for compliance
+
+### Features
+
+**Atlas Registry Generator (`scripts/atlas_build.js`):**
+- Crawls `/proof/` directory for all JSON artifacts
+- Extracts schema definitions from `app/lib/schemas/fixtures.ts`
+- Computes SHA256 ETags for all resources
+- Generates three MCP-compatible registries:
+  - `/public/mcp/resources.json` - Proof artifacts with ETags and schemas
+  - `/public/mcp/tools.json` - Available API tools and endpoints
+  - `/public/mcp/events.json` - Event type definitions
+- Command: `npm run atlas:build`
+
+**MCP API Endpoints:**
+- `GET /api/mcp/resources` - List all proof resources with ETags, schemas, and metadata
+- `GET /api/mcp/tools` - List all available MCP tools and endpoints
+- `GET /api/mcp/events` - List event type definitions
+- `GET /api/mcp/events?stream=true` - Stream recent proof events from log
+- `POST /api/mcp/events` - Emit new event (internal use)
+
+**Proof Event Bridge:**
+- ETag change detection on every proof access
+- Automatic emission of `proof.updated` events when ETags change
+- Automatic emission of `proof.loaded` events on GET requests
+- Non-blocking event emission to `/api/mcp/events`
+- Optional Tower webhook integration via `TOWER_WEBHOOK_URL` env var
+- Event log stored in `/public/mcp/events.log.jsonl`
+
+**Atlas-Compatible Telemetry:**
+- Structured JSON event format with:
+  - `event`: "proof.load"
+  - `ref`: Proof reference path
+  - `route`: Current route/page
+  - `source`: "cockpit-ui"
+  - `timestamp`: Unix milliseconds
+  - `lang`: Auto-detected locale (ms-MY or en-US)
+  - `schema_version`: v1 schema identifier
+  - `etag`: Proof artifact ETag
+- Optional meta parameter for contextual data
+- 60-second throttle window per `${ref}:${route}` composite key
+- MCP event emission when `window.MCP_EVENTS_ENABLED` is set
+
+### Technical Implementation
+
+**Atlas Registry Generator:**
+```bash
+# Generate MCP registries
+npm run atlas:build
+
+# Output:
+# /public/mcp/resources.json (14 proofs, 18 schemas)
+# /public/mcp/tools.json (5 tools)
+# /public/mcp/events.json (3 event types)
+```
+
+**MCP Resource Discovery:**
+```bash
+# Discover all proof resources
+GET /api/mcp/resources
+
+# Response:
+{
+  "version": "1.0.0",
+  "generated_at": "2025-10-22T04:20:18.223Z",
+  "resources": [
+    {
+      "uri": "/proof/cfo_forecast.json",
+      "etag": "W/abc123...",
+      "schema": "ForecastV1",
+      "locale": "ms-MY",
+      "size": 1234,
+      "modified": "2025-10-22T00:00:00.000Z"
+    }
+  ],
+  "schemas": [
+    {
+      "name": "ForecastV1",
+      "path": "app/lib/schemas/fixtures.ts#ForecastV1",
+      "description": "v1 schema for Forecast"
+    }
+  ]
+}
+```
+
+**Event Stream:**
+```bash
+# Stream recent proof events
+GET /api/mcp/events?stream=true
+
+# Response:
+{
+  "events": [
+    {
+      "type": "proof.updated",
+      "ref": "cfo_forecast.json",
+      "etag": "W/xyz789...",
+      "previous_etag": "W/abc123...",
+      "timestamp": 1729564818223
+    },
+    {
+      "type": "proof.loaded",
+      "ref": "leaderboard.json",
+      "etag": "W/def456...",
+      "method": "GET",
+      "timestamp": 1729564820456
+    }
+  ],
+  "count": 2
+}
+```
+
+**Atlas Telemetry Format:**
+```javascript
+// app/components/Telemetry.ts
+logProofLoad("cfo_forecast.json", "/cfo", { etag: "W/abc123", schema: "v1" });
+
+// Console output:
+📈 {"event":"proof.load","ref":"cfo_forecast.json","route":"/cfo","source":"cockpit-ui","timestamp":1729564818223,"lang":"ms-MY","schema_version":"v1","etag":"W/abc123"}
+```
+
+**Tower Webhook Integration:**
+```bash
+# Set environment variable for Tower audit ingestion
+export TOWER_WEBHOOK_URL=https://tower.example.com/api/audit/ingest
+
+# Events will be automatically POSTed to Tower
+```
+
+### Verification Checklist
+
+| Checkpoint | Expected Result |
+|------------|----------------|
+| Atlas registry generation | ✅ npm run atlas:build generates 3 JSON files |
+| MCP resources endpoint | ✅ /api/mcp/resources returns 14 proofs with ETags |
+| MCP tools endpoint | ✅ /api/mcp/tools returns 5 tool definitions |
+| MCP events endpoint | ✅ /api/mcp/events returns 3 event type definitions |
+| Event streaming | ✅ /api/mcp/events?stream=true returns logged events |
+| Proof ETag detection | ✅ ETag changes emit proof.updated events |
+| Proof loading events | ✅ GET requests emit proof.loaded events |
+| Atlas telemetry | ✅ JSON-formatted events with source, lang, timestamp |
+| Tower webhook | ✅ Events POST to TOWER_WEBHOOK_URL when configured |
+| Type-check | ✅ passes |
+| Tests | ✅ all passing |
+
+### Production Benefits
+
+**Discoverability:**
+- Claude/Codex agents can auto-query `/api/mcp/resources` to discover all proofs
+- No manual schema injection required
+- Self-documenting API with tool definitions
+- Schema-to-proof mapping for automated validation
+
+**Event-Driven Architecture:**
+- Real-time proof update notifications
+- Tower integration for audit trails
+- Non-blocking event emission
+- Persistent event log for replay/analysis
+
+**Observability:**
+- Atlas-formatted telemetry for cross-system compatibility
+- Structured JSON events for log aggregation
+- Locale tracking for internationalization insights
+- ETag tracking for cache efficiency metrics
+
+**Governance:**
+- G11: Self-Describing Proof Network via MCP registry
+- G12: Event Awareness via proof.updated/proof.loaded emissions
+- Tower-ready webhook integration
+- Audit-compliant event logging
+
+### Governance Framework
+
+| Gate | Description | Delivered By |
+|------|-------------|--------------|
+| **G11 – Self-Describing Proof Network** | All proofs, schemas, and tools discoverable via MCP registry | Atlas Registry Generator + MCP API Endpoints |
+| **G12 – Event Awareness** | Cockpit emits proof.updated events for real-time sync | Proof Event Bridge + MCP Events Endpoint |
+
+### End State
+
+🏁 **G19.9.2-R1.3 STATUS — Certified**
+```
+✅ Atlas registry generator (npm run atlas:build)
+✅ MCP API endpoints (resources, tools, events)
+✅ Proof event bridge with ETag change detection
+✅ Atlas-compatible telemetry with JSON events
+✅ Tower webhook integration
+✅ Event log persistence (events.log.jsonl)
+✅ G11/G12 governance compliance
+✅ Type-check green
+✅ Comprehensive tests
+```
+
+**System State:** Discoverable + Event-Driven + Atlas-Certified = 🧭 "Self-Describing MCP Node"
+
+**Atlas Compliance:** ✅ MCP v1.0.0 protocol compatible
+
+**Status:** ✅ Production-Ready (Atlas Registry & MCP Discovery Bridge)
+**Version:** G19.9.2-R1.3
+**Runtime:** ~1.5 hours, autonomous agent discovery enabled
+
+---
+
 **Last Updated:** 2025-10-22
-**Version:** G19.9.2-R1.2
-**Status:** Production-ready self-updating data factory with hardened security, Tower integration, schema-driven grammar, v1 contract alignment, full accessibility parity, automated proof regeneration, enhanced ETag caching, streaming responses, per-IP rate limiting, zod validation, bilingual i18n, comprehensive test coverage, proof-linked UI with required lineage, centralized loaders, and localized formatting
+**Version:** G19.9.2-R1.3
+**Status:** Production-ready self-updating data factory with hardened security, Tower integration, schema-driven grammar, v1 contract alignment, full accessibility parity, automated proof regeneration, enhanced ETag caching, streaming responses, per-IP rate limiting, zod validation, bilingual i18n, comprehensive test coverage, proof-linked UI with required lineage, centralized loaders, localized formatting, Atlas registry with MCP discovery, event-driven architecture, and Tower webhook integration

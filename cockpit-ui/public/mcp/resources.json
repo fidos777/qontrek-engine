@@ -1,0 +1,196 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2025-10-22T04:24:23.235Z",
+  "resources": [
+    {
+      "uri": "/proof/ab_experiments_v19_8.json",
+      "etag": "W/\"bb9a3f4a99005965ee7e9002300f8fd6bed01c3b8171ccac81c8a259abbf4db4\"",
+      "locale": "ms-MY",
+      "size": 606,
+      "modified": "2025-10-21T14:56:30.934Z"
+    },
+    {
+      "uri": "/proof/cfo_v19_8.json",
+      "etag": "W/\"be0d8bb1b499dfb283626db92dd9b14632c74e1f7155e7bae0ddda56bc5f5e10\"",
+      "locale": "ms-MY",
+      "size": 675,
+      "modified": "2025-10-21T14:56:29.553Z"
+    },
+    {
+      "uri": "/proof/docs_tracker_v19_6.json",
+      "etag": "W/\"2e4e204a272694a463dee80252e3e7ca9956a87fc6cc36117558a199fe423695\"",
+      "locale": "ms-MY",
+      "size": 1154,
+      "modified": "2025-10-21T13:39:38.590Z"
+    },
+    {
+      "uri": "/proof/g1_decision_v19_5.json",
+      "etag": "W/\"e4a14e218a53dd5f0bf56cb26850bba0033a732a979a165281a785ab9b28e8d5\"",
+      "locale": "ms-MY",
+      "size": 1044,
+      "modified": "2025-10-21T13:19:56.781Z"
+    },
+    {
+      "uri": "/proof/g1_funnel_v19_8.json",
+      "etag": "W/\"8e63b8b95131b61cb0f2a9c7a6d438f9c58397ecc57cdfef854ebb0cf845708b\"",
+      "locale": "ms-MY",
+      "size": 661,
+      "modified": "2025-10-21T14:56:30.023Z"
+    },
+    {
+      "uri": "/proof/heatmap_v19_8.json",
+      "etag": "W/\"4e01be769e4e913132123a53120057e278f3d9443304c5b5a50d0b2b6059bedd\"",
+      "locale": "ms-MY",
+      "size": 653,
+      "modified": "2025-10-21T14:56:30.240Z"
+    },
+    {
+      "uri": "/proof/lead_timeline_v19_8.json",
+      "etag": "W/\"a01334d8bc505eb9d0dc566fd23584f597384e14ec043e9de5586845cae46f57\"",
+      "locale": "ms-MY",
+      "size": 673,
+      "modified": "2025-10-21T14:56:30.473Z"
+    },
+    {
+      "uri": "/proof/lineage.json",
+      "etag": "W/\"29da975ae18943079c3eb3e52009057cf3932ba0845431457de593bed090cf1b\"",
+      "locale": "ms-MY",
+      "size": 170,
+      "modified": "2025-10-21T23:06:16.305Z"
+    },
+    {
+      "uri": "/proof/mobile_cards_v19_8.json",
+      "etag": "W/\"daaceb9eedf6a891f806438312ae93c1bd797261bcd627eaed63d1f3a2d9ffca\"",
+      "locale": "ms-MY",
+      "size": 645,
+      "modified": "2025-10-21T14:56:30.698Z"
+    },
+    {
+      "uri": "/proof/test_proof.json",
+      "etag": "W/\"3547ca07afe66f089dbd7e9bb1c641dbdc47b340b9c9d1ae63f22d541f9dd5e5\"",
+      "locale": "ms-MY",
+      "size": 41,
+      "modified": "2025-10-22T04:24:22.841Z"
+    },
+    {
+      "uri": "/proof/tower_hardening_v19_9_1.json",
+      "etag": "W/\"d62966329319d1e90719dc1be1f326130794607070ee328a5cd1ff01dc14b0bb\"",
+      "locale": "ms-MY",
+      "size": 3197,
+      "modified": "2025-10-21T23:07:35.723Z"
+    },
+    {
+      "uri": "/proof/v19_operational_ui_certification_final.json",
+      "etag": "W/\"312e6d58e74cc21bd2b1e1f9a8fc62e199882a0c27490c79a146e366609673b7\"",
+      "locale": "ms-MY",
+      "size": 1765,
+      "modified": "2025-10-21T06:30:23.474Z"
+    },
+    {
+      "uri": "/proof/voltek_upload_v19_9.json",
+      "etag": "W/\"f421b840aa97996c7ae759e7a2e6d74a9f441d569cd1d9b075aeff0d9bec3ef8\"",
+      "locale": "ms-MY",
+      "size": 1689,
+      "modified": "2025-10-21T15:51:55.622Z"
+    },
+    {
+      "uri": "/proof/watchdog_v19_8.json",
+      "etag": "W/\"1bfd79aa18b1c046f7df8c7d3a611e1a40eacca9b0fc9348b84f07d34a72233c\"",
+      "locale": "ms-MY",
+      "size": 666,
+      "modified": "2025-10-21T14:56:29.793Z"
+    }
+  ],
+  "schemas": [
+    {
+      "name": "MetaV1",
+      "path": "app/lib/schemas/fixtures.ts#MetaV1",
+      "description": "v1 schema for Meta"
+    },
+    {
+      "name": "ConfidenceV1",
+      "path": "app/lib/schemas/fixtures.ts#ConfidenceV1",
+      "description": "v1 schema for Confidence"
+    },
+    {
+      "name": "TriggerItemV1",
+      "path": "app/lib/schemas/fixtures.ts#TriggerItemV1",
+      "description": "v1 schema for TriggerItem"
+    },
+    {
+      "name": "TriggersV1",
+      "path": "app/lib/schemas/fixtures.ts#TriggersV1",
+      "description": "v1 schema for Triggers"
+    },
+    {
+      "name": "ForecastRowV1",
+      "path": "app/lib/schemas/fixtures.ts#ForecastRowV1",
+      "description": "v1 schema for ForecastRow"
+    },
+    {
+      "name": "ForecastV1",
+      "path": "app/lib/schemas/fixtures.ts#ForecastV1",
+      "description": "v1 schema for Forecast"
+    },
+    {
+      "name": "CreditBurnRowV1",
+      "path": "app/lib/schemas/fixtures.ts#CreditBurnRowV1",
+      "description": "v1 schema for CreditBurnRow"
+    },
+    {
+      "name": "CreditBurnV1",
+      "path": "app/lib/schemas/fixtures.ts#CreditBurnV1",
+      "description": "v1 schema for CreditBurn"
+    },
+    {
+      "name": "CreditPackRowV1",
+      "path": "app/lib/schemas/fixtures.ts#CreditPackRowV1",
+      "description": "v1 schema for CreditPackRow"
+    },
+    {
+      "name": "CreditPacksV1",
+      "path": "app/lib/schemas/fixtures.ts#CreditPacksV1",
+      "description": "v1 schema for CreditPacks"
+    },
+    {
+      "name": "LeaderboardRowV1",
+      "path": "app/lib/schemas/fixtures.ts#LeaderboardRowV1",
+      "description": "v1 schema for LeaderboardRow"
+    },
+    {
+      "name": "LeaderboardV1",
+      "path": "app/lib/schemas/fixtures.ts#LeaderboardV1",
+      "description": "v1 schema for Leaderboard"
+    },
+    {
+      "name": "ReflexV1",
+      "path": "app/lib/schemas/fixtures.ts#ReflexV1",
+      "description": "v1 schema for Reflex"
+    },
+    {
+      "name": "upgradeTriggersToV1",
+      "path": "app/lib/schemas/fixtures.ts#upgradeTriggersToV1",
+      "description": "v1 schema for upgradeTriggersTo"
+    },
+    {
+      "name": "upgradeConfidenceToV1",
+      "path": "app/lib/schemas/fixtures.ts#upgradeConfidenceToV1",
+      "description": "v1 schema for upgradeConfidenceTo"
+    },
+    {
+      "name": "upgradeCreditBurnToV1",
+      "path": "app/lib/schemas/fixtures.ts#upgradeCreditBurnToV1",
+      "description": "v1 schema for upgradeCreditBurnTo"
+    },
+    {
+      "name": "upgradeCreditPacksToV1",
+      "path": "app/lib/schemas/fixtures.ts#upgradeCreditPacksToV1",
+      "description": "v1 schema for upgradeCreditPacksTo"
+    },
+    {
+      "name": "fixturesV1",
+      "path": "app/lib/schemas/fixtures.ts#fixturesV1",
+      "description": "v1 schema for fixtures"
+    }
+  ]
+}
