@@ -121,12 +121,14 @@ export function requiresAction(state: SystemState): boolean {
 
 /**
  * Telemetry throttle to prevent log spam
- * Logs once per minute per file
+ * Logs once per minute per (proofRef, route) composite key
  */
 const logCache = new Map<string, number>();
-export function logProofLoad(file: string, src: string) {
+export function logProofLoad(proofRef: string, route: string, meta?: Record<string, any>) {
+  const compositeKey = `${proofRef}:${route}`;
   const now = Date.now();
-  if ((now - (logCache.get(file) || 0)) < 60000) return;
-  logCache.set(file, now);
-  console.log(`📈 logProofLoad(${file}, ${src})`);
+  if ((now - (logCache.get(compositeKey) || 0)) < 60000) return;
+  logCache.set(compositeKey, now);
+  const metaStr = meta ? ` meta=${JSON.stringify(meta)}` : "";
+  console.log(`📈 logProofLoad(proofRef=${proofRef}, route=${route}${metaStr})`);
 }

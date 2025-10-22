@@ -1,0 +1,18 @@
+{
+  "EN": {
+    "openProof": "Open Proof",
+    "copyLink": "Copy Link",
+    "viewLineage": "View Lineage",
+    "loading": "Loading proof…",
+    "failed": "Failed to load proof",
+    "close": "Close"
+  },
+  "BM": {
+    "openProof": "Buka Bukti",
+    "copyLink": "Salin Pautan",
+    "viewLineage": "Lihat Garis Keturunan",
+    "loading": "Memuat bukti…",
+    "failed": "Gagal memuat bukti",
+    "close": "Tutup"
+  }
+}

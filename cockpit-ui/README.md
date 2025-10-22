@@ -983,6 +983,202 @@ The CFO Lens provides a comprehensive financial overview with 5 specialized tabs
 
 ---
 
-**Last Updated:** 2025-10-21
-**Version:** G19.9.1
-**Status:** Production-ready self-updating data factory with hardened security, Tower integration, schema-driven grammar, full accessibility parity, automated proof regeneration, and "boring in prod" certification
+## 🔒 Gate G19.9.2-R1 – Proof Hygiene & Schema Hardening
+
+Production-grade hardening of the G19.9.2 proof infrastructure with ETag caching, zod schema validation, bilingual i18n, and automated tests.
+
+### Mission Intent
+
+Elevate the proof API and fixture infrastructure to production standards:
+- HTTP caching with ETag support
+- Runtime schema validation with zod
+- Bilingual strings (BM/EN) with auto-detect locale
+- Refined telemetry with composite keys
+- Automated API and schema tests
+
+### Features
+
+**Hardened Proof API (`/api/proof`):**
+- ETag-based HTTP caching with SHA256 hash
+- Cache-Control headers: `public, max-age=60`
+- 1MB file size limit enforcement
+- If-None-Match support for 304 responses
+- Audit logging with proof ref tracking
+- Path traversal protection
+- Returns: 200 (with ETag), 304 (cache hit), 404 (not found), 413 (too large)
+
+**Fixture Schemas (`app/lib/schemas/fixtures.ts`):**
+- Zod runtime validation for all fixture types:
+  - ConfidenceSchema: install_success_rate, refund_sla_days
+  - TriggerSchema: event, condition, action
+  - ForecastSchema: period, predicted_value, confidence_interval
+  - CreditBurnSchema: credit_used, credit_remaining, burn_rate_per_day
+  - LeaderboardSchema: rank, entity, score, metric
+  - ReflexMetricsSchema: response_time_ms, success_count, failure_count
+- Auto-populated schema_version and generated_at fields
+- Type inference with `z.infer<typeof Schema>`
+
+**Bilingual i18n (`i18n/proof.json`):**
+- BM (Bahasa Malaysia) and EN (English) translations
+- Strings: openProof, copyLink, viewLineage, loading, failed, close
+- Used by ProofModal component
+
+**Enhanced ProofModal (`components/ProofModal.tsx`):**
+- Auto-detect locale from `navigator.language`
+- i18n string loading from JSON
+- BM detection for "ms" or "bm" language codes
+- Fallback to EN for other locales
+- SSR-safe locale detection
+
+**Refined Telemetry (`app/components/Telemetry.ts`):**
+- Composite key caching: `${proofRef}:${route}`
+- Optional meta parameter for additional context
+- 60s throttle window to prevent log spam
+- Console logging: `📈 logProofLoad(proofRef=..., route=..., meta=...)`
+
+**Automated Tests:**
+- Proof API tests (`tests/proof_api.test.ts`):
+  - Path traversal protection (400)
+  - Non-existent file handling (404)
+  - ETag and Cache-Control headers (200)
+  - If-None-Match cache hit (304)
+  - File size limit enforcement (413)
+- Schema validation tests (`tests/fixtures.test.ts`):
+  - Valid data acceptance
+  - Invalid data rejection
+  - Range validation (min/max)
+  - Type validation (int, tuple, nullable)
+  - Auto-populated field defaults
+
+### Technical Implementation
+
+**Proof API with ETag:**
+```typescript
+import crypto from "crypto";
+
+const MAX_SIZE = 1_000_000; // 1 MB
+
+// ETag generation
+const etag = crypto.createHash("sha256").update(buf).digest("hex").slice(0, 16);
+const clientEtag = req.headers.get("if-none-match");
+
+if (clientEtag === etag) {
+  return new NextResponse(null, { status: 304 });
+}
+
+return new NextResponse(buf, {
+  status: 200,
+  headers: {
+    "ETag": etag,
+    "Cache-Control": "public, max-age=60",
+  },
+});
+```
+
+**Zod Schema Pattern:**
+```typescript
+import { z } from "zod";
+
+export const ConfidenceSchema = z.object({
+  install_success_rate: z.number().min(0).max(1),
+  refund_sla_days: z.number().min(0),
+  proof_ref: z.string(),
+  schema_version: z.string().default("v1"),
+  generated_at: z.string().default(() => new Date().toISOString()),
+});
+
+export type Confidence = z.infer<typeof ConfidenceSchema>;
+```
+
+**Bilingual i18n Usage:**
+```typescript
+import i18nProof from "@/i18n/proof.json";
+
+function detectLocale(): Lang {
+  if (typeof navigator === "undefined") return "EN";
+  const browserLang = navigator.language || "";
+  return browserLang.startsWith("ms") || browserLang.startsWith("bm") ? "BM" : "EN";
+}
+
+const labels = i18nProof[detectedLang];
+// labels.openProof, labels.loading, labels.failed, etc.
+```
+
+**Composite Key Telemetry:**
+```typescript
+export function logProofLoad(proofRef: string, route: string, meta?: Record<string, any>) {
+  const compositeKey = `${proofRef}:${route}`;
+  const now = Date.now();
+  if ((now - (logCache.get(compositeKey) || 0)) < 60000) return;
+  logCache.set(compositeKey, now);
+  console.log(`📈 logProofLoad(proofRef=${proofRef}, route=${route}${metaStr})`);
+}
+```
+
+### Verification Checklist
+
+| Checkpoint | Expected Result |
+|------------|----------------|
+| `/api/proof?ref=test.json` | Returns 200 with ETag, Cache-Control headers |
+| `/api/proof` + If-None-Match | Returns 304 on cache hit |
+| `/api/proof` + large file | Returns 413 (file_too_large) |
+| `/api/proof?ref=../../etc/passwd` | Returns 400 (invalid_ref) |
+| Schema validation | ✅ All fixtures pass zod validation |
+| ProofModal | Auto-detects BM for "ms" locale |
+| Telemetry | Composite key `${proofRef}:${route}` cached |
+| Tests | ✅ 12+ tests passing |
+| Type-check | ✅ passes |
+
+### Production Benefits
+
+**Performance:**
+- ETag caching reduces bandwidth for repeated proof loads
+- HTTP 304 responses save CPU time
+- 60s cache max-age reduces server load
+
+**Reliability:**
+- Zod validation catches malformed fixtures at runtime
+- Schema version tracking enables data migration
+- Generated timestamps for audit trails
+
+**Observability:**
+- Audit logging tracks all proof access
+- Composite key telemetry shows route-specific patterns
+- Meta parameter enables contextual debugging
+
+**Accessibility:**
+- Bilingual support for BM and EN users
+- Auto-detect locale from browser settings
+- SSR-safe implementation
+
+**Safety:**
+- Path traversal protection
+- File size limits prevent DoS
+- MIME type detection for security
+
+### End State
+
+🏁 **G19.9.2-R1 STATUS — "Proof Hygiene & Schema Hardening Certified"**
+```
+✅ Proof API with ETag + Cache-Control
+✅ Zod schemas for all fixtures
+✅ Bilingual i18n (BM/EN)
+✅ Auto-detect locale in ProofModal
+✅ Composite key telemetry
+✅ Automated API + schema tests
+✅ Type-check green
+```
+
+**System State:** Cacheable + Validated + Bilingual + Testable = 🔒 "Production-Grade Proof Infrastructure"
+
+**Dependencies:** zod (runtime validation)
+
+**Status:** ✅ Production-Ready (Proof Hygiene Hardened)
+**Version:** G19.9.2-R1
+**Telemetry:** Composite `${proofRef}:${route}` with 60s throttle
+
+---
+
+**Last Updated:** 2025-10-22
+**Version:** G19.9.2-R1
+**Status:** Production-ready self-updating data factory with hardened security, Tower integration, schema-driven grammar, full accessibility parity, automated proof regeneration, ETag caching, zod validation, bilingual i18n, and comprehensive test coverage

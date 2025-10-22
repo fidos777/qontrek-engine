@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useReducedMotion } from "@/lib/motion";
+import i18nProof from "@/i18n/proof.json";
 
 type Lang = "BM" | "EN";
 
@@ -10,23 +11,25 @@ interface ProofModalProps {
   lang?: Lang;
 }
 
-export function ProofModal({ proofRef, label = "Open Proof", lang = "EN" }: ProofModalProps) {
+function detectLocale(): Lang {
+  if (typeof navigator === "undefined") return "EN";
+  const browserLang = navigator.language || "";
+  return browserLang.startsWith("ms") || browserLang.startsWith("bm") ? "BM" : "EN";
+}
+
+export function ProofModal({ proofRef, label, lang }: ProofModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [detectedLang, setDetectedLang] = useState<Lang>("EN");
   const reducedMotion = useReducedMotion();
 
-  const labels = lang === "BM" ? {
-    open: "Buka Bukti",
-    close: "Tutup",
-    loading: "Memuatkan...",
-    error: "Ralat memuatkan bukti",
-  } : {
-    open: "Open Proof",
-    close: "Close",
-    loading: "Loading...",
-    error: "Error loading proof",
-  };
+  useEffect(() => {
+    setDetectedLang(lang || detectLocale());
+  }, [lang]);
+
+  const labels = i18nProof[detectedLang];
+  const displayLabel = label || labels.openProof;
 
   async function fetchProof() {
     setLoading(true);
@@ -36,7 +39,7 @@ export function ProofModal({ proofRef, label = "Open Proof", lang = "EN" }: Proo
       const json = await res.json();
       setContent(JSON.stringify(json, null, 2));
     } catch (err) {
-      setContent(`${labels.error}: ${proofRef}`);
+      setContent(`${labels.failed}: ${proofRef}`);
     } finally {
       setLoading(false);
     }
@@ -57,9 +60,9 @@ export function ProofModal({ proofRef, label = "Open Proof", lang = "EN" }: Proo
       <button
         onClick={handleOpen}
         className="text-xs px-2 py-1 rounded border border-blue-500 text-blue-600 hover:bg-blue-50 focus:ring-2 focus:ring-blue-300"
-        aria-label={label}
+        aria-label={displayLabel}
       >
-        {labels.open}
+        {labels.openProof}
       </button>
     );
   }
@@ -80,7 +83,7 @@ export function ProofModal({ proofRef, label = "Open Proof", lang = "EN" }: Proo
       >
         <div className="flex items-center justify-between mb-4">
           <h2 id="proof-modal-title" className="text-lg font-semibold">
-            {label}
+            {displayLabel}
           </h2>
           <button
             onClick={handleClose}
