@@ -20,6 +20,9 @@ public/mcp/telemetry.log.jsonl
 # Secure private logs (R1.4.3)
 .logs/
 
+# HMAC key registry (R1.4.3 P0)
+.keys/
+
 # Misc
 .DS_Store
 *.pem

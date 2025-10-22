@@ -3,6 +3,7 @@
 
 import { createHmac } from "crypto";
 import { SignedEvent, getCanonicalEvent } from "./signEvent";
+import { recordClockSkew } from "./healthTracker";
 
 export interface VerificationResult {
   valid: boolean;
@@ -34,6 +35,10 @@ export function verifyEvent(
   // Check timestamp freshness (prevent replay attacks)
   const now = Date.now();
   const age = (now - event.timestamp) / 1000;
+  const clockSkewMs = event.timestamp - now; // Positive = event ahead, negative = event behind
+
+  // Record clock skew for health monitoring
+  recordClockSkew(clockSkewMs);
 
   if (age > maxAgeSec) {
     return {
@@ -70,7 +75,7 @@ export function verifyEvent(
     return { valid: false, error: "signature_mismatch" };
   }
 
-  return { valid: true };
+  return { valid: true, timestamp_drift_ms: clockSkewMs };
 }
 
 /**

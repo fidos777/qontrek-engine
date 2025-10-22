@@ -6,6 +6,9 @@ import { isFederationEnabled } from "@/lib/config";
 import { readLogTail } from "@/lib/logs/logger";
 import { verifyEvent } from "@/lib/security/verifyEvent";
 import type { SignedEvent } from "@/lib/security/signEvent";
+import { getRotationStatus } from "@/lib/security/keyRegistry";
+import { getStats as getNonceStats } from "@/lib/security/nonceStore";
+import { getHealthMetrics } from "@/lib/security/healthTracker";
 import fs from "fs";
 import path from "path";
 
@@ -22,7 +25,33 @@ export async function GET() {
       G16: checkOperationalSafety(panicMode),
     };
 
-    return NextResponse.json(gates);
+    // P0 operational metrics (R1.4.3)
+    const keyRotation = getRotationStatus();
+    const nonceStore = getNonceStats();
+    const health = getHealthMetrics();
+
+    return NextResponse.json({
+      gates,
+      security: {
+        hmac_key_rotation: {
+          active_kid: keyRotation.activeKid,
+          rotation_status: keyRotation.rotationStatus,
+          rotation_due_in_days: keyRotation.rotationDueInDays,
+          total_keys: keyRotation.totalKeys,
+        },
+        nonce_store: {
+          backend: nonceStore.backend,
+          size: nonceStore.size,
+          last_prune_at: nonceStore.lastPruneAt,
+        },
+        clock_skew: {
+          clock_skew_ms: health.clockSkewMs,
+          clock_skew_status: health.clockSkewStatus,
+          last_updated: health.lastUpdated,
+          sample_count: health.sampleCount,
+        },
+      },
+    });
   } catch (error) {
     console.error("Governance check error:", error);
     return NextResponse.json(
