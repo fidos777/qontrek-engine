@@ -10,7 +10,9 @@
     "type-check": "tsc --noEmit",
     "atlas:build": "node scripts/atlas_build.js",
     "digest:generate": "node scripts/generateDigest.js",
-    "audit:mirror": "node scripts/auditMirror.js"
+    "audit:mirror": "node scripts/auditMirror.js",
+    "seal:generate": "node scripts/sealFactory.js",
+    "seal:upload": "node scripts/towerUpload.js ../proof/factory_runtime_seal.json"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.76.1",
