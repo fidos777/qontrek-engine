@@ -15,6 +15,7 @@ coverage/
 # Runtime logs & events
 public/mcp/events.log.jsonl
 public/mcp/sync_state.json
+public/mcp/telemetry.log.jsonl
 
 # Misc
 .DS_Store

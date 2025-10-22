@@ -1,8 +1,10 @@
 "use client";
 // app/components/AtlasDrawer.tsx
-// Atlas Federation Awareness UI - v2 (Demo-Hardened)
+// Atlas Federation Awareness UI - v3 (Trust Fabric)
 
 import { useState, useEffect } from "react";
+import GovernanceBadges from "./GovernanceBadges";
+import RateLimitMeter from "./RateLimitMeter";
 
 interface FederationStatus {
   mode: "local" | "federated" | "error";
@@ -145,7 +147,7 @@ export default function AtlasDrawer({ isOpen, onClose }: { isOpen: boolean; onCl
         className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl p-6 overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">Atlas Control</h2>
           <button
             onClick={onClose}
@@ -154,6 +156,14 @@ export default function AtlasDrawer({ isOpen, onClose }: { isOpen: boolean; onCl
           >
             ✕
           </button>
+        </div>
+
+        {/* Governance Badges */}
+        <div className="mb-6 pb-4 border-b border-gray-200">
+          <div className="text-xs text-gray-500 mb-2 uppercase tracking-wide">
+            Governance Status
+          </div>
+          <GovernanceBadges />
         </div>
 
         {/* Mode Display */}
@@ -239,6 +249,9 @@ export default function AtlasDrawer({ isOpen, onClose }: { isOpen: boolean; onCl
             <div className="text-sm text-gray-600">Total Events</div>
             <div className="text-3xl font-bold text-gray-900">{status.eventsCount}</div>
           </div>
+
+          {/* Rate Limit Meter */}
+          <RateLimitMeter />
 
           {/* Last Sync */}
           <div className="border border-gray-200 rounded-lg p-4">

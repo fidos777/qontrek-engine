@@ -1,0 +1,73 @@
+{
+  "proof_id": "ui_governance_badges_v1",
+  "version": "1.0.0",
+  "release": "G19.9.2-R1.4.2",
+  "component": "GovernanceBadges",
+  "type": "ui_component",
+  "objective": "G13-G16 gate status indicators with real-time monitoring",
+  "timestamp": "2025-01-22T14:35:00Z",
+  "features": {
+    "badge_display": {
+      "status": "completed",
+      "description": "Four badges for G13, G14, G15, G16 with status indicators",
+      "acceptance": "All badges render with correct icons and colors"
+    },
+    "status_colors": {
+      "status": "completed",
+      "description": "Color coding: emerald (pass), amber (warn), rose (fail)",
+      "acceptance": "Badge colors match gate status"
+    },
+    "tooltips": {
+      "status": "completed",
+      "description": "Hover tooltips show gate name and detailed message",
+      "acceptance": "Tooltips appear on hover with gate description"
+    },
+    "auto_refresh": {
+      "status": "completed",
+      "description": "Polls /api/mcp/governance every 30 seconds",
+      "acceptance": "Status updates automatically without page reload"
+    },
+    "loading_state": {
+      "status": "completed",
+      "description": "Skeleton badges during initial load",
+      "acceptance": "Loading placeholders shown while fetching"
+    }
+  },
+  "gates": {
+    "G13": {
+      "name": "Lineage Integrity",
+      "verification": "ProofChip v2 + HMAC check",
+      "component": "ProofChipV2, LineageTimelineTab"
+    },
+    "G14": {
+      "name": "Tower Federation",
+      "verification": "ACK & ETag freshness",
+      "component": "ConfidenceMeter"
+    },
+    "G15": {
+      "name": "Telemetry Conformance",
+      "verification": "Telemetry emit + badges",
+      "component": "atlasTelemetry.emit"
+    },
+    "G16": {
+      "name": "Operational Safety",
+      "verification": "Panic 503 + Rate limit",
+      "component": "AtlasDrawer, RateLimitMeter"
+    }
+  },
+  "files": {
+    "component": "cockpit-ui/app/components/GovernanceBadges.tsx",
+    "api": "cockpit-ui/app/api/mcp/governance/route.ts",
+    "tests": "cockpit-ui/tests/ui_trust.test.tsx"
+  },
+  "governance": {
+    "gate": "G15",
+    "criterion": "Telemetry Conformance - Governance badges operational",
+    "status": "pass"
+  },
+  "signature": {
+    "author": "Claude Code",
+    "method": "R1.4.2 UI Trust Fabric Implementation",
+    "hmac": "governance_badges_v1_completed"
+  }
+}

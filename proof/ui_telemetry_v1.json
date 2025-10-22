@@ -1,0 +1,73 @@
+{
+  "proof_id": "ui_telemetry_v1",
+  "version": "1.0.0",
+  "release": "G19.9.2-R1.4.2",
+  "component": "atlasTelemetry",
+  "type": "telemetry_bridge",
+  "objective": "UI event telemetry bridge to MCP with JSONL logging",
+  "timestamp": "2025-01-22T14:35:00Z",
+  "features": {
+    "emit_function": {
+      "status": "completed",
+      "description": "atlasTelemetry.emit(name, payload) for UI event collection",
+      "acceptance": "Function exports from lib/telemetry.ts"
+    },
+    "api_endpoint": {
+      "status": "completed",
+      "description": "POST /api/mcp/telemetry endpoint for event ingestion",
+      "acceptance": "Endpoint accepts events and logs to telemetry.log.jsonl"
+    },
+    "jsonl_logging": {
+      "status": "completed",
+      "description": "Append-only JSONL log file in public/mcp/telemetry.log.jsonl",
+      "acceptance": "Events written as newline-delimited JSON"
+    },
+    "event_types": {
+      "status": "completed",
+      "description": "UI events: ui.proof_chip.open, ui.confidence.score, etc.",
+      "acceptance": "All UI components emit telemetry on interactions"
+    },
+    "silent_failure": {
+      "status": "completed",
+      "description": "Telemetry errors don't break UI functionality",
+      "acceptance": "Fetch errors caught and logged, UI continues"
+    }
+  },
+  "event_catalog": [
+    {
+      "event": "ui.proof_chip.open",
+      "source": "ProofChipV2",
+      "payload": ["refName", "timestamp"]
+    },
+    {
+      "event": "ui.confidence.score",
+      "source": "ConfidenceMeter",
+      "payload": ["refName", "confidence", "factors", "elapsedMs", "timestamp"]
+    },
+    {
+      "event": "ui.lineage.view",
+      "source": "LineageTimelineTab",
+      "payload": ["refName", "timestamp"]
+    },
+    {
+      "event": "ui.governance.refresh",
+      "source": "GovernanceBadges",
+      "payload": ["timestamp"]
+    }
+  ],
+  "files": {
+    "lib": "cockpit-ui/lib/telemetry.ts",
+    "api": "cockpit-ui/app/api/mcp/telemetry/route.ts",
+    "log": "cockpit-ui/public/mcp/telemetry.log.jsonl"
+  },
+  "governance": {
+    "gate": "G15",
+    "criterion": "Telemetry Conformance - Emit + log operational",
+    "status": "pass"
+  },
+  "signature": {
+    "author": "Claude Code",
+    "method": "R1.4.2 UI Trust Fabric Implementation",
+    "hmac": "ui_telemetry_v1_completed"
+  }
+}

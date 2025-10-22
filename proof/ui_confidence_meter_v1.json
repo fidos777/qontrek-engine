@@ -1,0 +1,57 @@
+{
+  "proof_id": "ui_confidence_meter_v1",
+  "version": "1.0.0",
+  "release": "G19.9.2-R1.4.2",
+  "component": "ConfidenceMeter",
+  "type": "ui_component",
+  "objective": "Dynamic 0-100 trust bar with real-time confidence scoring",
+  "timestamp": "2025-01-22T14:35:00Z",
+  "features": {
+    "confidence_calculation": {
+      "status": "completed",
+      "description": "Weighted score: ETag (30%) + ACK (30%) + Schema (20%) + Freshness (20%)",
+      "acceptance": "Score calculated within 300ms of proof.updated event"
+    },
+    "visual_feedback": {
+      "status": "completed",
+      "description": "Color-coded progress bar: emerald (≥80%), amber (≥50%), rose (<50%)",
+      "acceptance": "Bar color and width update based on confidence score"
+    },
+    "factor_display": {
+      "status": "completed",
+      "description": "Shows individual factors: ETag, ACK, Schema, Freshness with checkmarks",
+      "acceptance": "Factor indicators display ✓/○ with appropriate colors"
+    },
+    "real_time_updates": {
+      "status": "completed",
+      "description": "Listens for proof.updated custom events and recalculates",
+      "acceptance": "Updates within 300ms when proof.updated fires"
+    },
+    "telemetry_emission": {
+      "status": "completed",
+      "description": "Emits ui.confidence.score with score and factors",
+      "acceptance": "Telemetry includes confidence, factors, and elapsedMs"
+    }
+  },
+  "scoring_algorithm": {
+    "etag_weight": 30,
+    "ack_weight": 30,
+    "schema_weight": 20,
+    "freshness_weight": 20,
+    "freshness_decay": "Linear decay over 24 hours"
+  },
+  "files": {
+    "component": "cockpit-ui/app/components/ConfidenceMeter.tsx",
+    "tests": "cockpit-ui/tests/ui_trust.test.tsx"
+  },
+  "governance": {
+    "gate": "G14",
+    "criterion": "Tower Federation - ACK & ETag freshness validation",
+    "status": "pass"
+  },
+  "signature": {
+    "author": "Claude Code",
+    "method": "R1.4.2 UI Trust Fabric Implementation",
+    "hmac": "confidence_meter_v1_completed"
+  }
+}

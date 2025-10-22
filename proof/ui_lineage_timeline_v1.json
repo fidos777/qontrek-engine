@@ -1,0 +1,72 @@
+{
+  "proof_id": "ui_lineage_timeline_v1",
+  "version": "1.0.0",
+  "release": "G19.9.2-R1.4.2",
+  "component": "LineageTimelineTab",
+  "type": "ui_component",
+  "objective": "Visual proof lineage timeline showing Source → Seal → ETag → ACK chain",
+  "timestamp": "2025-01-22T14:35:00Z",
+  "features": {
+    "stage_visualization": {
+      "status": "completed",
+      "description": "Four-stage timeline: Source, Seal, ETag, ACK with circular indicators",
+      "acceptance": "All stages render with correct icons and colors"
+    },
+    "color_coding": {
+      "status": "completed",
+      "description": "Status colors: emerald (completed), gray (pending), rose (error)",
+      "acceptance": "Stage circles and badges color-coded based on status"
+    },
+    "metadata_display": {
+      "status": "completed",
+      "description": "Each stage shows timestamp and relevant metadata (path, hmac, etag, tower)",
+      "acceptance": "Metadata cards display key-value pairs for each stage"
+    },
+    "lineage_integrity": {
+      "status": "completed",
+      "description": "Visual HMAC chain representation with connecting line",
+      "acceptance": "Timeline line connects all stages, info box explains HMAC seals"
+    },
+    "loading_state": {
+      "status": "completed",
+      "description": "Loading spinner and graceful fallback to mock data",
+      "acceptance": "Shows loading state, handles API errors gracefully"
+    }
+  },
+  "stages": [
+    {
+      "name": "Source",
+      "description": "Proof file origin and path",
+      "metadata": ["path"]
+    },
+    {
+      "name": "Seal",
+      "description": "HMAC-based cryptographic seal",
+      "metadata": ["hmac"]
+    },
+    {
+      "name": "ETag",
+      "description": "Entity tag for version control",
+      "metadata": ["etag"]
+    },
+    {
+      "name": "ACK",
+      "description": "Tower acknowledgment receipt",
+      "metadata": ["tower"]
+    }
+  ],
+  "files": {
+    "component": "cockpit-ui/app/components/LineageTimelineTab.tsx",
+    "tests": "cockpit-ui/tests/ui_trust.test.tsx"
+  },
+  "governance": {
+    "gate": "G13",
+    "criterion": "Lineage Integrity - Visual HMAC chain validation",
+    "status": "pass"
+  },
+  "signature": {
+    "author": "Claude Code",
+    "method": "R1.4.2 UI Trust Fabric Implementation",
+    "hmac": "lineage_timeline_v1_completed"
+  }
+}

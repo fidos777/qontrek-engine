@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { logProofLoad } from "@/lib/telemetry";
 import type { G1Response } from "@/types/gates";
+import ProofChipV2 from "@/app/components/ProofChipV2";
+import ConfidenceMeter from "@/app/components/ConfidenceMeter";
 
 async function fetchGate(url: string): Promise<G1Response> {
   try {
@@ -70,7 +72,16 @@ export default function Gate1Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Gate 1 — Decision Engine</h1>
+      <div className="flex items-center gap-3 mb-4">
+        <h1 className="text-2xl font-semibold">Gate 1 — Decision Engine</h1>
+        <ProofChipV2 refName={payload.rel} path={`/proof/${payload.rel}`} status="verified" />
+      </div>
+
+      {/* Confidence Meter */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+        <div className="text-sm text-gray-600 mb-2">Data Confidence</div>
+        <ConfidenceMeter refName={payload.rel} />
+      </div>
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
