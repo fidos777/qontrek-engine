@@ -11,7 +11,7 @@ export const MetaV1 = z.object({
 /** 1) G1 Confidence */
 export const ConfidenceV1 = MetaV1.extend({
   install_success_rate: z.number(),   // 0..1 or 0..100 ? -> use 0..100 as per tiles
-  refund_sla_days: z.number().int(),
+  refund_sla_days: z.number().int().nonnegative(),
 });
 
 /** 2) G1 Triggers */
@@ -29,7 +29,7 @@ const Horizon = z.enum(["0d","30d","60d","90d"]);
 export const ForecastRowV1 = z.object({
   horizon: Horizon,                   // "30d"|"60d"|"90d"
   inflow_rm: z.number(),              // expected inflow for bucket
-  proof_ref: z.string().optional(),
+  proof_ref: z.string().min(1),       // required for lineage
 });
 export const ForecastV1 = MetaV1.extend({
   series: z.array(ForecastRowV1).min(1),
@@ -41,7 +41,7 @@ export const CreditBurnRowV1 = z.object({
   project_id: z.string(),
   credits: z.number().int().nonnegative(),
   rm_value: z.number(),               // monetary value represented by credits/action
-  proof_ref: z.string().optional(),
+  proof_ref: z.string().min(1),       // required for lineage
 });
 export const CreditBurnV1 = MetaV1.extend({
   rows: z.array(CreditBurnRowV1).default([]),
@@ -53,7 +53,7 @@ export const CreditPackRowV1 = z.object({
   credits_total: z.number().int().nonnegative(),
   credits_used: z.number().int().nonnegative(),
   rm_value: z.number(),
-  proof_ref: z.string().optional(),
+  proof_ref: z.string().min(1),       // required for lineage
 });
 export const CreditPacksV1 = MetaV1.extend({
   packs: z.array(CreditPackRowV1).default([]),
@@ -65,7 +65,7 @@ export const LeaderboardRowV1 = z.object({
   response_quality: z.number(),         // 0..1
   referral_yield: z.number(),           // 0..1
   t_first_reply_min: z.number().int(),  // minutes
-  proof_ref: z.string().optional(),
+  proof_ref: z.string().min(1),         // required for lineage
 });
 export const LeaderboardV1 = MetaV1.extend({
   rows: z.array(LeaderboardRowV1).default([]),
@@ -95,7 +95,7 @@ export function upgradeForecastToV1(v0: AnyJson): z.infer<typeof ForecastV1> | n
   } catch {}
   try {
     const data = v0 as any;
-    const series: Array<{day:number; expected_in_rm:number}> = Array.isArray(data?.series) ? data.series : [];
+    const series: Array<{day:number; expected_in_rm:number; proof_ref?:string}> = Array.isArray(data?.series) ? data.series : [];
     const mapDayToHorizon = (d:number): z.infer<typeof Horizon> => (d===0?"0d": d===30?"30d": d===60?"60d":"90d");
     const upgraded = {
       schema_version: "v1" as const,
@@ -104,7 +104,11 @@ export function upgradeForecastToV1(v0: AnyJson): z.infer<typeof ForecastV1> | n
       milestones: Array.isArray(data?.milestones) ? data.milestones : undefined,
       series: series
         .filter(r => typeof r?.day === "number")
-        .map(r => ({ horizon: mapDayToHorizon(r.day), inflow_rm: num(r?.expected_in_rm, 0) })),
+        .map(r => ({
+          horizon: mapDayToHorizon(r.day),
+          inflow_rm: num(r?.expected_in_rm, 0),
+          proof_ref: r?.proof_ref ?? data?.proof_ref ?? "proof/ui_build_v19_9.json"
+        })),
     };
     const checked = ForecastV1.parse(upgraded);
     return checked;
@@ -112,15 +116,16 @@ export function upgradeForecastToV1(v0: AnyJson): z.infer<typeof ForecastV1> | n
 }
 
 export function upgradeLeaderboardToV1(v0: AnyJson) {
+  const data = v0 as any;
   const v1 = {
     schema_version: "v1" as const,
     generated_at: new Date().toISOString(),
-    rows: Array.isArray((v0 as any)?.rows) ? (v0 as any).rows.map((r:any)=>({
+    rows: Array.isArray(data?.rows) ? data.rows.map((r:any)=>({
       name: r?.name ?? r?.entity ?? "—",
       response_quality: num(r?.response_quality ?? r?.score, 0),
       referral_yield: num(r?.referral_yield, 0),
       t_first_reply_min: Math.round(num(r?.t_first_reply_min, 0)),
-      proof_ref: r?.proof_ref,
+      proof_ref: r?.proof_ref ?? data?.proof_ref ?? "proof/ui_build_v19_9.json",
     })) : [],
   };
   return LeaderboardV1.parse(v1);
@@ -142,28 +147,34 @@ export const upgradeConfidenceToV1 = (v0: AnyJson) => ConfidenceV1.parse({
   proof_ref: (v0 as any)?.proof_ref,
 });
 
-export const upgradeCreditBurnToV1 = (v0: AnyJson) => CreditBurnV1.parse({
-  schema_version: "v1" as const,
-  generated_at: new Date().toISOString(),
-  rows: Array.isArray((v0 as any)?.rows) ? (v0 as any).rows.map((r:any)=>({
-    project_id: String(r?.project_id ?? r?.id ?? "—"),
-    credits: Math.round(num(r?.credits, 0)),
-    rm_value: num(r?.rm_value, 0),
-    proof_ref: r?.proof_ref,
-  })) : [],
-});
+export const upgradeCreditBurnToV1 = (v0: AnyJson) => {
+  const data = v0 as any;
+  return CreditBurnV1.parse({
+    schema_version: "v1" as const,
+    generated_at: new Date().toISOString(),
+    rows: Array.isArray(data?.rows) ? data.rows.map((r:any)=>({
+      project_id: String(r?.project_id ?? r?.id ?? "—"),
+      credits: Math.round(num(r?.credits, 0)),
+      rm_value: num(r?.rm_value, 0),
+      proof_ref: r?.proof_ref ?? data?.proof_ref ?? "proof/ui_build_v19_9.json",
+    })) : [],
+  });
+};
 
-export const upgradeCreditPacksToV1 = (v0: AnyJson) => CreditPacksV1.parse({
-  schema_version: "v1" as const,
-  generated_at: new Date().toISOString(),
-  packs: Array.isArray((v0 as any)?.packs) ? (v0 as any).packs.map((p:any)=>({
-    tier: (["A","B","C"].includes(p?.tier) ? p.tier : "A") as "A"|"B"|"C",
-    credits_total: Math.round(num(p?.credits_total ?? p?.credits, 0)),
-    credits_used: Math.round(num(p?.credits_used ?? 0)),
-    rm_value: num(p?.rm_value, 0),
-    proof_ref: p?.proof_ref,
-  })) : [],
-});
+export const upgradeCreditPacksToV1 = (v0: AnyJson) => {
+  const data = v0 as any;
+  return CreditPacksV1.parse({
+    schema_version: "v1" as const,
+    generated_at: new Date().toISOString(),
+    packs: Array.isArray(data?.packs) ? data.packs.map((p:any)=>({
+      tier: (["A","B","C"].includes(p?.tier) ? p.tier : "A") as "A"|"B"|"C",
+      credits_total: Math.round(num(p?.credits_total ?? p?.credits, 0)),
+      credits_used: Math.round(num(p?.credits_used ?? 0)),
+      rm_value: num(p?.rm_value, 0),
+      proof_ref: p?.proof_ref ?? data?.proof_ref ?? "proof/ui_build_v19_9.json",
+    })) : [],
+  });
+};
 
 /** Export a single v1 contract surface */
 export const fixturesV1 = {

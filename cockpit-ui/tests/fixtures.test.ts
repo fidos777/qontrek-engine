@@ -42,17 +42,29 @@ describe("Fixture v1 Schema Validation", () => {
   });
 
   describe("ForecastV1", () => {
-    it("should validate valid forecast data", () => {
+    it("should validate valid forecast data with required proof_ref", () => {
       const valid = {
         schema_version: "v1" as const,
         generated_at: new Date().toISOString(),
         series: [
-          { horizon: "30d" as const, inflow_rm: 120000 },
-          { horizon: "60d" as const, inflow_rm: 240000 },
+          { horizon: "30d" as const, inflow_rm: 120000, proof_ref: "proof/cfo_forecast_v1.json" },
+          { horizon: "60d" as const, inflow_rm: 240000, proof_ref: "proof/cfo_forecast_v1.json" },
         ],
       };
       const result = fixturesV1.ForecastV1.safeParse(valid);
       expect(result.success).toBe(true);
+    });
+
+    it("should require proof_ref on all series entries", () => {
+      const invalid = {
+        schema_version: "v1" as const,
+        generated_at: new Date().toISOString(),
+        series: [
+          { horizon: "30d" as const, inflow_rm: 120000 }, // missing proof_ref
+        ],
+      };
+      const result = fixturesV1.ForecastV1.safeParse(invalid);
+      expect(result.success).toBe(false);
     });
 
     it("should require at least one series entry", () => {
@@ -67,12 +79,12 @@ describe("Fixture v1 Schema Validation", () => {
   });
 
   describe("CreditBurnV1", () => {
-    it("should validate valid credit burn data", () => {
+    it("should validate valid credit burn data with required proof_ref", () => {
       const valid = {
         schema_version: "v1" as const,
         generated_at: new Date().toISOString(),
         rows: [
-          { project_id: "proj-123", credits: 1000, rm_value: 5000 },
+          { project_id: "proj-123", credits: 1000, rm_value: 5000, proof_ref: "proof/credit_burn_v1.json" },
         ],
       };
       const result = fixturesV1.CreditBurnV1.safeParse(valid);
@@ -93,16 +105,28 @@ describe("Fixture v1 Schema Validation", () => {
   });
 
   describe("LeaderboardV1", () => {
-    it("should validate valid leaderboard data", () => {
+    it("should validate valid leaderboard data with required proof_ref", () => {
       const valid = {
         schema_version: "v1" as const,
         generated_at: new Date().toISOString(),
         rows: [
-          { name: "Aqil", response_quality: 0.9, referral_yield: 0.4, t_first_reply_min: 12 },
+          { name: "Aqil", response_quality: 0.9, referral_yield: 0.4, t_first_reply_min: 12, proof_ref: "proof/leaderboard_v1.json" },
         ],
       };
       const result = fixturesV1.LeaderboardV1.safeParse(valid);
       expect(result.success).toBe(true);
+    });
+
+    it("should require proof_ref on all rows", () => {
+      const invalid = {
+        schema_version: "v1" as const,
+        generated_at: new Date().toISOString(),
+        rows: [
+          { name: "Aqil", response_quality: 0.9, referral_yield: 0.4, t_first_reply_min: 12 }, // missing proof_ref
+        ],
+      };
+      const result = fixturesV1.LeaderboardV1.safeParse(invalid);
+      expect(result.success).toBe(false);
     });
   });
 

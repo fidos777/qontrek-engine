@@ -14,7 +14,7 @@ describe("Proof API - ETag & Caching", () => {
   });
 
   it("should return 400 for invalid ref (path traversal)", async () => {
-    const req = new Request("http://localhost/api/proof?ref=../../etc/passwd");
+    const req = new Request("http://localhost/api/proof?ref=../../etc/passwd.json");
     const res = await GET(req);
     expect(res.status).toBe(400);
     const json = await res.json();
@@ -29,13 +29,15 @@ describe("Proof API - ETag & Caching", () => {
     expect(json.error).toBe("not_found");
   });
 
-  it("should return 200 with ETag and Cache-Control headers", async () => {
+  it("should return 200 with ETag, private Cache-Control, and CORS headers", async () => {
     const req = new Request("http://localhost/api/proof?ref=test_proof.json");
     const res = await GET(req);
     expect(res.status).toBe(200);
     expect(res.headers.get("ETag")).toBeTruthy();
-    expect(res.headers.get("Cache-Control")).toBe("public, max-age=60");
+    expect(res.headers.get("Cache-Control")).toBe("private, max-age=60");
     expect(res.headers.get("Content-Type")).toBe("application/json; charset=utf-8");
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe("http://localhost");
+    expect(res.headers.get("Vary")).toBe("Origin");
   });
 
   it("should return 304 when If-None-Match matches ETag", async () => {
@@ -73,10 +75,18 @@ describe("Proof API - ETag & Caching", () => {
     const res = await HEAD(req);
     expect(res.status).toBe(200);
     expect(res.headers.get("ETag")).toBeTruthy();
-    expect(res.headers.get("Cache-Control")).toBe("public, max-age=60");
+    expect(res.headers.get("Cache-Control")).toBe("private, max-age=60");
     expect(res.headers.get("Content-Type")).toBe("application/json; charset=utf-8");
     const text = await res.text();
     expect(text).toBe(""); // empty body
+  });
+
+  it("should return 415 for non-.json files", async () => {
+    const req = new Request("http://localhost/api/proof?ref=test_proof.txt");
+    const res = await GET(req);
+    expect(res.status).toBe(415);
+    const json = await res.json();
+    expect(json.error).toBe("unsupported_type");
   });
 
   it("POST returns 405 method not allowed", async () => {

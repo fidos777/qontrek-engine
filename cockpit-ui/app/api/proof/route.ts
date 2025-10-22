@@ -10,6 +10,7 @@ const MAX_BYTES = 5 * 1024 * 1024; // 5 MB cap
 const RL = new Map<string, {tokens:number, ts:number}>(); // naive per-IP token bucket
 const BUCKET_MAX = 60;            // 60 requests
 const REFILL_MS = 60_000;         // per minute
+let GLOBAL_COUNT = 0;              // durable fallback counter
 
 function ipKey(req: Request) {
   // Next.js in dev: use x-forwarded-for or fallback to remote addr (opaque)
@@ -23,6 +24,10 @@ function allowRate(req: Request) {
   const refill = Math.floor((now - entry.ts) / REFILL_MS) * BUCKET_MAX;
   entry.tokens = Math.min(BUCKET_MAX, entry.tokens + (refill > 0 ? refill : 0));
   entry.ts = (refill > 0) ? now : entry.ts;
+
+  GLOBAL_COUNT++;
+  if (GLOBAL_COUNT > BUCKET_MAX * 10) return false; // global durable limit
+
   if (entry.tokens <= 0) { RL.set(k, entry); return false; }
   entry.tokens -= 1; RL.set(k, entry); return true;
 }
@@ -41,22 +46,35 @@ async function etagFor(buf: Buffer) {
   return `W/"${h}"`;
 }
 
-async function headersFor(path: string, etag: string) {
+async function headersFor(path: string, etag: string, origin: string) {
   const s = await stat(path);
   return {
     "Content-Type": "application/json; charset=utf-8",
     "Content-Length": String(s.size),
-    "Cache-Control": "public, max-age=60",
-    ETag: etag,
+    "Cache-Control": "private, max-age=60",
+    "ETag": etag,
+    "Access-Control-Allow-Origin": origin,
+    "Vary": "Origin",
   };
 }
 
 async function handle(req: Request, headOnly = false) {
   if (!allowRate(req)) {
-    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+    return NextResponse.json(
+      { error: "rate_limited" },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
   }
-  const { searchParams } = new URL(req.url);
-  const ref = searchParams.get("ref") || "";
+
+  const url = new URL(req.url);
+  const origin = url.origin;
+  const ref = url.searchParams.get("ref") || "";
+
+  // Enforce .json MIME type
+  if (!/\.json$/i.test(ref)) {
+    return NextResponse.json({ error: "unsupported_type" }, { status: 415 });
+  }
+
   const path = safePath(ref);
   if (!path) return NextResponse.json({ error: "invalid_ref" }, { status: 400 });
 
@@ -70,10 +88,10 @@ async function handle(req: Request, headOnly = false) {
 
   const inm = req.headers.get("if-none-match");
   if (inm && inm === etag) {
-    return new NextResponse(null, { status: 304, headers: await headersFor(path, etag) });
+    return new NextResponse(null, { status: 304, headers: await headersFor(path, etag, origin) });
   }
 
-  const headers = await headersFor(path, etag);
+  const headers = await headersFor(path, etag, origin);
   if (headOnly) {
     return new NextResponse(null, { status: 200, headers });
   }
