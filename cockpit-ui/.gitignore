@@ -17,6 +17,9 @@ public/mcp/events.log.jsonl
 public/mcp/sync_state.json
 public/mcp/telemetry.log.jsonl
 
+# Secure private logs (R1.4.3)
+.logs/
+
 # Misc
 .DS_Store
 *.pem

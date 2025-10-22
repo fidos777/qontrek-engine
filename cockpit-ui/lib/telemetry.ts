@@ -21,22 +21,16 @@ export function logProofLoad(
 }
 
 // Atlas Telemetry Bridge for UI Trust Fabric
+// Client-side safe: No secrets exposed, server handles authentication
 export const atlasTelemetry = {
   emit: async (name: string, payload: Record<string, any>) => {
-    const atlasKey = process.env.NEXT_PUBLIC_ATLAS_KEY;
-
-    // Skip telemetry in client-side if no key
-    if (typeof window !== "undefined" && !atlasKey) {
-      console.log("[TELEMETRY]", name, payload);
-      return;
-    }
-
+    // Client-side telemetry - no authentication headers
+    // Server-side middleware handles key validation
     try {
       await fetch("/api/mcp/telemetry", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(atlasKey && { "x-atlas-key": atlasKey }),
         },
         body: JSON.stringify({
           event: name,
@@ -45,8 +39,10 @@ export const atlasTelemetry = {
         }),
       });
     } catch (error) {
-      // Silent fail for telemetry
-      console.error("[TELEMETRY] Error:", error);
+      // Silent fail for telemetry - never break UI
+      if (typeof window !== "undefined") {
+        console.log("[TELEMETRY]", name, payload);
+      }
     }
   },
 };

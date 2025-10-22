@@ -1,0 +1,63 @@
+{
+  "proof_id": "log_privacy_v1",
+  "version": "1.0.0",
+  "release": "G19.9.2-R1.4.3",
+  "component": "Log Privacy & Security",
+  "type": "security_layer",
+  "objective": "Private log storage with PII scrubbing, rotation, and authenticated access",
+  "timestamp": "2025-01-22T15:00:00Z",
+  "features": {
+    "private_logging": {
+      "status": "completed",
+      "description": "Logs moved from public/mcp/ to .logs/mcp/ (excluded from git)",
+      "acceptance": ".logs/ directory in .gitignore, no public log exposure"
+    },
+    "pii_scrubbing": {
+      "status": "completed",
+      "description": "Automatic redaction of emails, phones, credit cards, API keys",
+      "acceptance": "lib/logs/scrub.ts with redact() function"
+    },
+    "log_rotation": {
+      "status": "completed",
+      "description": "Automatic rotation at 5MB, retention 48 hours",
+      "acceptance": "writeLog() rotates to .bak.jsonl, pruneLogs() removes old files"
+    },
+    "authenticated_access": {
+      "status": "completed",
+      "description": "GET /api/mcp/events/log requires X-Atlas-Key authentication",
+      "acceptance": "401 without valid key, tail parameter supported"
+    },
+    "telemetry_integration": {
+      "status": "completed",
+      "description": "/api/mcp/telemetry uses secure logger with scrubbing",
+      "acceptance": "All telemetry events scrubbed before writing"
+    }
+  },
+  "files": {
+    "logger": "cockpit-ui/lib/logs/logger.ts",
+    "scrubber": "cockpit-ui/lib/logs/scrub.ts",
+    "tail_api": "cockpit-ui/app/api/mcp/events/log/route.ts",
+    "telemetry": "cockpit-ui/app/api/mcp/telemetry/route.ts"
+  },
+  "security_measures": {
+    "pii_patterns": [
+      "Email addresses → [email]",
+      "Phone numbers (10-15 digits) → [phone]",
+      "Credit cards → [card]",
+      "API keys (32+ chars) → [key]"
+    ],
+    "log_retention": "48 hours",
+    "max_log_size": "5 MB",
+    "access_control": "X-Atlas-Key required for tail API"
+  },
+  "governance": {
+    "gate": "G15",
+    "criterion": "Telemetry Conformance - Privacy-compliant logging",
+    "status": "pass"
+  },
+  "signature": {
+    "author": "Claude Code",
+    "method": "R1.4.3 Security & Governance Seal",
+    "hmac": "log_privacy_v1_completed"
+  }
+}

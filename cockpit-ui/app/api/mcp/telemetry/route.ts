@@ -1,11 +1,9 @@
 // app/api/mcp/telemetry/route.ts
-// UI telemetry event collection endpoint
+// UI telemetry event collection endpoint (Secure with PII scrubbing)
 
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-
-const TELEMETRY_LOG = path.join(process.cwd(), "public/mcp/telemetry.log.jsonl");
+import { writeLog, pruneLogs } from "@/lib/logs/logger";
+import { redact } from "@/lib/logs/scrub";
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,21 +24,17 @@ export async function POST(req: NextRequest) {
       ...payload,
     };
 
+    // Scrub PII before logging
+    const scrubbed = redact(entry);
+
     // Log to console
-    console.log("[UI TELEMETRY]", JSON.stringify(entry));
+    console.log("[UI TELEMETRY]", JSON.stringify(scrubbed));
 
-    // Append to JSONL log file
-    try {
-      const logDir = path.dirname(TELEMETRY_LOG);
-      if (!fs.existsSync(logDir)) {
-        fs.mkdirSync(logDir, { recursive: true });
-      }
+    // Write to secure log with rotation
+    writeLog(scrubbed);
 
-      fs.appendFileSync(TELEMETRY_LOG, JSON.stringify(entry) + "\n");
-    } catch (fsError) {
-      console.error("Failed to write telemetry log:", fsError);
-      // Don't fail the request if logging fails
-    }
+    // Prune old logs (async, don't block)
+    setImmediate(() => pruneLogs());
 
     return NextResponse.json({
       ok: true,
@@ -56,27 +50,4 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET() {
-  try {
-    // Read recent telemetry events
-    if (!fs.existsSync(TELEMETRY_LOG)) {
-      return NextResponse.json({ events: [], count: 0 });
-    }
-
-    const content = fs.readFileSync(TELEMETRY_LOG, "utf-8");
-    const lines = content.trim().split("\n").filter(Boolean);
-    const events = lines.slice(-100).map((line) => JSON.parse(line)); // Last 100 events
-
-    return NextResponse.json({
-      events,
-      count: events.length,
-      total: lines.length,
-    });
-  } catch (error) {
-    console.error("Telemetry read error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
+// GET moved to /api/mcp/events/log (authenticated endpoint)

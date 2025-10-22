@@ -71,6 +71,30 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // **PANIC MODE ENFORCEMENT** - Highest priority
+  // When ATLAS_PANIC=true, block ALL /api/mcp/* endpoints except telemetry
+  const panicMode = process.env.ATLAS_PANIC === "true";
+  if (panicMode) {
+    // Allow telemetry ingestion even in panic mode (for observability)
+    if (pathname === "/api/mcp/telemetry") {
+      return NextResponse.next();
+    }
+
+    // Allow governance checks to show panic status
+    if (pathname === "/api/mcp/governance") {
+      return NextResponse.next();
+    }
+
+    // Block everything else with 503
+    return NextResponse.json(
+      {
+        error: "panic_mode_active",
+        message: "Atlas Federation is currently disabled (panic mode). All MCP endpoints are unavailable.",
+      },
+      { status: 503 }
+    );
+  }
+
   // Allow /api/mcp/resources and /api/mcp/tools (discovery endpoints)
   // These are read-only and safe for public access
   if (pathname === "/api/mcp/resources" || pathname === "/api/mcp/tools") {
