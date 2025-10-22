@@ -12,6 +12,10 @@ out/
 # Testing
 coverage/
 
+# Runtime logs & events
+public/mcp/events.log.jsonl
+public/mcp/sync_state.json
+
 # Misc
 .DS_Store
 *.pem
