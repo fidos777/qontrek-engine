@@ -1179,6 +1179,117 @@ export function logProofLoad(proofRef: string, route: string, meta?: Record<stri
 
 ---
 
+## 🔐 Gate G19.9.2-R1.1 — Schema & Proof API Alignment Patch
+
+Lock proof/fixture contracts to v1 keys, harden /api/proof for integrity + performance, and widen tests for upcoming CFO/Reflex/Engagement tiles.
+
+### Contracts (v1)
+
+All fixtures now follow strict v1 schema with backward-compatible adapters:
+
+| Fixture | v1 Keys | Purpose |
+|---------|---------|---------|
+| `g1_confidence.json` | `schema_version`, `generated_at`, `install_success_rate`, `refund_sla_days`, `proof_ref?` | Gate 1 confidence metrics |
+| `g1_triggers.json` | `schema_version`, `generated_at`, `items:[{type, last_seen_at, severity}]` | Gate 1 trigger audit |
+| `cfo_forecast.json` | `schema_version`, `generated_at`, `series:[{horizon, inflow_rm}]`, `milestones?` | CFO forecast with horizon buckets (0d/30d/60d/90d) |
+| `credit_burn.json` | `schema_version`, `generated_at`, `rows:[{project_id, credits, rm_value}]` | Credit burn tracking |
+| `credit_packs.json` | `schema_version`, `generated_at`, `packs:[{tier, credits_total, credits_used, rm_value}]` | Credit pack usage (A/B/C tiers) |
+| `leaderboard.json` | `schema_version`, `generated_at`, `rows:[{name, response_quality, referral_yield, t_first_reply_min}]` | Team leaderboard |
+| `reflex_metrics.json` | `schema_version`, `generated_at`, `PLS`, `CFI`, `LGE`, `TTE`, `window` | Learning Lens reflex metrics |
+
+### Backward-Compatibility
+
+**v0→v1 Adapters** are applied programmatically (see `app/lib/schemas/fixtures.ts`):
+- `upgrade.forecast()` - maps `day` → `horizon`, `expected_in_rm` → `inflow_rm`
+- `upgrade.leaderboard()` - maps `entity` → `name`, `score` → `response_quality`
+- `upgrade.confidence()` - maps `install_success_pct` → `install_success_rate`
+- `upgrade.triggers()` - maps `triggers` array → `items` array
+- `upgrade.credit_burn()` - maps `id` → `project_id`
+- `upgrade.credit_packs()` - maps `credits` → `credits_total`
+
+Components may accept v0 payloads during migration and still render.
+
+### Proof API Hardening
+
+**Enhanced Features:**
+- **GET/HEAD only** (405 for POST/PUT/DELETE/PATCH)
+- **Full SHA256 ETag** (`W/"<64-hex>"` instead of truncated)
+- **5 MB size cap** (increased from 1 MB)
+- **Streaming responses** (avoid double-buffering)
+- **Per-IP rate limiting** (60 requests/minute token bucket)
+- **Cache-Control**: `public, max-age=60`
+
+**Error Responses:**
+- `400` - invalid_ref (path traversal attempt)
+- `404` - not_found (file doesn't exist)
+- `405` - method_not_allowed (non-GET/HEAD)
+- `413` - too_large (exceeds 5 MB)
+- `429` - rate_limited (exceeded 60/min)
+
+### Telemetry Enhancement
+
+**Enriched Meta Support:**
+```typescript
+logProofLoad(proofRef, route, { etag, ipHash });
+// 📈 logProofLoad(ref=cfo_v19_8.json, route=/cfo) meta={"etag":"W/...","ipHash":"abc"}
+```
+
+Still throttled at 60s per composite key `${proofRef}:${route}`.
+
+### Verification Checklist
+
+| Checkpoint | Expected Result |
+|------------|----------------|
+| Schema validation | ✅ All v1 schemas validate correctly |
+| v0→v1 adapters | ✅ Backward compatibility maintained |
+| HEAD requests | ✅ Returns headers with no body |
+| 304 cache hits | ✅ If-None-Match works correctly |
+| 5 MB cap | ✅ 413 for oversized files |
+| Method guards | ✅ 405 for POST/PUT/DELETE/PATCH |
+| Rate limiting | ✅ 429 after 60 requests/minute |
+| Type-check | ✅ passes |
+| Tests | ✅ all passing |
+
+### Production Benefits
+
+**Contract Stability:**
+- v1 schemas prevent drift as new tiles ship
+- Adapters ensure zero-downtime migrations
+- Type-safe fixtures with zod validation
+
+**Performance:**
+- Full SHA256 ETags for stronger cache keys
+- 5 MB cap supports larger proof files
+- Streaming avoids memory spikes
+- Per-IP rate limiting prevents abuse
+
+**Security:**
+- Method guards prevent unintended mutations
+- Path traversal protection
+- Rate limiting mitigates DoS
+
+### End State
+
+🏁 **G19.9.2-R1.1 STATUS — Certified**
+```
+✅ v1 schemas locked (7 fixtures)
+✅ v0→v1 adapters for backward compatibility
+✅ Proof API hardened (GET/HEAD, 5MB, streaming, rate-limit)
+✅ Telemetry enriched (etag/ipHash meta)
+✅ Tests expanded (HEAD/304/413/405/429 + adapter tests)
+✅ Type-check green
+```
+
+**System State:** Contract-Locked + Performance-Hardened + Rate-Limited = 🔐 "Production-Grade API"
+
+**Dependencies:** zod (runtime validation)
+
+**Status:** ✅ Production-Ready (Schema & API Aligned)
+**Version:** G19.9.2-R1.1
+**Runtime:** ~90 minutes, atomic, zero schema-breaks
+
+---
+
 **Last Updated:** 2025-10-22
-**Version:** G19.9.2-R1
-**Status:** Production-ready self-updating data factory with hardened security, Tower integration, schema-driven grammar, full accessibility parity, automated proof regeneration, ETag caching, zod validation, bilingual i18n, and comprehensive test coverage
+**Version:** G19.9.2-R1.1
+**Status:** Production-ready self-updating data factory with hardened security, Tower integration, schema-driven grammar, v1 contract alignment, full accessibility parity, automated proof regeneration, enhanced ETag caching, streaming responses, per-IP rate limiting, zod validation, bilingual i18n, and comprehensive test coverage

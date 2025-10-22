@@ -1,51 +1,100 @@
+// cockpit-ui/app/api/proof/route.ts
 import { NextResponse } from "next/server";
+import { createReadStream } from "node:fs";
+import { stat, readFile } from "node:fs/promises";
 import { join, normalize } from "node:path";
-import { readFile } from "node:fs/promises";
-import crypto from "crypto";
+import { createHash } from "node:crypto";
 
-const MAX_SIZE = 1_000_000; // 1 MB
+const BASE = join(process.cwd(), "..", "proof");
+const MAX_BYTES = 5 * 1024 * 1024; // 5 MB cap
+const RL = new Map<string, {tokens:number, ts:number}>(); // naive per-IP token bucket
+const BUCKET_MAX = 60;            // 60 requests
+const REFILL_MS = 60_000;         // per minute
 
-export async function GET(req: Request) {
+function ipKey(req: Request) {
+  // Next.js in dev: use x-forwarded-for or fallback to remote addr (opaque)
+  const ip = (req.headers.get("x-forwarded-for") || "local").split(",")[0].trim();
+  return ip || "local";
+}
+function allowRate(req: Request) {
+  const k = ipKey(req);
+  const now = Date.now();
+  const entry = RL.get(k) || { tokens: BUCKET_MAX, ts: now };
+  const refill = Math.floor((now - entry.ts) / REFILL_MS) * BUCKET_MAX;
+  entry.tokens = Math.min(BUCKET_MAX, entry.tokens + (refill > 0 ? refill : 0));
+  entry.ts = (refill > 0) ? now : entry.ts;
+  if (entry.tokens <= 0) { RL.set(k, entry); return false; }
+  entry.tokens -= 1; RL.set(k, entry); return true;
+}
+
+function safePath(ref: string) {
+  // Allow ONLY proof/*.json under BASE
+  const cleaned = ref.replace(/^(\.?\/)+/, "");
+  if (!/\.json$/i.test(cleaned)) return null;
+  const path = normalize(join(BASE, cleaned));
+  if (!path.startsWith(BASE)) return null;
+  return path;
+}
+
+async function etagFor(buf: Buffer) {
+  const h = createHash("sha256").update(buf).digest("hex"); // full 64 hex
+  return `W/"${h}"`;
+}
+
+async function headersFor(path: string, etag: string) {
+  const s = await stat(path);
+  return {
+    "Content-Type": "application/json; charset=utf-8",
+    "Content-Length": String(s.size),
+    "Cache-Control": "public, max-age=60",
+    ETag: etag,
+  };
+}
+
+async function handle(req: Request, headOnly = false) {
+  if (!allowRate(req)) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
   const { searchParams } = new URL(req.url);
   const ref = searchParams.get("ref") || "";
-  const base = join(process.cwd(), "..", "proof");
-  const safe = normalize(join(base, ref.replace(/^(\.?\/)+/, "")));
-  if (!safe.startsWith(base)) {
-    console.warn(`[proof-api] invalid_ref attempted: ${ref}`);
-    return NextResponse.json({ error: "invalid_ref" }, { status: 400 });
+  const path = safePath(ref);
+  if (!path) return NextResponse.json({ error: "invalid_ref" }, { status: 400 });
+
+  const s = await stat(path).catch(()=>null);
+  if (!s) return NextResponse.json({ error: "not_found", ref }, { status: 404 });
+  if (s.size > MAX_BYTES) return NextResponse.json({ error: "too_large", limit: MAX_BYTES }, { status: 413 });
+
+  // Compute ETag from full content (small files). For bigger files, keep as is up to 5MB cap.
+  const buf = await readFile(path);
+  const etag = await etagFor(buf);
+
+  const inm = req.headers.get("if-none-match");
+  if (inm && inm === etag) {
+    return new NextResponse(null, { status: 304, headers: await headersFor(path, etag) });
   }
 
-  try {
-    const buf = await readFile(safe);
-
-    // Size limit enforcement
-    if (buf.byteLength > MAX_SIZE) {
-      console.warn(`[proof-api] file_too_large: ${ref} (${buf.byteLength} bytes)`);
-      return NextResponse.json({ error: "file_too_large", max_size: MAX_SIZE }, { status: 413 });
-    }
-
-    // ETag generation
-    const etag = crypto.createHash("sha256").update(buf).digest("hex").slice(0, 16);
-    const clientEtag = req.headers.get("if-none-match");
-
-    if (clientEtag === etag) {
-      console.log(`[proof-api] 304 cache hit: ${ref}`);
-      return new NextResponse(null, { status: 304 });
-    }
-
-    const isJson = /\.json$/i.test(ref);
-    console.log(`[proof-api] 200 serving: ${ref} (${buf.byteLength} bytes, etag=${etag})`);
-
-    return new NextResponse(buf, {
-      status: 200,
-      headers: {
-        "Content-Type": isJson ? "application/json; charset=utf-8" : "text/plain; charset=utf-8",
-        "ETag": etag,
-        "Cache-Control": "public, max-age=60",
-      },
-    });
-  } catch {
-    console.warn(`[proof-api] not_found: ${ref}`);
-    return NextResponse.json({ error: "not_found", ref }, { status: 404 });
+  const headers = await headersFor(path, etag);
+  if (headOnly) {
+    return new NextResponse(null, { status: 200, headers });
   }
+
+  // Stream response (avoid buffering twice on big files)
+  const stream = createReadStream(path);
+  return new NextResponse(stream as any, { status: 200, headers });
 }
+
+export async function GET(req: Request) {
+  return handle(req, false);
+}
+
+export async function HEAD(req: Request) {
+  return handle(req, true);
+}
+
+// Guard unsupported methods
+export async function POST() {
+  return NextResponse.json({ error: "method_not_allowed" }, { status: 405, headers: { Allow: "GET, HEAD" } });
+}
+export async function PUT() { return POST(); }
+export async function DELETE() { return POST(); }
+export async function PATCH() { return POST(); }

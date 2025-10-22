@@ -1,186 +1,181 @@
 import { describe, it, expect } from "vitest";
-import {
-  ConfidenceSchema,
-  TriggerSchema,
-  ForecastSchema,
-  CreditBurnSchema,
-  LeaderboardSchema,
-  ReflexMetricsSchema,
-} from "@/app/lib/schemas/fixtures";
+import { fixturesV1 } from "@/app/lib/schemas/fixtures";
 
-describe("Fixture Schema Validation", () => {
-  describe("ConfidenceSchema", () => {
+describe("Fixture v1 Schema Validation", () => {
+  describe("ConfidenceV1", () => {
     it("should validate valid confidence data", () => {
       const valid = {
-        install_success_rate: 0.95,
-        refund_sla_days: 30,
+        schema_version: "v1" as const,
+        generated_at: new Date().toISOString(),
+        install_success_rate: 95,
+        refund_sla_days: 7,
         proof_ref: "proof/confidence_v1.json",
       };
-      const result = ConfidenceSchema.safeParse(valid);
+      const result = fixturesV1.ConfidenceV1.safeParse(valid);
       expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.schema_version).toBe("v1");
-        expect(result.data.generated_at).toBeTruthy();
-      }
-    });
-
-    it("should reject invalid install_success_rate (out of range)", () => {
-      const invalid = {
-        install_success_rate: 1.5,
-        refund_sla_days: 30,
-        proof_ref: "proof/confidence_v1.json",
-      };
-      const result = ConfidenceSchema.safeParse(invalid);
-      expect(result.success).toBe(false);
     });
 
     it("should reject negative refund_sla_days", () => {
       const invalid = {
-        install_success_rate: 0.95,
+        schema_version: "v1" as const,
+        generated_at: new Date().toISOString(),
+        install_success_rate: 95,
         refund_sla_days: -5,
-        proof_ref: "proof/confidence_v1.json",
       };
-      const result = ConfidenceSchema.safeParse(invalid);
+      const result = fixturesV1.ConfidenceV1.safeParse(invalid);
       expect(result.success).toBe(false);
     });
   });
 
-  describe("TriggerSchema", () => {
-    it("should validate valid trigger data", () => {
+  describe("TriggersV1", () => {
+    it("should validate valid triggers data", () => {
       const valid = {
-        event: "user_signup",
-        condition: "email_verified",
-        action: "send_welcome_email",
-        proof_ref: "proof/trigger_v1.json",
+        schema_version: "v1" as const,
+        generated_at: new Date().toISOString(),
+        items: [
+          { type: "no_reply_48h", last_seen_at: "2025-10-22T10:00:00Z", severity: "warn" as const },
+        ],
       };
-      const result = TriggerSchema.safeParse(valid);
+      const result = fixturesV1.TriggersV1.safeParse(valid);
       expect(result.success).toBe(true);
     });
   });
 
-  describe("ForecastSchema", () => {
+  describe("ForecastV1", () => {
     it("should validate valid forecast data", () => {
       const valid = {
-        period: "2025-Q1",
-        predicted_value: 150000,
-        confidence_interval: [140000, 160000] as [number, number],
-        proof_ref: "proof/forecast_v1.json",
+        schema_version: "v1" as const,
+        generated_at: new Date().toISOString(),
+        series: [
+          { horizon: "30d" as const, inflow_rm: 120000 },
+          { horizon: "60d" as const, inflow_rm: 240000 },
+        ],
       };
-      const result = ForecastSchema.safeParse(valid);
+      const result = fixturesV1.ForecastV1.safeParse(valid);
       expect(result.success).toBe(true);
     });
 
-    it("should reject invalid confidence_interval (not tuple)", () => {
+    it("should require at least one series entry", () => {
       const invalid = {
-        period: "2025-Q1",
-        predicted_value: 150000,
-        confidence_interval: [140000],
-        proof_ref: "proof/forecast_v1.json",
+        schema_version: "v1" as const,
+        generated_at: new Date().toISOString(),
+        series: [],
       };
-      const result = ForecastSchema.safeParse(invalid);
+      const result = fixturesV1.ForecastV1.safeParse(invalid);
       expect(result.success).toBe(false);
     });
   });
 
-  describe("CreditBurnSchema", () => {
+  describe("CreditBurnV1", () => {
     it("should validate valid credit burn data", () => {
       const valid = {
-        credit_used: 5000,
-        credit_remaining: 15000,
-        burn_rate_per_day: 250,
-        estimated_depletion_date: "2025-03-15",
-        proof_ref: "proof/credit_burn_v1.json",
+        schema_version: "v1" as const,
+        generated_at: new Date().toISOString(),
+        rows: [
+          { project_id: "proj-123", credits: 1000, rm_value: 5000 },
+        ],
       };
-      const result = CreditBurnSchema.safeParse(valid);
+      const result = fixturesV1.CreditBurnV1.safeParse(valid);
       expect(result.success).toBe(true);
     });
 
-    it("should allow null estimated_depletion_date", () => {
-      const valid = {
-        credit_used: 5000,
-        credit_remaining: 15000,
-        burn_rate_per_day: 250,
-        estimated_depletion_date: null,
-        proof_ref: "proof/credit_burn_v1.json",
-      };
-      const result = CreditBurnSchema.safeParse(valid);
-      expect(result.success).toBe(true);
-    });
-
-    it("should reject negative credit values", () => {
+    it("should reject negative credits", () => {
       const invalid = {
-        credit_used: -100,
-        credit_remaining: 15000,
-        burn_rate_per_day: 250,
-        estimated_depletion_date: null,
-        proof_ref: "proof/credit_burn_v1.json",
+        schema_version: "v1" as const,
+        generated_at: new Date().toISOString(),
+        rows: [
+          { project_id: "proj-123", credits: -100, rm_value: 5000 },
+        ],
       };
-      const result = CreditBurnSchema.safeParse(invalid);
+      const result = fixturesV1.CreditBurnV1.safeParse(invalid);
       expect(result.success).toBe(false);
     });
   });
 
-  describe("LeaderboardSchema", () => {
+  describe("LeaderboardV1", () => {
     it("should validate valid leaderboard data", () => {
       const valid = {
-        rank: 1,
-        entity: "Team Alpha",
-        score: 9500,
-        metric: "total_revenue",
-        proof_ref: "proof/leaderboard_v1.json",
+        schema_version: "v1" as const,
+        generated_at: new Date().toISOString(),
+        rows: [
+          { name: "Aqil", response_quality: 0.9, referral_yield: 0.4, t_first_reply_min: 12 },
+        ],
       };
-      const result = LeaderboardSchema.safeParse(valid);
+      const result = fixturesV1.LeaderboardV1.safeParse(valid);
       expect(result.success).toBe(true);
-    });
-
-    it("should reject non-positive rank", () => {
-      const invalid = {
-        rank: 0,
-        entity: "Team Alpha",
-        score: 9500,
-        metric: "total_revenue",
-        proof_ref: "proof/leaderboard_v1.json",
-      };
-      const result = LeaderboardSchema.safeParse(invalid);
-      expect(result.success).toBe(false);
     });
   });
 
-  describe("ReflexMetricsSchema", () => {
+  describe("ReflexV1", () => {
     it("should validate valid reflex metrics data", () => {
       const valid = {
-        response_time_ms: 125,
-        success_count: 1500,
-        failure_count: 25,
-        avg_latency_ms: 87.5,
-        proof_ref: "proof/reflex_v1.json",
+        schema_version: "v1" as const,
+        generated_at: new Date().toISOString(),
+        PLS: 0.85,
+        CFI: 0.92,
+        LGE: 0.78,
+        TTE: 14,
+        window: "7d",
       };
-      const result = ReflexMetricsSchema.safeParse(valid);
+      const result = fixturesV1.ReflexV1.safeParse(valid);
       expect(result.success).toBe(true);
     });
+  });
+});
 
-    it("should reject negative response_time_ms", () => {
-      const invalid = {
-        response_time_ms: -10,
-        success_count: 1500,
-        failure_count: 25,
-        avg_latency_ms: 87.5,
-        proof_ref: "proof/reflex_v1.json",
-      };
-      const result = ReflexMetricsSchema.safeParse(invalid);
-      expect(result.success).toBe(false);
-    });
+describe("Fixture v0→v1 Adapters", () => {
+  it("upgrades forecast v0 to v1", () => {
+    const v0 = { series: [{ day: 30, expected_in_rm: 120000 }] };
+    const upgraded = fixturesV1.upgrade.forecast(v0);
+    expect(upgraded?.series?.[0]?.horizon).toBe("30d");
+    expect(upgraded?.series?.[0]?.inflow_rm).toBe(120000);
+    expect(upgraded?.schema_version).toBe("v1");
+    expect(upgraded?.generated_at).toBeTruthy();
+  });
 
-    it("should reject non-integer counts", () => {
-      const invalid = {
-        response_time_ms: 125,
-        success_count: 1500.5,
-        failure_count: 25,
-        avg_latency_ms: 87.5,
-        proof_ref: "proof/reflex_v1.json",
-      };
-      const result = ReflexMetricsSchema.safeParse(invalid);
-      expect(result.success).toBe(false);
-    });
+  it("leaderboard v0 maps entity/score → name/response_quality", () => {
+    const v0 = { rows: [{ entity: "Aqil", score: 0.9, t_first_reply_min: 12, referral_yield: 0.4 }] };
+    const v1 = fixturesV1.upgrade.leaderboard(v0);
+    expect(v1.rows[0].name).toBe("Aqil");
+    expect(v1.rows[0].response_quality).toBe(0.9);
+    expect(v1.rows[0].referral_yield).toBe(0.4);
+    expect(v1.rows[0].t_first_reply_min).toBe(12);
+    expect(v1.schema_version).toBe("v1");
+  });
+
+  it("confidence v0 → v1 with fallback defaults", () => {
+    const v0 = { install_success_pct: 95, refund_sla_days: 7 };
+    const v1 = fixturesV1.upgrade.confidence(v0);
+    expect(v1.install_success_rate).toBe(95);
+    expect(v1.refund_sla_days).toBe(7);
+    expect(v1.schema_version).toBe("v1");
+  });
+
+  it("triggers v0 → v1 with items array", () => {
+    const v0 = { triggers: [{ type: "no_reply_48h", last_seen_at: "2025-10-22T10:00:00Z", severity: "warn" }] };
+    const v1 = fixturesV1.upgrade.triggers(v0);
+    expect(v1.items.length).toBe(1);
+    expect(v1.items[0].type).toBe("no_reply_48h");
+    expect(v1.items[0].severity).toBe("warn");
+    expect(v1.schema_version).toBe("v1");
+  });
+
+  it("credit_burn v0 → v1 with project_id mapping", () => {
+    const v0 = { rows: [{ id: "proj-123", credits: 1000, rm_value: 5000 }] };
+    const v1 = fixturesV1.upgrade.credit_burn(v0);
+    expect(v1.rows[0].project_id).toBe("proj-123");
+    expect(v1.rows[0].credits).toBe(1000);
+    expect(v1.rows[0].rm_value).toBe(5000);
+    expect(v1.schema_version).toBe("v1");
+  });
+
+  it("credit_packs v0 → v1 with tier coercion", () => {
+    const v0 = { packs: [{ tier: "A", credits: 5000, credits_used: 1200, rm_value: 25000 }] };
+    const v1 = fixturesV1.upgrade.credit_packs(v0);
+    expect(v1.packs[0].tier).toBe("A");
+    expect(v1.packs[0].credits_total).toBe(5000);
+    expect(v1.packs[0].credits_used).toBe(1200);
+    expect(v1.packs[0].rm_value).toBe(25000);
+    expect(v1.schema_version).toBe("v1");
   });
 });
