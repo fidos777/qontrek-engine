@@ -4,6 +4,8 @@
 import { NextResponse } from "next/server";
 import { isFederationEnabled } from "@/lib/config";
 import { readLogTail } from "@/lib/logs/logger";
+import { verifyEvent } from "@/lib/security/verifyEvent";
+import type { SignedEvent } from "@/lib/security/signEvent";
 import fs from "fs";
 import path from "path";
 
@@ -82,7 +84,7 @@ async function checkLineageIntegrity() {
 
 /**
  * G14: Tower Federation
- * Validates ACK & ETag freshness
+ * Validates ACK & ETag freshness with cryptographic verification
  */
 async function checkTowerFederation() {
   const federationEnabled = isFederationEnabled();
@@ -93,29 +95,70 @@ async function checkTowerFederation() {
       desc: "Tower Federation",
       status: "pass",
       message: "Federation disabled (demo-safe mode)",
+      ack_verified: false,
     };
   }
 
   try {
-    // Check for recent Tower ACK in logs
+    // Check for recent Tower ACK in logs with cryptographic verification
     const logEntries = readLogTail(100);
     const now = Date.now();
     const fiveMinutes = 5 * 60 * 1000;
+    const clockSkewTolerance = 90 * 1000; // ±90s
 
-    const recentAck = logEntries.find(
+    // Find recent ACK events
+    const recentAcks = logEntries.filter(
       (entry: any) =>
-        entry.event === "tower.ack" && now - entry.timestamp < fiveMinutes
+        entry.event === "tower.ack" &&
+        entry.type === "tower.ack" &&
+        now - entry.timestamp < fiveMinutes
     );
 
-    const ok = !!recentAck;
+    if (recentAcks.length === 0) {
+      return {
+        ok: false,
+        desc: "Tower Federation",
+        status: "warn",
+        message: "No recent Tower ACK (>5 min)",
+        ack_verified: false,
+      };
+    }
+
+    // Verify the most recent ACK cryptographically
+    const mostRecentAck = recentAcks[0];
+    const verification = verifyEvent(mostRecentAck as SignedEvent, {
+      maxAgeSec: 300, // 5 minutes
+      sharedKey: process.env.TOWER_SHARED_KEY,
+    });
+
+    // Check for clock skew
+    const drift = verification.timestamp_drift_ms || 0;
+    const clockSkewHint =
+      Math.abs(drift) > clockSkewTolerance
+        ? ` (clock skew: ${(drift / 1000).toFixed(1)}s)`
+        : "";
+
+    if (!verification.valid) {
+      return {
+        ok: false,
+        desc: "Tower Federation",
+        status: "fail",
+        message: `ACK signature invalid: ${verification.error}${clockSkewHint}`,
+        ack_verified: false,
+        error_detail: verification.error,
+      };
+    }
+
+    const ageSeconds = Math.round((now - mostRecentAck.timestamp) / 1000);
 
     return {
-      ok,
+      ok: true,
       desc: "Tower Federation",
-      status: ok ? "pass" : "warn",
-      message: ok
-        ? `ACK & ETag freshness validated (${Math.round((now - recentAck.timestamp) / 1000)}s ago)`
-        : "No recent Tower ACK (>5 min)",
+      status: "pass",
+      message: `ACK cryptographically verified (${ageSeconds}s ago)${clockSkewHint}`,
+      ack_verified: true,
+      ack_age_seconds: ageSeconds,
+      clock_skew_ms: drift,
     };
   } catch (error) {
     return {
@@ -123,6 +166,7 @@ async function checkTowerFederation() {
       desc: "Tower Federation",
       status: "fail",
       message: "Failed to check federation: " + String(error),
+      ack_verified: false,
     };
   }
 }

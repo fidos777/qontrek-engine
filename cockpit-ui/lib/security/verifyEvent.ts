@@ -43,8 +43,8 @@ export function verifyEvent(
     };
   }
 
-  if (event.timestamp > now + 60000) {
-    // Allow 1 minute clock skew
+  if (event.timestamp > now + 90000) {
+    // Allow 90 seconds clock skew (±90s tolerance)
     return {
       valid: false,
       error: "timestamp_future",

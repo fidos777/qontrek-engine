@@ -17,10 +17,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create telemetry entry
+    // Check panic mode status
+    const panicMode = process.env.ATLAS_PANIC === "true";
+
+    // Create telemetry entry with panic mode flag
     const entry = {
       event,
       timestamp: timestamp || Date.now(),
+      panic_mode: panicMode,
       ...payload,
     };
 
