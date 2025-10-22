@@ -1,0 +1,38 @@
+{
+  "version": "1.1.0",
+  "generated_at": "2025-10-22T04:30:00.000Z",
+  "nodes": [
+    {
+      "id": "atlas-local",
+      "type": "client",
+      "name": "Qontrek Cockpit Atlas Node",
+      "capabilities": ["discover", "emit", "consume"],
+      "endpoint": "/api/mcp",
+      "protocol": "mcp",
+      "version": "1.1.0",
+      "status": "active",
+      "features": {
+        "proof_discovery": true,
+        "event_emission": true,
+        "event_consumption": true,
+        "hmac_signing": true,
+        "schema_validation": true,
+        "telemetry_federation": true
+      },
+      "metadata": {
+        "locale": "ms-MY",
+        "timezone": "Asia/Kuala_Lumpur",
+        "environment": "production"
+      }
+    }
+  ],
+  "federation": {
+    "protocol": "atlas-v1.1",
+    "authentication": "hmac-sha256",
+    "sync_interval_ms": 60000,
+    "retry_policy": {
+      "max_retries": 3,
+      "backoff_ms": [1000, 2000, 4000]
+    }
+  }
+}

@@ -1,2 +1,6 @@
 {"type":"proof.updated","ref":"test.json","etag":"W/test123","timestamp":1761107064098}
 {"type":"proof.loaded","ref":"stream_test.json","timestamp":1761107064103}
+{"type":"proof.updated","ref":"test.json","etag":"W/test123","timestamp":1761110423146}
+{"type":"proof.loaded","ref":"stream_test.json","timestamp":1761110423156}
+{"type":"proof.updated","ref":"test.json","etag":"W/test123","timestamp":1761110444027}
+{"type":"proof.loaded","ref":"stream_test.json","timestamp":1761110444032}

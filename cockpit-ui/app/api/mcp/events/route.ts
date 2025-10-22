@@ -11,6 +11,7 @@ const EVENTS_LOG_PATH = join(process.cwd(), "public", "mcp", "events.log.jsonl")
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const stream = url.searchParams.get("stream");
+  const since = url.searchParams.get("since"); // Support ?since=<id> for Tower sync
 
   // If stream=true, return recent events from log
   if (stream === "true") {
@@ -23,7 +24,7 @@ export async function GET(req: Request) {
       }
 
       const log = readFileSync(EVENTS_LOG_PATH, "utf-8");
-      const events = log
+      let events = log
         .trim()
         .split("\n")
         .filter(Boolean)
@@ -36,8 +37,19 @@ export async function GET(req: Request) {
         })
         .filter(Boolean);
 
+      // Filter by "since" timestamp or signature
+      if (since) {
+        const sinceValue = since;
+        const sinceIndex = events.findIndex(
+          (e: any) => e.signature === sinceValue || e.timestamp?.toString() === sinceValue
+        );
+        if (sinceIndex !== -1) {
+          events = events.slice(sinceIndex + 1); // Return events after "since"
+        }
+      }
+
       return NextResponse.json(
-        { events, count: events.length },
+        { events, count: events.length, since: since || null },
         { headers: { "Cache-Control": "no-store" } }
       );
     } catch (error) {
