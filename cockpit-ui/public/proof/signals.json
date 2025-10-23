@@ -1,0 +1,9 @@
+{
+  "etag": "abc123xyz",
+  "ack_age_ms": 150,
+  "schema_pass": true,
+  "freshness_ms": 5000,
+  "rate_headroom": 0.85,
+  "mode": "live",
+  "generated_at": "2025-10-23T05:19:00.000Z"
+}
