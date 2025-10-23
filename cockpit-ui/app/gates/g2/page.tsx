@@ -4,6 +4,11 @@ import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { logProofLoad } from "@/lib/telemetry";
 import type { G2Response } from "@/types/gates";
+// R1.5.2 - Governance Feedback Layer
+import GovernanceHeaderStrip from "@/components/voltek/GovernanceHeaderStrip";
+import HologramBadge from "@/components/voltek/HologramBadge";
+import ProofFreshnessIndicator from "@/components/voltek/ProofFreshnessIndicator";
+import { useAISuggestions } from "@/lib/hooks/useAISuggestions";
 
 async function fetchGate(url: string): Promise<G2Response> {
   try {
@@ -25,13 +30,19 @@ async function fetchGate(url: string): Promise<G2Response> {
 export default function Gate2Dashboard() {
   const [payload, setPayload] = useState<G2Response | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dataLoadedAt, setDataLoadedAt] = useState<Date>(new Date());
   const telemetrySent = useRef(false);
+
+  // R1.5.2 - AI suggestions hook
+  const aiSuggestions = useAISuggestions();
 
   useEffect(() => {
     (async () => {
       try {
         const resp = await fetchGate("/api/gates/g2/summary");
         setPayload(resp);
+        // R1.5.2 - Update proof freshness timestamp
+        setDataLoadedAt(new Date());
         // Prevent double telemetry in Next.js StrictMode (dev only)
         if (!telemetrySent.current && resp?.rel && resp?.source) {
           logProofLoad(resp.rel, resp.source);
@@ -54,8 +65,16 @@ export default function Gate2Dashboard() {
   const pct = (v: unknown) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "-");
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
+    <>
+      {/* R1.5.2 - Governance Header Strip */}
+      <GovernanceHeaderStrip lastSync={dataLoadedAt} />
+
+      <div className="p-6 space-y-6">
+        {/* Header with Proof Freshness Indicator */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
+          <ProofFreshnessIndicator lastUpdated={dataLoadedAt} source="g2-api" />
+        </div>
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -158,6 +177,12 @@ export default function Gate2Dashboard() {
           </Card>
         </div>
       </div>
+
+      {/* R1.5.2 - Footer with Tower Federation Badge */}
+      <div className="mt-8 p-6 border-t border-slate-700 bg-slate-900/30 flex items-center justify-center">
+        <HologramBadge text="Tower Federation Certified" />
+      </div>
     </div>
+    </>
   );
 }
