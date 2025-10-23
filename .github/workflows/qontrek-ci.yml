@@ -1,0 +1,72 @@
+name: Qontrek CI
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "cockpit-ui/**"
+      - ".github/workflows/qontrek-ci.yml"
+  pull_request:
+    paths:
+      - "cockpit-ui/**"
+      - ".github/workflows/qontrek-ci.yml"
+
+concurrency:
+  group: qontrek-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: cockpit-ui
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: true
+      NEXT_TELEMETRY_DISABLED: "1"
+      ATLAS_FEDERATION_ENABLED: "false"
+      ATLAS_PANIC: "false"
+      NODE_OPTIONS: "--max_old_space_size=4096"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+          cache-dependency-path: cockpit-ui/package-lock.json
+
+      - name: System deps for native modules
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3 libsqlite3-dev
+          npm config set python $(which python3)
+
+      - name: Install
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Unit tests (no network)
+        run: npm test -- --coverage --run
+
+      - name: Coverage gate (90%)
+        run: node scripts/checkCoverage.js --min=90 || echo "::warning::Coverage <90%"
+
+      - name: Attach npm logs (debug)
+        if: failure()
+        run: |
+          LOG=$(ls -t ~/.npm/_logs/* 2>/dev/null | head -n 1 || true)
+          if [ -n "$LOG" ]; then
+            echo "Found npm log: $LOG"
+            tail -n 200 "$LOG"
+          else
+            echo "No npm logs found."
+          fi
