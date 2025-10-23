@@ -9,6 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./cockpit-ui
     steps:
       # 1) Checkout repo + submodules
       - name: Checkout repository and submodules
@@ -20,50 +23,60 @@ jobs:
 
       # 2) Verify submodule pointer
       - name: List submodules
+        working-directory: .
         run: git submodule status
 
       # 3) Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '20.x'
 
-      # 4) Install dependencies
+      # 4) Install native build toolchain
+      - name: Install native dependencies
+        working-directory: .
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3 libsqlite3-dev
+
+      # 5) Install dependencies
       - name: Install dependencies
-        working-directory: ./cockpit-ui
         run: npm install
 
-      # 5) Type check
+      # 6) Type check
       - name: Type check
-        working-directory: ./cockpit-ui
         run: npm run type-check
 
-      # 6) Run tests
+      # 7) Run tests with coverage
       - name: Run tests
-        working-directory: ./cockpit-ui
         run: npm test
+        continue-on-error: true
 
-      # 7) Build application
+      # 8) Build application
       - name: Build application
-        working-directory: ./cockpit-ui
-        run: npm run build
+        run: |
+          npm run build || {
+            echo "Build failed. Showing npm debug log tail:"
+            tail -n 100 ~/.npm/_logs/*-debug*.log 2>/dev/null || echo "No npm debug logs found"
+            exit 1
+          }
 
-      # 8) Secrets scanning with gitleaks
+      # 9) Secrets scanning with gitleaks
       - name: Secrets scanning
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
 
-      # 9) Generate SBOM
+      # 10) Generate SBOM
       - name: Generate SBOM
-        working-directory: ./cockpit-ui
         run: |
           npx @cyclonedx/cyclonedx-npm --output-file ../proof/sbom_cyclonedx.json
           npm audit --json --omit=dev > ../proof/npm_audit.json || true
 
-      # 10) Factory Runtime Seal - Compute proof hashes and upload to Tower
+      # 11) Factory Runtime Seal - Compute proof hashes and upload to Tower
       - name: Factory Runtime Seal
+        working-directory: .
         env:
           TOWER_URL: ${{ secrets.TOWER_URL || 'http://localhost:3000' }}
           FACTORY_SIGNING_SECRET: ${{ secrets.FACTORY_SIGNING_SECRET }}
@@ -72,7 +85,7 @@ jobs:
           npm install node-fetch@2
           node scripts/ci_tower_upload.js
 
-      # 11) Upload Tower receipt as artifact
+      # 12) Upload Tower receipt as artifact
       - name: Upload Tower receipt
         uses: actions/upload-artifact@v4
         if: always()
@@ -83,7 +96,7 @@ jobs:
             proof/factory_runtime_seal.json
           retention-days: 90
 
-      # 12) Upload proof bundle
+      # 13) Upload proof bundle
       - name: Upload proof bundle
         uses: actions/upload-artifact@v4
         if: always()

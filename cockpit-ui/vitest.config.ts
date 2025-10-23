@@ -9,6 +9,11 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./"),
+      // Mock native dependencies in CI to avoid building binaries
+      ...(process.env.CI && {
+        sqlite: path.resolve(__dirname, "./__mocks__/sqlite.ts"),
+        sqlite3: path.resolve(__dirname, "./__mocks__/sqlite3.ts"),
+      }),
     },
   },
 });
