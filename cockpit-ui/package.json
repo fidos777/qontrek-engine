@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "next lint",
+    "lighthouse": "lighthouse http://localhost:3000/gates/g2 --output=html --output-path=./proof/lighthouse_report_v1.html --chrome-flags='--headless'"
   },
   "dependencies": {
     "next": "14.2.5",
@@ -23,7 +25,10 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.5",
     "jsdom": "^24.0.0",
+    "lighthouse": "^13.0.1",
     "postcss": "^8.4.41",
     "tailwindcss": "^3.4.10",
     "typescript": "^5.4.0",
