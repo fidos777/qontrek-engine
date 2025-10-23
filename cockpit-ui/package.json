@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "next lint",
+    "lighthouse": "lighthouse http://localhost:3000/gates/g2 --only-categories=performance,accessibility --view"
   },
   "dependencies": {
     "next": "14.2.5",
