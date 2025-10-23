@@ -8,6 +8,10 @@ import { logProofLoad } from "@/lib/telemetry";
 import { useCountUpValue } from "@/lib/hooks/useCountUpValue";
 import { getMotionProps } from "@/lib/utils/motion";
 import type { G2Response } from "@/types/gates";
+import { LeadModal, type G2Lead } from "@/components/voltek/LeadModal";
+import { usePaymentSuccess } from "@/lib/hooks/usePaymentSuccess";
+import { useProofSync } from "@/lib/hooks/useProofSync";
+import { showInfoToast } from "@/lib/utils/toast-helpers";
 
 async function fetchGate(url: string): Promise<G2Response> {
   try {
@@ -30,6 +34,8 @@ export default function Gate2Dashboard() {
   const [payload, setPayload] = useState<G2Response | null>(null);
   const [error, setError] = useState<string | null>(null);
   const telemetrySent = useRef(false);
+  const [selectedLead, setSelectedLead] = useState<G2Lead | null>(null);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -41,11 +47,34 @@ export default function Gate2Dashboard() {
           logProofLoad(resp.rel, resp.source);
           telemetrySent.current = true;
         }
+        // Dispatch proof.updated event for proof sync notification
+        window.dispatchEvent(
+          new CustomEvent("proof.updated", {
+            detail: { freshness: 0, source: resp?.source || "real" },
+          })
+        );
       } catch (e: any) {
         setError(e?.message ?? "Unknown error");
       }
     })();
   }, []);
+
+  // Handlers for lead interactions
+  const handleLeadClick = (lead: G2Lead) => {
+    setSelectedLead(lead);
+    setIsLeadModalOpen(true);
+  };
+
+  const handleAction = (
+    action: "call" | "sms" | "whatsapp",
+    lead: G2Lead
+  ) => {
+    showInfoToast(`Preparing ${action} for ${lead.name || "lead"}...`);
+  };
+
+  // Use hooks for payment success and proof sync
+  usePaymentSuccess(payload?.data?.recent_success || []);
+  useProofSync();
 
   if (error) return <div className="p-6"><p className="text-red-600" aria-live="polite">Error: {error}</p></div>;
   if (!payload) return <div className="p-6">Loading...</div>;
@@ -176,27 +205,7 @@ export default function Gate2Dashboard() {
       {/* Main Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Critical Leads */}
-        <motion.div
-          {...getMotionProps({
-            initial: { opacity: 0, x: -20 },
-            animate: { opacity: 1, x: 0 },
-            transition: { delay: 0.5, duration: 0.6 },
-          })}
-        >
-          <Card className="p-4">
-            <div className="text-lg font-semibold mb-3">Critical Leads</div>
-            {data.critical_leads.length === 0 ? (
-              <p className="text-sm text-gray-500">No critical overdue leads.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="text-left">
-                    <tr>
-                      <th scope="col" className="py-2 pr-4">Name</th>
-                      <th scope="col" className="py-2 pr-4">Stage</th>
-                      <th scope="col" className="py-2 pr-4">Amount</th>
-                      <th scope="col" className="py-2 pr-4">Overdue</th>
-                      <th scope="col" className="py-2">Last Reminder</th>
+ origin/claude/implement-interaction-layer-011CUQLppVZcsfru8yLd5RSa
                     </tr>
                   </thead>
                   <tbody>
@@ -341,6 +350,18 @@ export default function Gate2Dashboard() {
           </motion.div>
         </div>
       </div>
+<<<<<<< HEAD
     </motion.div>
+=======
+
+      {/* Lead Modal */}
+      <LeadModal
+        lead={selectedLead}
+        isOpen={isLeadModalOpen}
+        onClose={() => setIsLeadModalOpen(false)}
+        onAction={handleAction}
+      />
+    </div>
+>>>>>>> origin/claude/implement-interaction-layer-011CUQLppVZcsfru8yLd5RSa
   );
 }
