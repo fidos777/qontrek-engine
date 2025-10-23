@@ -14,7 +14,10 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "framer-motion": "^11",
+    "xlsx": "^0.18",
+    "zod": "^3.23"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.2",

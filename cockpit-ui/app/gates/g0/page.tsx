@@ -3,7 +3,10 @@
 import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { logProofLoad } from "@/lib/telemetry";
+import { createTelemetry } from "@/lib/telemetryClient";
 import type { G0Response } from "@/types/gates";
+
+const telemetry = createTelemetry();
 
 async function fetchGate(url: string): Promise<G0Response> {
   try {
@@ -105,7 +108,10 @@ export default function Gate0Dashboard() {
                   <div className="font-medium text-sm">{lead.company}</div>
                   <div className="text-xs text-gray-500">{lead.contact}</div>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded">
+                    <span
+                      className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded cursor-pointer hover:bg-red-200"
+                      onClick={() => telemetry.emit("ui.confidence.score", { score: lead.score, status: "hot", company: lead.company })}
+                    >
                       Score: {lead.score}
                     </span>
                     <span className="text-xs text-gray-500">{lead.source}</span>
@@ -135,7 +141,10 @@ export default function Gate0Dashboard() {
                   <div className="font-medium text-sm">{lead.company}</div>
                   <div className="text-xs text-gray-500">{lead.contact}</div>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                    <span
+                      className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded cursor-pointer hover:bg-yellow-200"
+                      onClick={() => telemetry.emit("ui.confidence.score", { score: lead.score, status: "warm", company: lead.company })}
+                    >
                       Score: {lead.score}
                     </span>
                     <span className="text-xs text-gray-500">{lead.source}</span>
@@ -165,7 +174,10 @@ export default function Gate0Dashboard() {
                   <div className="font-medium text-sm">{lead.company}</div>
                   <div className="text-xs text-gray-500">{lead.contact}</div>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                    <span
+                      className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded cursor-pointer hover:bg-blue-200"
+                      onClick={() => telemetry.emit("ui.confidence.score", { score: lead.score, status: "cold", company: lead.company })}
+                    >
                       Score: {lead.score}
                     </span>
                     <span className="text-xs text-gray-500">{lead.source}</span>

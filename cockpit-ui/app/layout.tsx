@@ -1,4 +1,6 @@
 import "./globals.css";
+import { SafeModeProvider } from "@/lib/safeModeContext";
+import SafeModeBadge from "@/components/SafeModeBadge";
 
 export default function RootLayout({
   children,
@@ -10,7 +12,12 @@ export default function RootLayout({
       <head>
         <title>Qontrek Cockpit UI</title>
       </head>
-      <body>{children}</body>
+      <body>
+        <SafeModeProvider>
+          <SafeModeBadge />
+          {children}
+        </SafeModeProvider>
+      </body>
     </html>
   );
 }

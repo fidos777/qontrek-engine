@@ -7,6 +7,17 @@ import {
   emitTowerReceiptProof,
   TowerReceipt,
 } from '@/lib/tower/receipts';
+import { createTelemetry } from '@/lib/telemetryClient';
+
+// Server-side telemetry uses console-only sink
+const serverSink = {
+  emit: async (name: string, payload: any) => {
+    const timestamp = new Date().toISOString();
+    const entry = { event: name, payload, timestamp };
+    console.log("[TELEMETRY]", JSON.stringify(entry));
+  },
+};
+const telemetry = createTelemetry(serverSink);
 
 /**
  * POST /api/tower/uploadProof
@@ -35,11 +46,14 @@ import {
  */
 export async function POST(request: NextRequest) {
   try {
+    await telemetry.emit("ui.import.open", { timestamp: new Date().toISOString() });
+
     const body = await request.json();
     const { manifest } = body;
 
     // Validate manifest structure
     if (!manifest || !manifest.files || !Array.isArray(manifest.files)) {
+      await telemetry.emit("ui.import.error", { error: "missing or invalid files array" });
       return NextResponse.json(
         { error: 'Invalid manifest: missing or invalid files array' },
         { status: 400 }
@@ -47,6 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!manifest.merkleRoot) {
+      await telemetry.emit("ui.import.error", { error: "missing merkleRoot" });
       return NextResponse.json(
         { error: 'Invalid manifest: missing merkleRoot' },
         { status: 400 }
@@ -54,11 +69,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (!manifest.signature || !manifest.kid) {
+      await telemetry.emit("ui.import.error", { error: "missing signature or kid" });
       return NextResponse.json(
         { error: 'Invalid manifest: missing signature or kid' },
         { status: 400 }
       );
     }
+
+    await telemetry.emit("ui.import.validate", { fileCount: manifest.files.length });
 
     // Extract file hashes
     const fileHashes = manifest.files.map((f: any) => f.sha256);
@@ -68,6 +86,7 @@ export async function POST(request: NextRequest) {
 
     // Check if echo root matches claimed root
     if (echoRoot !== manifest.merkleRoot) {
+      await telemetry.emit("ui.import.error", { error: "Merkle root mismatch" });
       return NextResponse.json(
         {
           error: 'Merkle root mismatch',
@@ -117,6 +136,12 @@ export async function POST(request: NextRequest) {
     // Emit proof for CI consumption
     await emitTowerReceiptProof(receipt);
 
+    await telemetry.emit("ui.import.apply", {
+      receiptId: receipt.receiptId,
+      fileCount: manifest.files.length,
+      merkleRoot: echoRoot,
+    });
+
     // Return acknowledgment
     return NextResponse.json({
       receiptId: receipt.receiptId,
@@ -127,6 +152,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Tower uploadProof error:', error);
+    await telemetry.emit("ui.import.error", { error: (error as Error).message });
     return NextResponse.json(
       { error: 'Internal server error', details: (error as Error).message },
       { status: 500 }
