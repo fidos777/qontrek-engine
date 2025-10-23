@@ -68,9 +68,7 @@ jobs:
           TOWER_URL: ${{ secrets.TOWER_URL || 'http://localhost:3000' }}
           FACTORY_SIGNING_SECRET: ${{ secrets.FACTORY_SIGNING_SECRET }}
           FACTORY_KEY_ID: ${{ secrets.FACTORY_KEY_ID || 'factory-key-001' }}
-        run: |
-          npm install node-fetch@2
-          node scripts/ci_tower_upload.js
+        run: node scripts/ci_tower_upload.js
 
       # 11) Upload Tower receipt as artifact
       - name: Upload Tower receipt

@@ -104,7 +104,7 @@ async function scanProofFiles(proofDir) {
  * Upload manifest to Tower
  */
 async function uploadToTower(manifest) {
-  const fetch = (await import('node-fetch')).default;
+  // Using native fetch (available in Node 18+)
   const uploadUrl = `${TOWER_URL}/api/tower/uploadProof`;
 
   console.log(`Uploading to Tower: ${uploadUrl}`);
@@ -127,7 +127,7 @@ async function uploadToTower(manifest) {
  * Verify Tower acknowledgment
  */
 async function verifyAck(receiptId, maxRetries = 3) {
-  const fetch = (await import('node-fetch')).default;
+  // Using native fetch (available in Node 18+)
   const ackUrl = `${TOWER_URL}/api/tower/ack/${receiptId}`;
 
   for (let i = 0; i < maxRetries; i++) {

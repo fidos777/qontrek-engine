@@ -166,7 +166,7 @@ export async function sendAlertNotification(alert: Alert): Promise<void> {
   // Example Slack webhook (disabled by default)
   if (process.env.SLACK_WEBHOOK_URL) {
     try {
-      const fetch = (await import('node-fetch')).default;
+      // Using native fetch (available in Node 18+)
       await fetch(process.env.SLACK_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -192,7 +192,7 @@ export async function sendAlertNotification(alert: Alert): Promise<void> {
  */
 export async function monitorAndAlert(healthEndpoint = 'http://localhost:3000/api/mcp/healthz'): Promise<void> {
   try {
-    const fetch = (await import('node-fetch')).default;
+    // Using native fetch (available in Node 18+)
     const response = await fetch(healthEndpoint);
 
     if (!response.ok) {
