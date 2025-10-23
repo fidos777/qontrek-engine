@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { logProofLoad } from "@/lib/telemetry";
 import type { G2Response } from "@/types/gates";
+import { ImportDataButton } from "@/components/trust/ImportDataButton";
 
 async function fetchGate(url: string): Promise<G2Response> {
   try {
@@ -55,7 +56,10 @@ export default function Gate2Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
+        <ImportDataButton variant="default" size="default" />
+      </div>
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
