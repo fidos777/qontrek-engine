@@ -2,7 +2,7 @@ name: Qontrek CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "claude/**" ]
   pull_request:
     branches: [ "main" ]
 
@@ -10,19 +10,84 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # 1) Checkout repo + submodules guna PAT rahsia
+      # 1) Checkout repo + submodules
       - name: Checkout repository and submodules
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.CI_GITHUB_TOKEN }}
           submodules: recursive
+          fetch-depth: 0
 
       # 2) Verify submodule pointer
       - name: List submodules
         run: git submodule status
 
-      # 3) Dummy build/test – ganti dgn step sebenar nanti
-      - name: Run build step
+      # 3) Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 4) Install dependencies
+      - name: Install dependencies
+        working-directory: ./cockpit-ui
+        run: npm install
+
+      # 5) Type check
+      - name: Type check
+        working-directory: ./cockpit-ui
+        run: npm run type-check
+
+      # 6) Run tests
+      - name: Run tests
+        working-directory: ./cockpit-ui
+        run: npm test
+
+      # 7) Build application
+      - name: Build application
+        working-directory: ./cockpit-ui
+        run: npm run build
+
+      # 8) Secrets scanning with gitleaks
+      - name: Secrets scanning
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      # 9) Generate SBOM
+      - name: Generate SBOM
+        working-directory: ./cockpit-ui
         run: |
-          echo "✅ Submodules checked out successfully"
-          ls -R flows/
+          npx @cyclonedx/cyclonedx-npm --output-file ../proof/sbom_cyclonedx.json
+          npm audit --json --omit=dev > ../proof/npm_audit.json || true
+
+      # 10) Factory Runtime Seal - Compute proof hashes and upload to Tower
+      - name: Factory Runtime Seal
+        env:
+          TOWER_URL: ${{ secrets.TOWER_URL || 'http://localhost:3000' }}
+          FACTORY_SIGNING_SECRET: ${{ secrets.FACTORY_SIGNING_SECRET }}
+          FACTORY_KEY_ID: ${{ secrets.FACTORY_KEY_ID || 'factory-key-001' }}
+        run: |
+          npm install node-fetch@2
+          node scripts/ci_tower_upload.js
+
+      # 11) Upload Tower receipt as artifact
+      - name: Upload Tower receipt
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tower-receipt
+          path: |
+            proof/tower_receipt_v1.json
+            proof/factory_runtime_seal.json
+          retention-days: 90
+
+      # 12) Upload proof bundle
+      - name: Upload proof bundle
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: proof-bundle
+          path: proof/
+          retention-days: 90
