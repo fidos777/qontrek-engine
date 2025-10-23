@@ -4,6 +4,10 @@ import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { logProofLoad } from "@/lib/telemetry";
 import type { G2Response } from "@/types/gates";
+import { LeadModal, type G2Lead } from "@/components/voltek/LeadModal";
+import { usePaymentSuccess } from "@/lib/hooks/usePaymentSuccess";
+import { useProofSync } from "@/lib/hooks/useProofSync";
+import { showInfoToast } from "@/lib/utils/toast-helpers";
 
 async function fetchGate(url: string): Promise<G2Response> {
   try {
@@ -26,6 +30,8 @@ export default function Gate2Dashboard() {
   const [payload, setPayload] = useState<G2Response | null>(null);
   const [error, setError] = useState<string | null>(null);
   const telemetrySent = useRef(false);
+  const [selectedLead, setSelectedLead] = useState<G2Lead | null>(null);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -37,11 +43,34 @@ export default function Gate2Dashboard() {
           logProofLoad(resp.rel, resp.source);
           telemetrySent.current = true;
         }
+        // Dispatch proof.updated event for proof sync notification
+        window.dispatchEvent(
+          new CustomEvent("proof.updated", {
+            detail: { freshness: 0, source: resp?.source || "real" },
+          })
+        );
       } catch (e: any) {
         setError(e?.message ?? "Unknown error");
       }
     })();
   }, []);
+
+  // Handlers for lead interactions
+  const handleLeadClick = (lead: G2Lead) => {
+    setSelectedLead(lead);
+    setIsLeadModalOpen(true);
+  };
+
+  const handleAction = (
+    action: "call" | "sms" | "whatsapp",
+    lead: G2Lead
+  ) => {
+    showInfoToast(`Preparing ${action} for ${lead.name || "lead"}...`);
+  };
+
+  // Use hooks for payment success and proof sync
+  usePaymentSuccess(payload?.data?.recent_success || []);
+  useProofSync();
 
   if (error) return <div className="p-6"><p className="text-red-600" aria-live="polite">Error: {error}</p></div>;
   if (!payload) return <div className="p-6">Loading...</div>;
@@ -103,7 +132,11 @@ export default function Gate2Dashboard() {
                 </thead>
                 <tbody>
                   {data.critical_leads.map((r: any, idx: number) => (
-                    <tr key={idx} className="border-t">
+                    <tr
+                      key={idx}
+                      className="border-t cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => handleLeadClick(r as G2Lead)}
+                    >
                       <td className="py-2 pr-4">{r.name ?? "-"}</td>
                       <td className="py-2 pr-4">{r.stage ?? "-"}</td>
                       <td className="py-2 pr-4">{typeof r.amount === "number" ? fmMYR.format(r.amount) : "-"}</td>
@@ -158,6 +191,14 @@ export default function Gate2Dashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Lead Modal */}
+      <LeadModal
+        lead={selectedLead}
+        isOpen={isLeadModalOpen}
+        onClose={() => setIsLeadModalOpen(false)}
+        onAction={handleAction}
+      />
     </div>
   );
 }
