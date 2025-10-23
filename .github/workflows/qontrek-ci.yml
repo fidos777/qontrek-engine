@@ -41,6 +41,8 @@ jobs:
       # 6) Run tests
       - name: Run tests
         working-directory: ./cockpit-ui
+        env:
+          CI: "true"
         run: npm test
 
       # 7) Build application
