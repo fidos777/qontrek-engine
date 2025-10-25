@@ -1,0 +1,67 @@
+Timestamp: Fri Oct 24 00:05:25 +08 2025
+
+🔍 Checking Node & NPM versions...
+v22.17.0
+10.9.2
+
+🧩 Auditing dependencies...
+npm warn config production Use `--omit=dev` instead.
+found 0 vulnerabilities
+
+🧠 Running TypeScript & Lint checks...
+
+> cockpit-ui@0.1.0 type-check
+> tsc --noEmit
+
+npm error Missing script: "lint"
+npm error
+npm error Did you mean this?
+npm error   npm link # Symlink a package folder
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: /Users/firdausismail/.npm-cache/_logs/2025-10-23T16_05_27_649Z-debug-0.log
+⚠️ Lint check issues detected
+
+🏗️ Building production bundle...
+
+> cockpit-ui@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.33
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/6) ...
+   Generating static pages (1/6) 
+   Generating static pages (2/6) 
+   Generating static pages (4/6) 
+ ✓ Generating static pages (6/6)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /_not-found                          873 B          88.1 kB
+├ ○ /cfo                                 1.7 kB         88.9 kB
+├ ○ /gates/g0                            2 kB           89.2 kB
+└ ○ /gates/g2                            1.91 kB        89.1 kB
++ First Load JS shared by all            87.2 kB
+  ├ chunks/117-90d954db14ece976.js       31.7 kB
+  ├ chunks/fd9d1056-f32d435cf20da718.js  53.6 kB
+  └ other shared chunks (total)          1.86 kB
+
+
+○  (Static)  prerendered as static content
+
+✅ Build succeeded
+
+🚀 Launching local server for runtime verification...
+🌐 Testing http://localhost:3001/gates/g2...
+200
+
+📜 Generating governance verification artifact...
+🧹 Cleaned up local server (PID: 34689)
+
