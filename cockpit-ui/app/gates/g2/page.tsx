@@ -4,6 +4,9 @@ import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { logProofLoad } from "@/lib/telemetry";
 import type { G2Response } from "@/types/gates";
+import { getSnapshot, subscribe } from "@/lib/state/voltekStore";
+import ImportButton from "@/components/voltek/ImportButton";
+import TrustScoreCircle from "@/components/voltek/TrustScoreCircle";
 
 async function fetchGate(url: string): Promise<G2Response> {
   try {
@@ -25,6 +28,7 @@ async function fetchGate(url: string): Promise<G2Response> {
 export default function Gate2Dashboard() {
   const [payload, setPayload] = useState<G2Response | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [snapshot, setSnapshot] = useState(() => getSnapshot());
   const telemetrySent = useRef(false);
 
   useEffect(() => {
@@ -43,6 +47,13 @@ export default function Gate2Dashboard() {
     })();
   }, []);
 
+  useEffect(() => {
+    const unsubscribe = subscribe(() => {
+      setSnapshot(getSnapshot());
+    });
+    return unsubscribe;
+  }, []);
+
   if (error) return <div className="p-6"><p className="text-red-600" aria-live="polite">Error: {error}</p></div>;
   if (!payload) return <div className="p-6">Loading...</div>;
 
@@ -55,10 +66,17 @@ export default function Gate2Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
+        <ImportButton />
+      </div>
 
       {/* KPI Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="p-4">
+          <div className="text-sm text-gray-500 mb-2">Trust Index</div>
+          <TrustScoreCircle value={snapshot.summary.trust_index} />
+        </Card>
         <Card className="p-4">
           <div className="text-sm text-gray-500">Total Recoverable</div>
           <div className="text-2xl font-bold">{fmMYR.format(Number(data.summary.total_recoverable || 0))}</div>
