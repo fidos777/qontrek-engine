@@ -1,224 +1,174 @@
 /**
- * Zod schemas for runtime validation of Voltek data structures
- * Session 1A - Data model & store
+ * Zod schemas for Voltek dataset validation
+ *
+ * These schemas define the structure of data imported from Voltek Excel files.
+ * They provide runtime validation and type safety.
  */
 
-import { z } from "zod";
-import type {
-  VoltekLead,
-  VoltekProject,
-  VoltekDataset,
-  KpiSummary,
-  GovernanceState,
-  ComputedSnapshot,
-  ValidationResult,
-} from "./types";
+import { z } from 'zod';
 
-// ============================================================================
-// Core Domain Schemas
-// ============================================================================
+// Base types
+export const VoltekProjectStatusSchema = z.enum([
+  'lead',
+  'qualified',
+  'in_progress',
+  'installed',
+  'completed',
+  'cancelled',
+  'on_hold'
+]);
 
-/**
- * Schema for VoltekLead validation
- */
-export const VoltekLeadSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  status: z.enum(["new", "contacted", "qualified", "lost", "converted"]),
-  source: z.string().optional(),
-  created_at: z.string(),
-  updated_at: z.string(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-});
+export const VoltekPrioritySchema = z.enum([
+  'high',
+  'medium',
+  'low'
+]);
 
-/**
- * Schema for VoltekProject validation
- */
+// Project schema
 export const VoltekProjectSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
+  id: z.string(),
+  projectName: z.string(),
+  clientName: z.string(),
+  status: VoltekProjectStatusSchema,
+  priority: VoltekPrioritySchema.optional(),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
+  estimatedValue: z.number().optional(),
+  actualValue: z.number().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+  contactName: z.string().optional(),
+  contactEmail: z.string().email().optional().or(z.literal('')),
+  contactPhone: z.string().optional(),
+  notes: z.string().optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
+// Lead schema
+export const VoltekLeadSchema = z.object({
+  id: z.string(),
+  leadSource: z.string().optional(),
+  leadName: z.string(),
+  contactPerson: z.string().optional(),
+  email: z.string().email().optional().or(z.literal('')),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+  estimatedValue: z.number().optional(),
+  qualificationScore: z.number().optional(),
+  status: z.string().optional(),
+  notes: z.string().optional(),
+  createdAt: z.date().optional(),
+  followUpDate: z.date().optional(),
+});
+
+// Financial record schema
+export const VoltekFinancialSchema = z.object({
+  id: z.string(),
+  projectId: z.string().optional(),
+  transactionDate: z.date().optional(),
+  description: z.string(),
+  category: z.string().optional(),
+  amount: z.number(),
+  type: z.enum(['income', 'expense']).optional(),
+  paymentMethod: z.string().optional(),
+  vendor: z.string().optional(),
+  invoiceNumber: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+// Installation task schema
+export const VoltekInstallationTaskSchema = z.object({
+  id: z.string(),
+  projectId: z.string().optional(),
+  taskName: z.string(),
   description: z.string().optional(),
-  status: z.enum(["active", "paused", "completed", "archived"]),
-  lead_id: z.string().optional(),
-  start_date: z.string(),
-  end_date: z.string().optional(),
-  budget: z.number().nonnegative().optional(),
-  revenue: z.number().nonnegative().optional(),
-  success_rate: z.number().min(0).max(100).optional(),
-  recovery_rate_7d: z.number().min(0).max(100).optional(),
-  created_at: z.string(),
-  updated_at: z.string(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
+  assignedTo: z.string().optional(),
+  scheduledDate: z.date().optional(),
+  completedDate: z.date().optional(),
+  status: z.string().optional(),
+  estimatedHours: z.number().optional(),
+  actualHours: z.number().optional(),
+  notes: z.string().optional(),
 });
 
-/**
- * Schema for VoltekDataset validation
- */
+// Material/Equipment schema
+export const VoltekMaterialSchema = z.object({
+  id: z.string(),
+  projectId: z.string().optional(),
+  itemName: z.string(),
+  description: z.string().optional(),
+  category: z.string().optional(),
+  quantity: z.number().optional(),
+  unit: z.string().optional(),
+  unitCost: z.number().optional(),
+  totalCost: z.number().optional(),
+  supplier: z.string().optional(),
+  orderDate: z.date().optional(),
+  receivedDate: z.date().optional(),
+  status: z.string().optional(),
+});
+
+// Main dataset schema
 export const VoltekDatasetSchema = z.object({
-  version: z.string(),
-  imported_at: z.string(),
-  source: z.enum(["import", "supabase", "manual"]),
-  leads: z.array(VoltekLeadSchema).optional(),
-  projects: z.array(VoltekProjectSchema).optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
+  projects: z.array(VoltekProjectSchema).default([]),
+  leads: z.array(VoltekLeadSchema).default([]),
+  financials: z.array(VoltekFinancialSchema).default([]),
+  installationTasks: z.array(VoltekInstallationTaskSchema).default([]),
+  materials: z.array(VoltekMaterialSchema).default([]),
 });
 
-// ============================================================================
-// Computed Metrics Schemas
-// ============================================================================
+// Type exports
+export type VoltekProjectStatus = z.infer<typeof VoltekProjectStatusSchema>;
+export type VoltekPriority = z.infer<typeof VoltekPrioritySchema>;
+export type VoltekProject = z.infer<typeof VoltekProjectSchema>;
+export type VoltekLead = z.infer<typeof VoltekLeadSchema>;
+export type VoltekFinancial = z.infer<typeof VoltekFinancialSchema>;
+export type VoltekInstallationTask = z.infer<typeof VoltekInstallationTaskSchema>;
+export type VoltekMaterial = z.infer<typeof VoltekMaterialSchema>;
+export type VoltekDataset = z.infer<typeof VoltekDatasetSchema>;
+
+// Validation issues tracking
+export interface ValidationIssue {
+  sheet?: string;
+  row?: number;
+  column?: string;
+  field?: string;
+  message: string;
+  severity: 'error' | 'warning' | 'info';
+}
 
 /**
- * Schema for KPI Summary validation
+ * Safe parse function that returns both parsed data and validation issues
  */
-export const KpiSummarySchema = z.object({
-  recovery_rate_7d: z.number().min(0).max(100),
-  success_rate: z.number().min(0).max(100),
-  trust_index: z.number().min(0).max(100),
-  total_leads: z.number().int().nonnegative(),
-  total_projects: z.number().int().nonnegative(),
-  active_projects: z.number().int().nonnegative(),
-  total_revenue: z.number().nonnegative(),
-  average_project_value: z.number().nonnegative(),
-  lead_conversion_rate: z.number().min(0).max(100),
-  computed_at: z.string(),
-});
-
-/**
- * Schema for Governance State validation
- */
-export const GovernanceStateSchema = z.object({
-  badges: z.array(z.string()),
-  score: z.number().min(0).max(100),
-  compliance_level: z.enum(["none", "partial", "full"]),
-  last_audit: z.string(),
-});
-
-/**
- * Schema for Computed Snapshot validation
- */
-export const ComputedSnapshotSchema = z.object({
-  summary: KpiSummarySchema,
-  governance: GovernanceStateSchema,
-  totals: z.record(z.string(), z.number()),
-  hash: z.string(),
-  source: z.enum(["import", "supabase", "manual"]),
-  freshness: z.number().nonnegative(),
-  dataset: VoltekDatasetSchema,
-  computed_at: z.string(),
-});
-
-// ============================================================================
-// Validation Helpers
-// ============================================================================
-
-/**
- * Safely parse and validate a VoltekDataset
- * @param input - Unknown input to validate
- * @returns Validation result with typed data or issues
- */
-export function safeParseDataset(
-  input: unknown
-): ValidationResult<VoltekDataset> {
-  const result = VoltekDatasetSchema.safeParse(input);
+export function safeParseDataset(data: unknown): {
+  success: boolean;
+  data?: VoltekDataset;
+  issues: ValidationIssue[];
+} {
+  const result = VoltekDatasetSchema.safeParse(data);
 
   if (result.success) {
     return {
-      ok: true,
+      success: true,
       data: result.data,
+      issues: [],
     };
   }
 
-  const issues = result.error.issues.map(
-    (issue) => `${issue.path.join(".")}: ${issue.message}`
-  );
+  const issues: ValidationIssue[] = result.error.issues.map((issue) => ({
+    field: issue.path.join('.'),
+    message: issue.message,
+    severity: 'error',
+  }));
 
   return {
-    ok: false,
+    success: false,
     issues,
-  };
-}
-
-/**
- * Safely parse and validate a VoltekLead
- * @param input - Unknown input to validate
- * @returns Validation result with typed data or issues
- */
-export function safeParseLead(input: unknown): ValidationResult<VoltekLead> {
-  const result = VoltekLeadSchema.safeParse(input);
-
-  if (result.success) {
-    return {
-      ok: true,
-      data: result.data,
-    };
-  }
-
-  const issues = result.error.issues.map(
-    (issue) => `${issue.path.join(".")}: ${issue.message}`
-  );
-
-  return {
-    ok: false,
-    issues,
-  };
-}
-
-/**
- * Safely parse and validate a VoltekProject
- * @param input - Unknown input to validate
- * @returns Validation result with typed data or issues
- */
-export function safeParseProject(
-  input: unknown
-): ValidationResult<VoltekProject> {
-  const result = VoltekProjectSchema.safeParse(input);
-
-  if (result.success) {
-    return {
-      ok: true,
-      data: result.data,
-    };
-  }
-
-  const issues = result.error.issues.map(
-    (issue) => `${issue.path.join(".")}: ${issue.message}`
-  );
-
-  return {
-    ok: false,
-    issues,
-  };
-}
-
-/**
- * Strictly validate a dataset and throw on error
- * Useful when you want to fail fast
- */
-export function validateDataset(input: unknown): VoltekDataset {
-  return VoltekDatasetSchema.parse(input);
-}
-
-/**
- * Validate an array of datasets
- */
-export function safeParseDatasets(
-  inputs: unknown[]
-): ValidationResult<VoltekDataset[]> {
-  const results = inputs.map(safeParseDataset);
-  const failures = results.filter((r) => !r.ok);
-
-  if (failures.length > 0) {
-    const allIssues = failures.flatMap((f) => f.issues || []);
-    return {
-      ok: false,
-      issues: allIssues,
-    };
-  }
-
-  return {
-    ok: true,
-    data: results.map((r) => r.data!),
   };
 }

@@ -1,0 +1,452 @@
+{
+  "$schema": "voltek-excel-mapping-v1",
+  "description": "Column mapping configuration for Voltek Excel files. TODO: Adjust sheet names and headers to match actual uploaded Excel files.",
+  "version": "1.0.0",
+  "sheets": {
+    "projects": {
+      "sheetNames": ["MDL - RESIDENTIAL (VOLTEK)", "Projects", "Project List"],
+      "columns": [
+        {
+          "sourceHeaders": ["Project ID", "ID", "Project #", "Proj ID"],
+          "targetField": "id",
+          "required": true,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Project Name", "Name", "Project", "Title"],
+          "targetField": "projectName",
+          "required": true,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Client Name", "Client", "Customer", "Customer Name"],
+          "targetField": "clientName",
+          "required": true,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Status", "Project Status", "State"],
+          "targetField": "status",
+          "required": true,
+          "transform": "toLower"
+        },
+        {
+          "sourceHeaders": ["Priority", "Urgency"],
+          "targetField": "priority",
+          "required": false,
+          "transform": "toLower"
+        },
+        {
+          "sourceHeaders": ["Start Date", "Date Started", "Begin Date"],
+          "targetField": "startDate",
+          "required": false,
+          "transform": "toDate"
+        },
+        {
+          "sourceHeaders": ["End Date", "Completion Date", "Finish Date", "Date Completed"],
+          "targetField": "endDate",
+          "required": false,
+          "transform": "toDate"
+        },
+        {
+          "sourceHeaders": ["Estimated Value", "Est. Value", "Estimate", "Quote Amount"],
+          "targetField": "estimatedValue",
+          "required": false,
+          "transform": "toNumber"
+        },
+        {
+          "sourceHeaders": ["Actual Value", "Final Value", "Total Cost", "Invoice Amount"],
+          "targetField": "actualValue",
+          "required": false,
+          "transform": "toNumber"
+        },
+        {
+          "sourceHeaders": ["Address", "Street Address", "Location"],
+          "targetField": "address",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["City", "Town"],
+          "targetField": "city",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["State", "Province"],
+          "targetField": "state",
+          "required": false,
+          "transform": "toUpper"
+        },
+        {
+          "sourceHeaders": ["Zip Code", "ZIP", "Postal Code"],
+          "targetField": "zipCode",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Contact Name", "Contact", "Contact Person"],
+          "targetField": "contactName",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Contact Email", "Email", "E-mail"],
+          "targetField": "contactEmail",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Contact Phone", "Phone", "Phone Number", "Tel"],
+          "targetField": "contactPhone",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Notes", "Comments", "Remarks"],
+          "targetField": "notes",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Created Date", "Date Created", "Created"],
+          "targetField": "createdAt",
+          "required": false,
+          "transform": "toDate"
+        },
+        {
+          "sourceHeaders": ["Updated Date", "Last Updated", "Modified"],
+          "targetField": "updatedAt",
+          "required": false,
+          "transform": "toDate"
+        }
+      ]
+    },
+    "leads": {
+      "sheetNames": ["Leads", "Lead List", "Prospects"],
+      "columns": [
+        {
+          "sourceHeaders": ["Lead ID", "ID", "#"],
+          "targetField": "id",
+          "required": true,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Lead Source", "Source", "Referral Source"],
+          "targetField": "leadSource",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Lead Name", "Name", "Company Name"],
+          "targetField": "leadName",
+          "required": true,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Contact Person", "Contact", "Contact Name"],
+          "targetField": "contactPerson",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Email", "E-mail", "Contact Email"],
+          "targetField": "email",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Phone", "Phone Number", "Tel", "Contact Phone"],
+          "targetField": "phone",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Address", "Street Address"],
+          "targetField": "address",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["City", "Town"],
+          "targetField": "city",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["State", "Province"],
+          "targetField": "state",
+          "required": false,
+          "transform": "toUpper"
+        },
+        {
+          "sourceHeaders": ["Zip Code", "ZIP", "Postal Code"],
+          "targetField": "zipCode",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Estimated Value", "Est. Value", "Potential Value"],
+          "targetField": "estimatedValue",
+          "required": false,
+          "transform": "toNumber"
+        },
+        {
+          "sourceHeaders": ["Qualification Score", "Score", "Rating"],
+          "targetField": "qualificationScore",
+          "required": false,
+          "transform": "toNumber"
+        },
+        {
+          "sourceHeaders": ["Status", "Lead Status", "State"],
+          "targetField": "status",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Notes", "Comments", "Remarks"],
+          "targetField": "notes",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Created Date", "Date Created", "Created"],
+          "targetField": "createdAt",
+          "required": false,
+          "transform": "toDate"
+        },
+        {
+          "sourceHeaders": ["Follow Up Date", "Follow-up", "Next Contact"],
+          "targetField": "followUpDate",
+          "required": false,
+          "transform": "toDate"
+        }
+      ]
+    },
+    "installation": {
+      "sheetNames": ["INSTALLATION PROJECT PLANNING", "Installation Tasks", "Tasks", "Schedule"],
+      "columns": [
+        {
+          "sourceHeaders": ["Task ID", "ID", "#"],
+          "targetField": "id",
+          "required": true,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Project ID", "Proj ID", "Project"],
+          "targetField": "projectId",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Task Name", "Task", "Description"],
+          "targetField": "taskName",
+          "required": true,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Description", "Details", "Task Description"],
+          "targetField": "description",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Assigned To", "Assignee", "Technician", "Worker"],
+          "targetField": "assignedTo",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Scheduled Date", "Schedule Date", "Planned Date", "Start Date"],
+          "targetField": "scheduledDate",
+          "required": false,
+          "transform": "toDate"
+        },
+        {
+          "sourceHeaders": ["Completed Date", "Completion Date", "Finish Date", "End Date"],
+          "targetField": "completedDate",
+          "required": false,
+          "transform": "toDate"
+        },
+        {
+          "sourceHeaders": ["Status", "Task Status", "State"],
+          "targetField": "status",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Estimated Hours", "Est. Hours", "Planned Hours"],
+          "targetField": "estimatedHours",
+          "required": false,
+          "transform": "toNumber"
+        },
+        {
+          "sourceHeaders": ["Actual Hours", "Hours", "Time Spent"],
+          "targetField": "actualHours",
+          "required": false,
+          "transform": "toNumber"
+        },
+        {
+          "sourceHeaders": ["Notes", "Comments", "Remarks"],
+          "targetField": "notes",
+          "required": false,
+          "transform": "toString"
+        }
+      ]
+    },
+    "financials": {
+      "sheetNames": ["Financials", "Transactions", "Expenses", "Income"],
+      "columns": [
+        {
+          "sourceHeaders": ["Transaction ID", "ID", "#"],
+          "targetField": "id",
+          "required": true,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Project ID", "Proj ID", "Project"],
+          "targetField": "projectId",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Transaction Date", "Date", "Payment Date"],
+          "targetField": "transactionDate",
+          "required": false,
+          "transform": "toDate"
+        },
+        {
+          "sourceHeaders": ["Description", "Details", "Item"],
+          "targetField": "description",
+          "required": true,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Category", "Type", "Class"],
+          "targetField": "category",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Amount", "Total", "Cost", "Value"],
+          "targetField": "amount",
+          "required": true,
+          "transform": "toNumber"
+        },
+        {
+          "sourceHeaders": ["Transaction Type", "Type", "Income/Expense"],
+          "targetField": "type",
+          "required": false,
+          "transform": "toLower"
+        },
+        {
+          "sourceHeaders": ["Payment Method", "Method", "Payment Type"],
+          "targetField": "paymentMethod",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Vendor", "Supplier", "Payee"],
+          "targetField": "vendor",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Invoice Number", "Invoice #", "Invoice"],
+          "targetField": "invoiceNumber",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Notes", "Comments", "Remarks"],
+          "targetField": "notes",
+          "required": false,
+          "transform": "toString"
+        }
+      ]
+    },
+    "materials": {
+      "sheetNames": ["Materials", "Equipment", "Inventory", "Parts"],
+      "columns": [
+        {
+          "sourceHeaders": ["Item ID", "ID", "#", "SKU"],
+          "targetField": "id",
+          "required": true,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Project ID", "Proj ID", "Project"],
+          "targetField": "projectId",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Item Name", "Name", "Product", "Material"],
+          "targetField": "itemName",
+          "required": true,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Description", "Details", "Specifications"],
+          "targetField": "description",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Category", "Type", "Class"],
+          "targetField": "category",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Quantity", "Qty", "Amount"],
+          "targetField": "quantity",
+          "required": false,
+          "transform": "toNumber"
+        },
+        {
+          "sourceHeaders": ["Unit", "UOM", "Unit of Measure"],
+          "targetField": "unit",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Unit Cost", "Cost", "Price", "Unit Price"],
+          "targetField": "unitCost",
+          "required": false,
+          "transform": "toNumber"
+        },
+        {
+          "sourceHeaders": ["Total Cost", "Total", "Extended Cost"],
+          "targetField": "totalCost",
+          "required": false,
+          "transform": "toNumber"
+        },
+        {
+          "sourceHeaders": ["Supplier", "Vendor", "Manufacturer"],
+          "targetField": "supplier",
+          "required": false,
+          "transform": "toString"
+        },
+        {
+          "sourceHeaders": ["Order Date", "Date Ordered", "Purchase Date"],
+          "targetField": "orderDate",
+          "required": false,
+          "transform": "toDate"
+        },
+        {
+          "sourceHeaders": ["Received Date", "Date Received", "Delivery Date"],
+          "targetField": "receivedDate",
+          "required": false,
+          "transform": "toDate"
+        },
+        {
+          "sourceHeaders": ["Status", "Item Status", "State"],
+          "targetField": "status",
+          "required": false,
+          "transform": "toString"
+        }
+      ]
+    }
+  }
+}

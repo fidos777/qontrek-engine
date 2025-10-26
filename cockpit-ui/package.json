@@ -2,53 +2,26 @@
   "name": "cockpit-ui",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
+  "license": "MIT",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "test": "vitest run",
     "type-check": "tsc --noEmit",
-    "lint": "next lint"
+    "build": "echo \"(cockpit-ui library: nothing to build)\"",
+    "demo:reset": "echo 'reset ok (no persistent local store used)'"
   },
   "dependencies": {
-    "@radix-ui/react-dialog": "^1.0.5",
-    "@radix-ui/react-switch": "^1.2.6",
-    "@radix-ui/react-tooltip": "^1.2.8",
-    "@supabase/supabase-js": "^2.46.1",
-    "canvas-confetti": "^1.6.0",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "framer-motion": "^12.23.24",
-    "lucide-react": "^0.322.0",
-    "next": "^14.2.33",
-    "react": "18.2.0",
-    "react-countup": "^6.5.3",
-    "react-dom": "18.2.0",
-    "react-hot-toast": "^2.4.1",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7",
-<<<<<<< HEAD
-    "tailwind-merge": "^3.3.1",
-    "tailwindcss-animate": "^1.0.7"
-=======
-    "zod": "^4.1.12"
->>>>>>> origin/claude/voltek-data-model-store-011CUUqFKH7xn6C6UTbTcQAk
+    "framer-motion": "^11.15.0",
+    "lucide-react": "^0.441.0",
+    "xlsx": "^0.18.5",
+    "zod": "^3.24.1"
+  },
+  "peerDependencies": {
+    "react": "^18 || ^19",
+    "react-dom": "^18 || ^19"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.4.2",
-    "@testing-library/react": "^14.2.1",
-    "@types/node": "^20.14.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "@types/sqlite3": "^3.1.9",
-    "autoprefixer": "^10.4.20",
-    "eslint": "^9.6.0",
-    "eslint-config-next": "^14.2.6",
-    "jsdom": "^24.0.0",
-    "postcss": "^8.4.41",
-    "prettier": "^3.3.3",
-    "tailwindcss": "^3.4.10",
-    "typescript": "^5.4.0",
-    "vitest": "^4.0.1"
+    "@types/node": "^20.12.7",
+    "@types/react": "^18.3.3",
+    "typescript": "^5.6.3"
   }
 }
