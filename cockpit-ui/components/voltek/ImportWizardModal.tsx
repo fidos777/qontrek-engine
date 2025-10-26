@@ -1,494 +1,499 @@
+// components/voltek/ImportWizardModal.tsx
+// 4-step import wizard for Voltek Excel data
+
 "use client";
 
-import React, { useState } from "react";
+import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
-  DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
+  DialogContent,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Upload,
-  GitMerge,
-  CheckCircle2,
-  Shield,
-  ArrowRight,
-  ArrowLeft,
-  File,
-  Check,
-  Loader2,
-} from "lucide-react";
-import confetti from "canvas-confetti";
-import toast from "react-hot-toast";
+import { Progress } from "@/components/ui/progress";
+import { importVoltekExcel, type VoltekProject, type ValidationIssue } from "@/lib/data/ingest/voltek";
+import { setSnapshot } from "@/lib/state/voltekStore";
+import { emit } from "@/lib/events/bus";
 
-interface ImportWizardModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onComplete?: () => void;
+export interface ImportWizardModalProps {
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-type Step = 1 | 2 | 3 | 4;
+type WizardStep = "upload" | "review" | "validate" | "import";
 
-const STEPS = [
-  { id: 1, name: "Upload", icon: Upload, color: "from-blue-500 to-cyan-500" },
-  { id: 2, name: "Map", icon: GitMerge, color: "from-cyan-500 to-teal-500" },
-  { id: 3, name: "Validate", icon: CheckCircle2, color: "from-teal-500 to-green-500" },
-  { id: 4, name: "Seal", icon: Shield, color: "from-green-500 to-emerald-500" },
-];
+interface WizardState {
+  step: WizardStep;
+  file: File | null;
+  fileName: string;
+  fileSize: string;
+  dataset: VoltekProject[];
+  issues: ValidationIssue[];
+  isProcessing: boolean;
+  error: string | null;
+}
 
-export function ImportWizardModal({ open, onOpenChange, onComplete }: ImportWizardModalProps) {
-  const [currentStep, setCurrentStep] = useState<Step>(1);
-  const [isSealing, setIsSealing] = useState(false);
-  const [uploadComplete, setUploadComplete] = useState(false);
-  const [mapComplete, setMapComplete] = useState(false);
-  const [validateComplete, setValidateComplete] = useState(false);
+export const ImportWizardModal: React.FC<ImportWizardModalProps> = ({ isOpen, onClose }) => {
+  const [state, setState] = React.useState<WizardState>({
+    step: "upload",
+    file: null,
+    fileName: "",
+    fileSize: "",
+    dataset: [],
+    issues: [],
+    isProcessing: false,
+    error: null,
+  });
 
-  const handleNext = () => {
-    if (currentStep < 4) {
-      // Mark step as complete
-      if (currentStep === 1) setUploadComplete(true);
-      if (currentStep === 2) setMapComplete(true);
-      if (currentStep === 3) setValidateComplete(true);
-      
-      setCurrentStep((prev) => (prev + 1) as Step);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Reset state when modal closes
+  React.useEffect(() => {
+    if (!isOpen) {
+      setState({
+        step: "upload",
+        file: null,
+        fileName: "",
+        fileSize: "",
+        dataset: [],
+        issues: [],
+        isProcessing: false,
+        error: null,
+      });
     }
+  }, [isOpen]);
+
+  // File selection handler
+  const handleFileSelect = async (file: File) => {
+    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+      setState((s) => ({ ...s, error: "Please select an Excel file (.xlsx or .xls)" }));
+      return;
+    }
+
+    setState((s) => ({
+      ...s,
+      file,
+      fileName: file.name,
+      fileSize: formatFileSize(file.size),
+      isProcessing: true,
+      error: null,
+    }));
+
+    try {
+      const result = await importVoltekExcel(file);
+      setState((s) => ({
+        ...s,
+        dataset: result.dataset,
+        issues: result.issues,
+        isProcessing: false,
+        step: "review",
+      }));
+    } catch (err: any) {
+      setState((s) => ({
+        ...s,
+        isProcessing: false,
+        error: err?.message || "Failed to parse Excel file",
+      }));
+    }
+  };
+
+  // Drag-and-drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileSelect(file);
+  };
+
+  // File input change
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFileSelect(file);
+  };
+
+  // Navigate between steps
+  const handleNext = () => {
+    if (state.step === "upload") setState((s) => ({ ...s, step: "review" }));
+    else if (state.step === "review") setState((s) => ({ ...s, step: "validate" }));
+    else if (state.step === "validate") setState((s) => ({ ...s, step: "import" }));
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep((prev) => (prev - 1) as Step);
+    if (state.step === "review") setState((s) => ({ ...s, step: "upload" }));
+    else if (state.step === "validate") setState((s) => ({ ...s, step: "review" }));
+    else if (state.step === "import") setState((s) => ({ ...s, step: "validate" }));
+  };
+
+  // Final import action
+  const handleImport = () => {
+    try {
+      const snapshot = setSnapshot(state.dataset, "import");
+
+      // Emit event
+      emit("import:completed", {
+        count: snapshot.count,
+        hash: snapshot.hash,
+      });
+
+      // Show success toast (simple implementation)
+      alert(`Successfully imported ${snapshot.count} projects (hash: ${snapshot.hash})`);
+
+      // Close modal
+      onClose();
+    } catch (err: any) {
+      setState((s) => ({
+        ...s,
+        error: err?.message || "Failed to import data",
+      }));
     }
   };
 
-  const handleSeal = async () => {
-    setIsSealing(true);
-    
-    // Simulate sealing process
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    // Trigger confetti
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ["#10B981", "#059669", "#34D399"],
-    });
-
-    // Show success toast
-    toast.success("✅ Data sealed successfully! Trust Index updated.", {
-      duration: 4000,
-      icon: "🔒",
-    });
-
-    setIsSealing(false);
-    
-    // Call completion callback
-    if (onComplete) onComplete();
-    
-    // Close modal
-    setTimeout(() => {
-      onOpenChange(false);
-      // Reset wizard for next use
-      setCurrentStep(1);
-      setUploadComplete(false);
-      setMapComplete(false);
-      setValidateComplete(false);
-    }, 500);
-  };
-
-  const resetWizard = () => {
-    setCurrentStep(1);
-    setUploadComplete(false);
-    setMapComplete(false);
-    setValidateComplete(false);
-    setIsSealing(false);
-  };
+  // Progress calculation
+  const stepProgress = {
+    upload: 25,
+    review: 50,
+    validate: 75,
+    import: 100,
+  }[state.step];
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      onOpenChange(isOpen);
-      if (!isOpen) resetWizard();
-    }}>
-      <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <Upload className="text-blue-600" size={24} />
-            Import Data Wizard
-          </DialogTitle>
-          <DialogDescription>
-            Upload, map, validate, and seal your data with cryptographic proof
-          </DialogDescription>
-        </DialogHeader>
+    <Dialog isOpen={isOpen} onClose={onClose}>
+      <DialogHeader>
+        <DialogTitle>Import Voltek Projects</DialogTitle>
+      </DialogHeader>
 
-        {/* Progress Indicator */}
-        <div className="flex items-center justify-between mb-6 mt-4">
-          {STEPS.map((step, index) => (
-            <React.Fragment key={step.id}>
-              <div className="flex flex-col items-center gap-2">
-                <motion.div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all ${
-                    currentStep >= step.id
-                      ? "border-emerald-500 bg-gradient-to-br " + step.color + " text-white"
-                      : "border-gray-300 bg-gray-100 text-gray-400"
-                  }`}
-                  animate={currentStep === step.id ? { scale: [1, 1.1, 1] } : {}}
-                  transition={{ duration: 0.5, repeat: currentStep === step.id ? Infinity : 0, repeatDelay: 1 }}
-                >
-                  {currentStep > step.id ? (
-                    <Check size={24} />
-                  ) : (
-                    <step.icon size={24} />
-                  )}
-                </motion.div>
-                <div className="text-xs font-medium text-center">
-                  {step.name}
-                </div>
-              </div>
-              
-              {index < STEPS.length - 1 && (
-                <div className="flex-1 h-0.5 mx-2 mb-6">
-                  <div
-                    className={`h-full transition-all duration-500 ${
-                      currentStep > step.id ? "bg-emerald-500" : "bg-gray-300"
-                    }`}
-                  />
-                </div>
-              )}
-            </React.Fragment>
-          ))}
+      <DialogContent className="min-h-[400px]">
+        {/* Progress bar */}
+        <div className="mb-6">
+          <Progress value={stepProgress} className="mb-2" />
+          <div className="flex justify-between text-xs text-gray-500">
+            <span className={state.step === "upload" ? "font-semibold text-gray-900" : ""}>
+              Upload
+            </span>
+            <span className={state.step === "review" ? "font-semibold text-gray-900" : ""}>
+              Review
+            </span>
+            <span className={state.step === "validate" ? "font-semibold text-gray-900" : ""}>
+              Validate
+            </span>
+            <span className={state.step === "import" ? "font-semibold text-gray-900" : ""}>
+              Import
+            </span>
+          </div>
         </div>
 
-        {/* Step Content */}
-        <div className="min-h-[280px]">
-          <AnimatePresence mode="wait">
-            {currentStep === 1 && (
-              <StepUpload key="step1" onComplete={() => setUploadComplete(true)} />
-            )}
-            {currentStep === 2 && (
-              <StepMap key="step2" onComplete={() => setMapComplete(true)} />
-            )}
-            {currentStep === 3 && (
-              <StepValidate key="step3" onComplete={() => setValidateComplete(true)} />
-            )}
-            {currentStep === 4 && (
-              <StepSeal key="step4" isSealing={isSealing} />
-            )}
-          </AnimatePresence>
-        </div>
+        {/* Error display */}
+        {state.error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800">
+            {state.error}
+          </div>
+        )}
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-between items-center pt-4 border-t">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            disabled={currentStep === 1 || isSealing}
+        {/* Step content with animation */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={state.step}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
           >
-            <ArrowLeft size={16} className="mr-2" />
+            {state.step === "upload" && (
+              <UploadStep
+                fileName={state.fileName}
+                fileSize={state.fileSize}
+                isProcessing={state.isProcessing}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onFileSelect={() => fileInputRef.current?.click()}
+                fileInputRef={fileInputRef}
+                onFileChange={handleFileChange}
+              />
+            )}
+
+            {state.step === "review" && (
+              <ReviewStep dataset={state.dataset.slice(0, 10)} totalCount={state.dataset.length} />
+            )}
+
+            {state.step === "validate" && (
+              <ValidateStep issues={state.issues} totalRows={state.dataset.length} />
+            )}
+
+            {state.step === "import" && (
+              <ImportStep
+                count={state.dataset.length}
+                issueCount={state.issues.length}
+                fileName={state.fileName}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </DialogContent>
+
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose} disabled={state.isProcessing}>
+          Cancel
+        </Button>
+
+        {state.step !== "upload" && state.step !== "import" && (
+          <Button variant="secondary" onClick={handleBack} disabled={state.isProcessing}>
             Back
           </Button>
+        )}
 
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-              disabled={isSealing}
-            >
-              Cancel
-            </Button>
-            
-            {currentStep < 4 ? (
-              <Button onClick={handleNext}>
-                Next
-                <ArrowRight size={16} className="ml-2" />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSeal}
-                disabled={isSealing}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-              >
-                {isSealing ? (
-                  <>
-                    <Loader2 size={16} className="mr-2 animate-spin" />
-                    Sealing...
-                  </>
-                ) : (
-                  <>
-                    <Shield size={16} className="mr-2" />
-                    Seal Data
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        </div>
-      </DialogContent>
+        {state.step === "upload" && state.file && !state.isProcessing && (
+          <Button variant="primary" onClick={handleNext}>
+            Next
+          </Button>
+        )}
+
+        {(state.step === "review" || state.step === "validate") && (
+          <Button variant="primary" onClick={handleNext} disabled={state.isProcessing}>
+            Next
+          </Button>
+        )}
+
+        {state.step === "import" && (
+          <Button variant="primary" onClick={handleImport} disabled={state.isProcessing}>
+            Import {state.dataset.length} Projects
+          </Button>
+        )}
+      </DialogFooter>
     </Dialog>
   );
-}
+};
 
 // Step 1: Upload
-function StepUpload({ onComplete }: { onComplete: () => void }) {
-  const [isDragging, setIsDragging] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<string | null>(null);
-
-  const handleFileSelect = () => {
-    // Simulate file upload
-    setUploadedFile("recovery_data_Q4_2024.xlsx");
-    onComplete();
-    toast.success("File uploaded successfully!");
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="space-y-4"
-    >
-      <div
-        className={`border-2 border-dashed rounded-lg p-8 transition-all ${
-          isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
-        }`}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setIsDragging(true);
-        }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setIsDragging(false);
-          handleFileSelect();
-        }}
-      >
-        <div className="flex flex-col items-center gap-4">
-          <Upload size={48} className={isDragging ? "text-blue-600" : "text-gray-400"} />
-          
-          {uploadedFile ? (
-            <div className="flex items-center gap-2 text-green-700">
-              <Check size={20} />
-              <span className="font-medium">{uploadedFile}</span>
-            </div>
-          ) : (
-            <>
-              <div className="text-center">
-                <p className="text-lg font-medium text-gray-700">Drop your file here</p>
-                <p className="text-sm text-gray-500">or click to browse</p>
-              </div>
-              <Button onClick={handleFileSelect}>
-                <File size={16} className="mr-2" />
-                Select File
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
-          <strong>Accepted formats:</strong> .xlsx, .csv, .json
-        </p>
-      </div>
-    </motion.div>
-  );
+interface UploadStepProps {
+  fileName: string;
+  fileSize: string;
+  isProcessing: boolean;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  onFileSelect: () => void;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-// Step 2: Map
-function StepMap({ onComplete }: { onComplete: () => void }) {
-  React.useEffect(() => {
-    // Auto-complete mapping after a short delay
-    const timer = setTimeout(() => onComplete(), 500);
-    return () => clearTimeout(timer);
-  }, [onComplete]);
-
-  const mappings = [
-    { source: "Customer Name", target: "lead.name", status: "mapped" },
-    { source: "Amount Due", target: "lead.amount", status: "mapped" },
-    { source: "Days Overdue", target: "lead.days_overdue", status: "mapped" },
-    { source: "Stage", target: "lead.stage", status: "mapped" },
-  ];
-
+const UploadStep: React.FC<UploadStepProps> = ({
+  fileName,
+  fileSize,
+  isProcessing,
+  onDragOver,
+  onDrop,
+  onFileSelect,
+  fileInputRef,
+  onFileChange,
+}) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="space-y-4"
-    >
-      <p className="text-sm text-gray-600 mb-4">
-        Auto-mapping detected fields to schema...
+    <div className="space-y-4">
+      <p className="text-sm text-gray-600">
+        Upload your Voltek projects Excel file to begin the import process.
       </p>
 
-      <div className="space-y-2">
-        {mappings.map((mapping, index) => (
-          <motion.div
-            key={mapping.source}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
-          >
-            <div className="flex items-center gap-3">
-              <Badge variant="outline">{mapping.source}</Badge>
-              <ArrowRight size={16} className="text-gray-400" />
-              <Badge variant="secondary">{mapping.target}</Badge>
-            </div>
-            <CheckCircle2 size={20} className="text-green-600" />
-          </motion.div>
-        ))}
+      <div
+        className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer"
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+        onClick={onFileSelect}
+      >
+        {isProcessing ? (
+          <div className="py-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2" />
+            <p className="text-sm text-gray-600">Processing file...</p>
+          </div>
+        ) : fileName ? (
+          <div className="py-4">
+            <div className="text-4xl mb-2">📄</div>
+            <p className="font-medium">{fileName}</p>
+            <p className="text-sm text-gray-500">{fileSize}</p>
+          </div>
+        ) : (
+          <div className="py-4">
+            <div className="text-4xl mb-2">📤</div>
+            <p className="font-medium mb-1">Drop Excel file here or click to select</p>
+            <p className="text-sm text-gray-500">Supports .xlsx and .xls files</p>
+          </div>
+        )}
       </div>
 
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
-        <p className="text-sm text-green-800 flex items-center gap-2">
-          <Check size={16} />
-          All fields mapped successfully
-        </p>
-      </div>
-    </motion.div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx,.xls"
+        onChange={onFileChange}
+        className="hidden"
+      />
+    </div>
   );
+};
+
+// Step 2: Review
+interface ReviewStepProps {
+  dataset: VoltekProject[];
+  totalCount: number;
 }
+
+const ReviewStep: React.FC<ReviewStepProps> = ({ dataset, totalCount }) => {
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-gray-600">
+        Preview of first 10 projects (total: {totalCount})
+      </p>
+
+      <div className="border rounded-lg overflow-hidden">
+        <div className="overflow-x-auto max-h-80">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 sticky top-0">
+              <tr>
+                <th className="px-3 py-2 text-left font-medium">ID</th>
+                <th className="px-3 py-2 text-left font-medium">Name</th>
+                <th className="px-3 py-2 text-left font-medium">Client</th>
+                <th className="px-3 py-2 text-left font-medium">Status</th>
+                <th className="px-3 py-2 text-left font-medium">Budget</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dataset.map((project, idx) => (
+                <tr key={idx} className="border-t">
+                  <td className="px-3 py-2">{project.id || "-"}</td>
+                  <td className="px-3 py-2">{project.name || "-"}</td>
+                  <td className="px-3 py-2">{project.client || "-"}</td>
+                  <td className="px-3 py-2">
+                    {project.status ? (
+                      <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">
+                        {project.status}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    {project.budget ? `$${project.budget.toLocaleString()}` : "-"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Step 3: Validate
-function StepValidate({ onComplete }: { onComplete: () => void }) {
-  const [checks, setChecks] = React.useState([
-    { name: "Schema validation", completed: false },
-    { name: "Data type check", completed: false },
-    { name: "Duplicate detection", completed: false },
-    { name: "Referential integrity", completed: false },
-  ]);
-
-  React.useEffect(() => {
-    // Simulate validation checks
-    checks.forEach((_, index) => {
-      setTimeout(() => {
-        setChecks((prev) =>
-          prev.map((check, i) =>
-            i === index ? { ...check, completed: true } : check
-          )
-        );
-        
-        if (index === checks.length - 1) {
-          onComplete();
-        }
-      }, (index + 1) * 400);
-    });
-  }, []);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="space-y-4"
-    >
-      <p className="text-sm text-gray-600 mb-4">
-        Running validation checks...
-      </p>
-
-      <div className="space-y-3">
-        {checks.map((check, index) => (
-          <motion.div
-            key={check.name}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
-          >
-            <span className="text-sm font-medium">{check.name}</span>
-            {check.completed ? (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 200 }}
-              >
-                <CheckCircle2 size={20} className="text-green-600" />
-              </motion.div>
-            ) : (
-              <Loader2 size={20} className="text-blue-600 animate-spin" />
-            )}
-          </motion.div>
-        ))}
-      </div>
-
-      {checks.every((c) => c.completed) && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-green-50 border border-green-200 rounded-lg p-4"
-        >
-          <p className="text-sm text-green-800 flex items-center gap-2">
-            <Check size={16} />
-            All validation checks passed
-          </p>
-        </motion.div>
-      )}
-    </motion.div>
-  );
+interface ValidateStepProps {
+  issues: ValidationIssue[];
+  totalRows: number;
 }
 
-// Step 4: Seal
-function StepSeal({ isSealing }: { isSealing: boolean }) {
+const ValidateStep: React.FC<ValidateStepProps> = ({ issues, totalRows }) => {
+  const hasIssues = issues.length > 0;
+
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="space-y-4"
-    >
-      <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-6">
-        <div className="flex items-start gap-4">
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-lg">
-            <Shield size={32} className="text-white" />
+    <div className="space-y-4">
+      {hasIssues ? (
+        <>
+          <div className="flex items-center gap-2 text-yellow-800">
+            <span className="text-xl">⚠️</span>
+            <p className="font-medium">Found {issues.length} validation issues</p>
           </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Ready to seal
-            </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Your data has been validated and is ready to be sealed with cryptographic proof.
-              This will:
-            </p>
-            <ul className="space-y-2 text-sm text-gray-700">
-              <li className="flex items-center gap-2">
-                <Check size={16} className="text-green-600" />
-                Generate immutable hash for audit trail
-              </li>
-              <li className="flex items-center gap-2">
-                <Check size={16} className="text-green-600" />
-                Update Trust Index to 100%
-              </li>
-              <li className="flex items-center gap-2">
-                <Check size={16} className="text-green-600" />
-                Create Federation acknowledgment receipt
-              </li>
-              <li className="flex items-center gap-2">
-                <Check size={16} className="text-green-600" />
-                Sync with Qontrek Tower for governance
-              </li>
-            </ul>
+
+          <div className="border rounded-lg overflow-hidden max-h-80 overflow-y-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 sticky top-0">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium">Row</th>
+                  <th className="px-3 py-2 text-left font-medium">Field</th>
+                  <th className="px-3 py-2 text-left font-medium">Issue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {issues.map((issue, idx) => (
+                  <tr key={idx} className="border-t">
+                    <td className="px-3 py-2">{issue.row}</td>
+                    <td className="px-3 py-2 font-mono text-xs">{issue.field}</td>
+                    <td className="px-3 py-2 text-gray-600">{issue.message}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+
+          <p className="text-sm text-gray-600">
+            You can proceed with the import, but these rows may have incomplete data.
+          </p>
+        </>
+      ) : (
+        <div className="py-8 text-center">
+          <div className="text-4xl mb-2">✅</div>
+          <p className="font-medium text-green-800 mb-1">All validations passed!</p>
+          <p className="text-sm text-gray-600">
+            {totalRows} projects are ready to import.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Step 4: Import confirmation
+interface ImportStepProps {
+  count: number;
+  issueCount: number;
+  fileName: string;
+}
+
+const ImportStep: React.FC<ImportStepProps> = ({ count, issueCount, fileName }) => {
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-gray-600">
+        Ready to import projects into the Voltek store.
+      </p>
+
+      <div className="border rounded-lg p-4 bg-gray-50 space-y-2">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">Source file:</span>
+          <span className="font-medium">{fileName}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">Projects to import:</span>
+          <span className="font-medium">{count}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">Validation issues:</span>
+          <span className={issueCount > 0 ? "text-yellow-700 font-medium" : "text-green-700"}>
+            {issueCount > 0 ? `${issueCount} warnings` : "None"}
+          </span>
         </div>
       </div>
 
-      {isSealing && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="bg-blue-50 border border-blue-200 rounded-lg p-4"
-        >
-          <div className="flex items-center gap-3">
-            <Loader2 size={20} className="text-blue-600 animate-spin" />
-            <div>
-              <p className="text-sm font-medium text-blue-900">Sealing in progress...</p>
-              <p className="text-xs text-blue-700">Generating cryptographic proof</p>
-            </div>
-          </div>
-        </motion.div>
+      {issueCount > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800">
+          Note: Some rows have validation warnings but will still be imported.
+        </div>
       )}
-    </motion.div>
+
+      <p className="text-sm text-gray-600">
+        Click "Import" to seal the data snapshot and complete the import process.
+      </p>
+    </div>
   );
+};
+
+// Helper function
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+export default ImportWizardModal;

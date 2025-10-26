@@ -1,311 +1,160 @@
-/**
- * Voltek Excel data importer
- *
- * This module provides the main entry point for importing Voltek Excel files
- * and normalizing them to the VoltekDataset structure with Zod validation.
- */
+// lib/data/ingest/voltek.ts
+// Voltek Excel import utilities
 
-import * as XLSX from 'xlsx';
-import { parseExcelFile, readExcelFile, parseExcel, ExcelMapping } from './excel';
-import {
-  VoltekDataset,
-  VoltekProject,
-  VoltekLead,
-  VoltekFinancial,
-  VoltekInstallationTask,
-  VoltekMaterial,
-  safeParseDataset,
-  ValidationIssue,
-} from '../schemas';
+import * as XLSX from "xlsx";
+import { z } from "zod";
 
-// Import mapping configuration
-// Note: Ensure tsconfig.json has "resolveJsonModule": true
-import voltekMappingJson from '../mapping/voltek.xlsx.map.json';
-const voltekMapping = voltekMappingJson as ExcelMapping;
+// Zod schema for a single project row
+export const VoltekProjectSchema = z.object({
+  id: z.string().min(1, "Project ID is required"),
+  name: z.string().min(1, "Project name is required"),
+  client: z.string().optional(),
+  status: z.enum(["active", "pending", "completed", "cancelled"]).optional(),
+  budget: z.number().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  owner: z.string().optional(),
+  revenue: z.number().optional(),
+  cost: z.number().optional(),
+});
 
-/**
- * Import result with validation feedback
- */
+export type VoltekProject = z.infer<typeof VoltekProjectSchema>;
+
+export interface ValidationIssue {
+  row: number;
+  field: string;
+  message: string;
+}
+
 export interface ImportResult {
   success: boolean;
-  data?: VoltekDataset;
+  dataset: VoltekProject[];
   issues: ValidationIssue[];
-  stats: {
-    projectsCount: number;
-    leadsCount: number;
-    financialsCount: number;
-    installationTasksCount: number;
-    materialsCount: number;
-  };
+  raw?: any[];
 }
 
 /**
- * Generate a unique ID if one is missing
- */
-function generateId(prefix: string, index: number): string {
-  return `${prefix}_${Date.now()}_${index}`;
-}
-
-/**
- * Normalize projects data
- */
-function normalizeProjects(rows: Record<string, any>[]): VoltekProject[] {
-  return rows.map((row, index) => {
-    // Ensure ID exists
-    if (!row.id) {
-      row.id = generateId('proj', index);
-    }
-
-    // Map status values to valid enum values
-    if (row.status) {
-      const statusMap: Record<string, string> = {
-        lead: 'lead',
-        qualified: 'qualified',
-        'in progress': 'in_progress',
-        inprogress: 'in_progress',
-        'in-progress': 'in_progress',
-        installed: 'installed',
-        complete: 'completed',
-        completed: 'completed',
-        cancelled: 'cancelled',
-        canceled: 'cancelled',
-        'on hold': 'on_hold',
-        onhold: 'on_hold',
-        'on-hold': 'on_hold',
-      };
-      row.status = statusMap[row.status.toLowerCase()] || row.status;
-    }
-
-    // Map priority values
-    if (row.priority) {
-      const priorityMap: Record<string, string> = {
-        h: 'high',
-        high: 'high',
-        m: 'medium',
-        med: 'medium',
-        medium: 'medium',
-        l: 'low',
-        low: 'low',
-      };
-      row.priority = priorityMap[row.priority.toLowerCase()] || row.priority;
-    }
-
-    return row as VoltekProject;
-  });
-}
-
-/**
- * Normalize leads data
- */
-function normalizeLeads(rows: Record<string, any>[]): VoltekLead[] {
-  return rows.map((row, index) => {
-    if (!row.id) {
-      row.id = generateId('lead', index);
-    }
-    return row as VoltekLead;
-  });
-}
-
-/**
- * Normalize financials data
- */
-function normalizeFinancials(rows: Record<string, any>[]): VoltekFinancial[] {
-  return rows.map((row, index) => {
-    if (!row.id) {
-      row.id = generateId('fin', index);
-    }
-
-    // Map transaction type
-    if (row.type) {
-      const typeMap: Record<string, string> = {
-        income: 'income',
-        revenue: 'income',
-        payment: 'income',
-        expense: 'expense',
-        cost: 'expense',
-        expenditure: 'expense',
-      };
-      row.type = typeMap[row.type.toLowerCase()] || row.type;
-    }
-
-    return row as VoltekFinancial;
-  });
-}
-
-/**
- * Normalize installation tasks data
- */
-function normalizeInstallationTasks(
-  rows: Record<string, any>[]
-): VoltekInstallationTask[] {
-  return rows.map((row, index) => {
-    if (!row.id) {
-      row.id = generateId('task', index);
-    }
-    return row as VoltekInstallationTask;
-  });
-}
-
-/**
- * Normalize materials data
- */
-function normalizeMaterials(rows: Record<string, any>[]): VoltekMaterial[] {
-  return rows.map((row, index) => {
-    if (!row.id) {
-      row.id = generateId('mat', index);
-    }
-    return row as VoltekMaterial;
-  });
-}
-
-/**
- * Main import function: Import Voltek Excel file
- *
- * @param file - The Excel file to import
- * @returns Promise<ImportResult> - The parsed and validated dataset with issues
- *
- * @example
- * ```typescript
- * // In a component or API route:
- * const result = await importVoltekExcel(uploadedFile);
- *
- * if (result.success) {
- *   console.log(`Imported ${result.stats.projectsCount} projects`);
- *   console.log(`Imported ${result.stats.leadsCount} leads`);
- *   // Use result.data
- * } else {
- *   console.error('Import failed with issues:', result.issues);
- * }
- * ```
+ * Parse and validate Excel file containing Voltek project data
  */
 export async function importVoltekExcel(file: File): Promise<ImportResult> {
-  const issues: ValidationIssue[] = [];
-
   try {
-    // Parse Excel file using mapping
-    const parsed = await parseExcelFile(file, voltekMapping);
+    // Read file as ArrayBuffer
+    const buffer = await file.arrayBuffer();
 
-    // Collect parsing issues
-    issues.push(...parsed.issues);
+    // Parse with xlsx
+    const workbook = XLSX.read(buffer, { type: "array" });
 
-    // Normalize data from each sheet
-    const projects = normalizeProjects(
-      parsed.sheets.projects?.rows || []
-    );
-    const leads = normalizeLeads(parsed.sheets.leads?.rows || []);
-    const financials = normalizeFinancials(
-      parsed.sheets.financials?.rows || []
-    );
-    const installationTasks = normalizeInstallationTasks(
-      parsed.sheets.installation?.rows || []
-    );
-    const materials = normalizeMaterials(
-      parsed.sheets.materials?.rows || []
-    );
-
-    // Construct dataset
-    const dataset: VoltekDataset = {
-      projects,
-      leads,
-      financials,
-      installationTasks,
-      materials,
-    };
-
-    // Validate with Zod schema
-    const validationResult = safeParseDataset(dataset);
-
-    if (!validationResult.success) {
-      issues.push(...validationResult.issues);
+    // Get first sheet
+    const firstSheetName = workbook.SheetNames[0];
+    if (!firstSheetName) {
+      return {
+        success: false,
+        dataset: [],
+        issues: [{ row: 0, field: "file", message: "No sheets found in Excel file" }],
+      };
     }
 
-    // Calculate stats
-    const stats = {
-      projectsCount: projects.length,
-      leadsCount: leads.length,
-      financialsCount: financials.length,
-      installationTasksCount: installationTasks.length,
-      materialsCount: materials.length,
-    };
+    const worksheet = workbook.Sheets[firstSheetName];
 
-    // Return result
-    return {
-      success: validationResult.success,
-      data: validationResult.success ? validationResult.data : dataset,
-      issues,
-      stats,
-    };
-  } catch (error) {
-    issues.push({
-      message: `Failed to import Excel file: ${error instanceof Error ? error.message : String(error)}`,
-      severity: 'error',
+    // Convert to JSON
+    const rawData = XLSX.utils.sheet_to_json(worksheet, { defval: undefined });
+
+    if (!Array.isArray(rawData) || rawData.length === 0) {
+      return {
+        success: false,
+        dataset: [],
+        issues: [{ row: 0, field: "file", message: "No data rows found in Excel file" }],
+        raw: [],
+      };
+    }
+
+    // Normalize and validate each row
+    const dataset: VoltekProject[] = [];
+    const issues: ValidationIssue[] = [];
+
+    rawData.forEach((row: any, idx: number) => {
+      const rowNum = idx + 2; // Excel row number (1-indexed + header)
+
+      try {
+        // Normalize row to expected schema
+        const normalized = {
+          id: String(row.ID || row.id || row["Project ID"] || "").trim(),
+          name: String(row.Name || row.name || row["Project Name"] || "").trim(),
+          client: row.Client || row.client || row.Customer,
+          status: normalizeStatus(row.Status || row.status),
+          budget: parseNumber(row.Budget || row.budget),
+          startDate: row["Start Date"] || row.startDate || row.start_date,
+          endDate: row["End Date"] || row.endDate || row.end_date,
+          owner: row.Owner || row.owner || row["Project Owner"],
+          revenue: parseNumber(row.Revenue || row.revenue),
+          cost: parseNumber(row.Cost || row.cost),
+        };
+
+        // Validate with Zod
+        const result = VoltekProjectSchema.safeParse(normalized);
+
+        if (result.success) {
+          dataset.push(result.data);
+        } else {
+          // Collect validation errors
+          result.error.issues.forEach((err: any) => {
+            issues.push({
+              row: rowNum,
+              field: err.path.join("."),
+              message: err.message,
+            });
+          });
+
+          // Still add the row with partial data for preview
+          dataset.push(normalized as VoltekProject);
+        }
+      } catch (err: any) {
+        issues.push({
+          row: rowNum,
+          field: "parse",
+          message: err?.message || "Failed to parse row",
+        });
+      }
     });
 
     return {
-      success: false,
+      success: issues.length === 0,
+      dataset,
       issues,
-      stats: {
-        projectsCount: 0,
-        leadsCount: 0,
-        financialsCount: 0,
-        installationTasksCount: 0,
-        materialsCount: 0,
-      },
+      raw: rawData,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      dataset: [],
+      issues: [
+        {
+          row: 0,
+          field: "file",
+          message: err?.message || "Failed to read Excel file",
+        },
+      ],
     };
   }
 }
 
-/**
- * Get basic workbook information without full parsing
- */
-export async function getWorkbookInfo(file: File): Promise<{
-  sheetNames: string[];
-  fileSize: number;
-  fileName: string;
-}> {
-  const workbook = await readExcelFile(file);
-  return {
-    sheetNames: workbook.SheetNames,
-    fileSize: file.size,
-    fileName: file.name,
-  };
+// Helper: normalize status values
+function normalizeStatus(val: any): "active" | "pending" | "completed" | "cancelled" | undefined {
+  if (!val) return undefined;
+  const str = String(val).toLowerCase().trim();
+  if (str === "active" || str === "in progress") return "active";
+  if (str === "pending" || str === "planned") return "pending";
+  if (str === "completed" || str === "done" || str === "closed") return "completed";
+  if (str === "cancelled" || str === "canceled") return "cancelled";
+  return undefined;
 }
 
-/**
- * Preview first N rows from each sheet
- */
-export async function previewWorkbook(
-  file: File,
-  maxRows: number = 5
-): Promise<{
-  sheets: {
-    [sheetName: string]: {
-      headers: string[];
-      rows: any[][];
-    };
-  };
-}> {
-  const workbook = await readExcelFile(file);
-  const sheets: {
-    [sheetName: string]: { headers: string[]; rows: any[][] };
-  } = {};
-
-  for (const sheetName of workbook.SheetNames) {
-    const worksheet = workbook.Sheets[sheetName];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-      header: 1,
-      raw: false,
-    }) as any[][];
-
-    if (jsonData.length > 0) {
-      const headers = jsonData[0] || [];
-      const rows = jsonData.slice(1, maxRows + 1);
-      sheets[sheetName] = { headers, rows };
-    }
-  }
-
-  return { sheets };
+// Helper: parse number from various formats
+function parseNumber(val: any): number | undefined {
+  if (val === null || val === undefined || val === "") return undefined;
+  if (typeof val === "number") return val;
+  // Remove currency symbols and commas
+  const cleaned = String(val).replace(/[$,]/g, "").trim();
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? undefined : num;
 }
-
-// Re-export for convenience
-export { VoltekDataset, ValidationIssue } from '../schemas';
