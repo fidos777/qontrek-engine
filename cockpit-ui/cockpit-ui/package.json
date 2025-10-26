@@ -23,3 +23,9 @@
     "typescript": "^5.6.3"
   }
 }
+"scripts": {
+  "type-check": "tsc --noEmit -p ./tsconfig.json",
+  "build": "echo \"(cockpit-ui library: nothing to build)\"",
+  "demo:reset": "echo \"reset ok (no persistent local store used)\""
+}
+
