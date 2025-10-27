@@ -5,6 +5,15 @@ import { Card } from "@/components/ui/card";
 import { logProofLoad } from "@/lib/telemetry";
 import type { G2Response } from "@/types/gates";
 
+// Proof & Trust Components
+import { useSafeMode } from "@/contexts/SafeMode";
+import { ProofChipCompact } from "@/components/ui/ProofChipQuick";
+import ProofModalQuick from "@/components/ui/ProofModalQuick";
+import ImportWizardMock from "@/components/voltek/ImportWizardMock";
+import GovernanceStripCompact from "@/components/voltek/GovernanceStripCompact";
+import CFOLensTiles from "@/components/voltek/CFOLensTiles";
+import { buildProofPayload, pick, type ProofDatum } from "@/lib/utils/proof-helpers";
+
 async function fetchGate(url: string): Promise<G2Response> {
   try {
     const res = await fetch(url, { cache: "no-store" });
@@ -26,12 +35,39 @@ export default function Gate2Dashboard() {
   const [payload, setPayload] = useState<G2Response | null>(null);
   const [error, setError] = useState<string | null>(null);
   const telemetrySent = useRef(false);
+  const [dataLoadedAt, setDataLoadedAt] = useState<Date>(new Date());
+
+  // Proof & Trust state
+  const { safeMode } = useSafeMode();
+  const [proofModal, setProofModal] = useState<{
+    open: boolean;
+    data: ProofDatum | null;
+  }>({ open: false, data: null });
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [trustScore, setTrustScore] = useState(0);
 
   useEffect(() => {
     (async () => {
       try {
         const resp = await fetchGate("/api/gates/g2/summary");
         setPayload(resp);
+        setDataLoadedAt(new Date());
+
+        // Deep-link: Auto-open proof modal from URL
+        const params = new URLSearchParams(window.location.search);
+        const proofField = params.get('proof');
+        const showDrift = params.get('drift') === 'true';
+
+        if (proofField && resp) {
+          const value = pick(resp, proofField) ?? pick(resp.summary, proofField);
+          if (value !== undefined) {
+            setProofModal({
+              open: true,
+              data: buildProofPayload(proofField, value, showDrift)
+            });
+          }
+        }
+
         // Prevent double telemetry in Next.js StrictMode (dev only)
         if (!telemetrySent.current && resp?.rel && resp?.source) {
           logProofLoad(resp.rel, resp.source);
@@ -55,23 +91,56 @@ export default function Gate2Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
+        <button
+          onClick={() => setWizardOpen(true)}
+          className="px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:scale-105"
+          style={{ background: 'var(--accent)', color: 'white' }}
+        >
+          Import Data
+        </button>
+      </div>
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4">
-          <div className="text-sm text-gray-500">Total Recoverable</div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm" style={{ color: 'var(--text-3)' }}>Total Recoverable</span>
+            <ProofChipCompact
+              onClick={() => setProofModal({
+                open: true,
+                data: buildProofPayload('total_recoverable', data.summary.total_recoverable)
+              })}
+            />
+          </div>
           <div className="text-2xl font-bold">{fmMYR.format(Number(data.summary.total_recoverable || 0))}</div>
         </Card>
         <Card className="p-4">
-          <div className="text-sm text-gray-500">7-Day Recovery Rate</div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm" style={{ color: 'var(--text-3)' }}>7-Day Recovery Rate</span>
+            <ProofChipCompact
+              onClick={() => setProofModal({
+                open: true,
+                data: buildProofPayload('recovery_rate_7d', kpi["recovery_rate_7d"])
+              })}
+            />
+          </div>
           <div className="text-2xl font-bold">{pct(kpi["recovery_rate_7d"])}</div>
           <div className="text-xs text-gray-500 mt-2">Avg days to pay: {kpi["average_days_to_payment"] ?? "-"}</div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500">Pending Cases</div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm" style={{ color: 'var(--text-3)' }}>Pending Cases</span>
+                <ProofChipCompact
+                  onClick={() => setProofModal({
+                    open: true,
+                    data: buildProofPayload('pending_cases', kpi["pending_cases"])
+                  })}
+                />
+              </div>
               <div className="text-xl font-semibold">{kpi["pending_cases"] ?? 0}</div>
             </div>
             <div>
@@ -158,6 +227,35 @@ export default function Gate2Dashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Import Wizard */}
+      <ImportWizardMock
+        isOpen={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onSeal={() => {
+          setTrustScore(100);
+          setTimeout(() => setTrustScore(95), 10000);
+          setDataLoadedAt(new Date());
+        }}
+      />
+
+      {/* Proof Modal */}
+      {proofModal.data && (
+        <ProofModalQuick
+          isOpen={proofModal.open}
+          onClose={() => setProofModal({ open: false, data: null })}
+          data={proofModal.data}
+        />
+      )}
+
+      {/* CFO Lens */}
+      <CFOLensTiles
+        safeMode={safeMode}
+        onProofClick={(field, value) => setProofModal({
+          open: true,
+          data: buildProofPayload(field, value)
+        })}
+      />
     </div>
   );
 }
