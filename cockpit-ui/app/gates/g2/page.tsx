@@ -1,50 +1,33 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
-import ConfidenceMeterAnimated from "@/components/voltek/ConfidenceMeterAnimated";
-import { getMotionProps } from "@/lib/utils/motion";
-import { useCountUpValue } from "@/lib/hooks/useCountUpValue";
-import { showInfoToast } from "@/lib/utils/toast-helpers";
-
-// Governance pack
-import GovernanceHeaderStrip from "@/components/voltek/GovernanceHeaderStrip";
-import ProofFreshnessIndicator from "@/components/voltek/ProofFreshnessIndicator";
-
-// Types (local fallback for leads to avoid TS breaks)
+import { logProofLoad } from "@/lib/telemetry";
 import type { G2Response } from "@/types/gates";
-type G2Lead = {
-  name?: string;
-  stage?: string;
-  amount?: number;
-  overdue_days?: number;
-  last_reminder?: string;
-};
 
-// Helpers (currency + percentage)
-const fmtMYR = new Intl.NumberFormat("en-MY", {
-  style: "currency",
-  currency: "MYR",
-  minimumFractionDigits: 0,
-});
-const pct = (v: unknown) => {
-  if (typeof v === "number") return `${(v * 100).toFixed(0)}%`;
-  const n = Number(v);
-  return isNaN(n) ? "-" : `${(n * 100).toFixed(0)}%`;
-};
+// Proof & Trust Components
+import { useSafeMode } from "@/contexts/SafeMode";
+import { ProofChipCompact } from "@/components/ui/ProofChipQuick";
+import ProofModalQuick from "@/components/ui/ProofModalQuick";
+import ImportWizardMock from "@/components/voltek/ImportWizardMock";
+import GovernanceStripCompact from "@/components/voltek/GovernanceStripCompact";
+import CFOLensTiles from "@/components/voltek/CFOLensTiles";
+import { buildProofPayload, pick, type ProofDatum } from "@/lib/utils/proof-helpers";
 
-// Data fetch with dev fallback
 async function fetchGate(url: string): Promise<G2Response> {
   try {
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error("not ok");
     return await res.json();
   } catch {
-    // dev fallback to mock route
-    const res = await fetch("/api/gates/g2/summary");
-    if (!res.ok) throw new Error("G2 summary endpoint unavailable");
-    return await res.json();
+    // DEV-ONLY fallback to fixture
+    // NOTE: This branch is dead code in production builds.
+    // Next.js will tree-shake this entire block when NODE_ENV=production
+    if (process.env.NODE_ENV !== "production") {
+      const mod = await import("@/tests/fixtures/g2.summary.json");
+      return mod.default as G2Response;
+    }
+    throw new Error("G2 summary endpoint unavailable");
   }
 }
 
@@ -52,20 +35,16 @@ export default function Gate2Dashboard() {
   const [payload, setPayload] = useState<G2Response | null>(null);
   const [error, setError] = useState<string | null>(null);
   const telemetrySent = useRef(false);
-  const [selectedLead, setSelectedLead] = useState<G2Lead | null>(null);
-  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [dataLoadedAt, setDataLoadedAt] = useState<Date>(new Date());
 
-  // Always call hooks in the same order every render.
-  // (We feed 0/empty defaults when data is not yet available.)
-  const kpi = (payload?.summary?.kpi ?? {}) as Record<string, number | string>;
-  const totalRecoverableTarget = Number(payload?.summary?.total_recoverable ?? 0);
-  const pendingCasesTarget = Number(kpi["pending_cases"] ?? 0);
-  const handoverQueueTarget = Number(kpi["handover_queue"] ?? 0);
-
-  const totalRecoverable = useCountUpValue(totalRecoverableTarget, 1.2, 0);
-  const pendingCases = useCountUpValue(pendingCasesTarget, 1.2, 0.2);
-  const handoverQueue = useCountUpValue(handoverQueueTarget, 1.2, 0.3);
+  // Proof & Trust state
+  const { safeMode } = useSafeMode();
+  const [proofModal, setProofModal] = useState<{
+    open: boolean;
+    data: ProofDatum | null;
+  }>({ open: false, data: null });
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [trustScore, setTrustScore] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -73,12 +52,25 @@ export default function Gate2Dashboard() {
         const resp = await fetchGate("/api/gates/g2/summary");
         setPayload(resp);
         setDataLoadedAt(new Date());
-        if (!telemetrySent.current) {
-          window.dispatchEvent(
-            new CustomEvent("proof.updated", {
-              detail: { freshness: 0, source: resp?.source || "real" },
-            })
-          );
+
+        // Deep-link: Auto-open proof modal from URL
+        const params = new URLSearchParams(window.location.search);
+        const proofField = params.get('proof');
+        const showDrift = params.get('drift') === 'true';
+
+        if (proofField && resp) {
+          const value = pick(resp, proofField) ?? pick(resp.summary, proofField);
+          if (value !== undefined) {
+            setProofModal({
+              open: true,
+              data: buildProofPayload(proofField, value, showDrift)
+            });
+          }
+        }
+
+        // Prevent double telemetry in Next.js StrictMode (dev only)
+        if (!telemetrySent.current && resp?.rel && resp?.source) {
+          logProofLoad(resp.rel, resp.source);
           telemetrySent.current = true;
         }
       } catch (e: any) {
@@ -87,204 +79,183 @@ export default function Gate2Dashboard() {
     })();
   }, []);
 
-  const handleLeadClick = (lead: G2Lead) => {
-    setSelectedLead(lead);
-    setIsLeadModalOpen(true);
-  };
+  if (error) return <div className="p-6"><p className="text-red-600" aria-live="polite">Error: {error}</p></div>;
+  if (!payload) return <div className="p-6">Loading...</div>;
 
-  const handleAction = (
-    action: "call" | "sms" | "whatsapp",
-    lead: G2Lead
-  ) => {
-    showInfoToast(`Preparing ${action} for ${lead.name || "lead"}...`);
-  };
+  const { data } = payload;
+  const kpi = (data.summary.kpi ?? {}) as Record<string, number | string>;
+  const fmMYR = new Intl.NumberFormat("en-MY", { style: "currency", currency: "MYR" });
+  const fmDT = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" });
 
-  if (error) {
-    return (
-      <div className="p-6">
-        <Card className="p-4 text-red-600" aria-live="assertive">
-          Failed to load dashboard: {error}
+  const pct = (v: unknown) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "-");
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
+        <button
+          onClick={() => setWizardOpen(true)}
+          className="px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:scale-105"
+          style={{ background: 'var(--accent)', color: 'white' }}
+        >
+          Import Data
+        </button>
+      </div>
+
+      {/* KPI Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm" style={{ color: 'var(--text-3)' }}>Total Recoverable</span>
+            <ProofChipCompact
+              onClick={() => setProofModal({
+                open: true,
+                data: buildProofPayload('total_recoverable', data.summary.total_recoverable)
+              })}
+            />
+          </div>
+          <div className="text-2xl font-bold">{fmMYR.format(Number(data.summary.total_recoverable || 0))}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm" style={{ color: 'var(--text-3)' }}>7-Day Recovery Rate</span>
+            <ProofChipCompact
+              onClick={() => setProofModal({
+                open: true,
+                data: buildProofPayload('recovery_rate_7d', kpi["recovery_rate_7d"])
+              })}
+            />
+          </div>
+          <div className="text-2xl font-bold">{pct(kpi["recovery_rate_7d"])}</div>
+          <div className="text-xs text-gray-500 mt-2">Avg days to pay: {kpi["average_days_to_payment"] ?? "-"}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm" style={{ color: 'var(--text-3)' }}>Pending Cases</span>
+                <ProofChipCompact
+                  onClick={() => setProofModal({
+                    open: true,
+                    data: buildProofPayload('pending_cases', kpi["pending_cases"])
+                  })}
+                />
+              </div>
+              <div className="text-xl font-semibold">{kpi["pending_cases"] ?? 0}</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">Handover Queue</div>
+              <div className="text-xl font-semibold">{kpi["handover_queue"] ?? 0}</div>
+            </div>
+          </div>
         </Card>
       </div>
-    );
-  }
 
-  // Main layout
-  return (
-    <>
-      {/* Governance strip always gets a Date */}
-      <GovernanceHeaderStrip lastSync={dataLoadedAt} />
-
-      <motion.div
-        className="p-6 space-y-6"
-        {...getMotionProps({
-          initial: { opacity: 0 },
-          animate: { opacity: 1 },
-          transition: { duration: 0.5 },
-        })}
-      >
-        {/* Header with Proof Freshness */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
-          <ProofFreshnessIndicator loadedAt={dataLoadedAt} />
-        </div>
-
-        {/* KPI Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <motion.div
-            {...getMotionProps({
-              initial: { opacity: 0, y: 10 },
-              animate: { opacity: 1, y: 0 },
-              transition: { delay: 0.1, duration: 0.6 },
-            })}
-          >
-            <Card className="p-4">
-              <div className="text-sm text-gray-500">Total Recoverable</div>
-              <motion.div
-                className="text-2xl font-bold"
-                {...getMotionProps({
-                  initial: { scale: 0.8 },
-                  animate: { scale: 1 },
-                  transition: { delay: 0.2, duration: 0.5, type: "spring" },
-                })}
-              >
-                {fmtMYR.format(totalRecoverable)}
-              </motion.div>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            {...getMotionProps({
-              initial: { opacity: 0, y: 10 },
-              animate: { opacity: 1, y: 0 },
-              transition: { delay: 0.2, duration: 0.6 },
-            })}
-          >
-            <Card className="p-4">
-              <div className="text-sm text-gray-500">7-Day Recovery Rate</div>
-              <div className="text-2xl font-bold">
-                {pct(kpi["recovery_rate_7d"])}
-              </div>
-              <div className="text-xs text-gray-500 mt-2">
-                Avg days to pay: {kpi["avg_days_to_pay"] ?? "–"}
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            {...getMotionProps({
-              initial: { opacity: 0, y: 10 },
-              animate: { opacity: 1, y: 0 },
-              transition: { delay: 0.3, duration: 0.6 },
-            })}
-          >
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-gray-500">Pending Cases</div>
-                  <motion.div
-                    className="text-xl font-semibold"
-                    {...getMotionProps({
-                      initial: { scale: 0.8 },
-                      animate: { scale: 1 },
-                      transition: { delay: 0.4, duration: 0.5, type: "spring" },
-                    })}
-                  >
-                    {pendingCases}
-                  </motion.div>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500">Handover Queue</div>
-                  <motion.div
-                    className="text-xl font-semibold"
-                    {...getMotionProps({
-                      initial: { scale: 0.8 },
-                      animate: { scale: 1 },
-                      transition: { delay: 0.5, duration: 0.5, type: "spring" },
-                    })}
-                  >
-                    {handoverQueue}
-                  </motion.div>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        </div>
-
-        {/* Trust Index */}
-        <motion.div
-          {...getMotionProps({
-            initial: { opacity: 0, y: 10 },
-            animate: { opacity: 1, y: 0 },
-            transition: { delay: 0.4, duration: 0.6 },
-          })}
-        >
-          <Card className="p-4">
-            <ConfidenceMeterAnimated value={100} label="Trust Index" />
-          </Card>
-        </motion.div>
-
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Critical Leads */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <motion.div
-            {...getMotionProps({
-              initial: { opacity: 0, x: -20 },
-              animate: { opacity: 1, x: 0 },
-              transition: { delay: 0.5, duration: 0.6 },
-            })}
-          >
-            <Card className="p-4">
-              <div className="text-lg font-semibold mb-3">Critical Leads</div>
-              {!payload?.data?.critical_leads?.length ? (
-                <p className="text-sm text-gray-500">No critical overdue leads.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="text-left">
-                      <tr>
-                        <th scope="col" className="py-2 pr-4">Name</th>
-                        <th scope="col" className="py-2 pr-4">Stage</th>
-                        <th scope="col" className="py-2 pr-4">Amount</th>
-                        <th scope="col" className="py-2 pr-4">Overdue</th>
-                        <th scope="col" className="py-2">Last Reminder</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {payload.data.critical_leads.map((r: G2Lead, idx: number) => (
-                        <motion.tr
-                          key={idx}
-                          className="border-t cursor-pointer hover:bg-gray-50 transition"
-                          {...getMotionProps({
-                            initial: { opacity: 0, y: 5 },
-                            animate: { opacity: 1, y: 0 },
-                            transition: { delay: idx * 0.05, duration: 0.4 },
-                          })}
-                          onClick={() => handleLeadClick(r)}
-                        >
-                          <td className="py-2 pr-4">{r.name ?? "–"}</td>
-                          <td className="py-2 pr-4">{r.stage ?? "–"}</td>
-                          <td className="py-2 pr-4">{fmtMYR.format(r.amount ?? 0)}</td>
-                          <td className="py-2 pr-4">{r.overdue_days ?? "–"}d</td>
-                          <td className="py-2">{r.last_reminder ?? "–"}</td>
-                        </motion.tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </Card>
-          </motion.div>
+        <Card className="p-4">
+          <div className="text-lg font-semibold mb-3">Critical Leads</div>
+          {data.critical_leads.length === 0 ? (
+            <p className="text-sm text-gray-500">No critical overdue leads.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-left">
+                  <tr>
+                    <th scope="col" className="py-2 pr-4">Name</th>
+                    <th scope="col" className="py-2 pr-4">Stage</th>
+                    <th scope="col" className="py-2 pr-4">Amount</th>
+                    <th scope="col" className="py-2 pr-4">Overdue</th>
+                    <th scope="col" className="py-2">Last Reminder</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.critical_leads.map((r: any, idx: number) => (
+                    <tr key={idx} className="border-t">
+                      <td className="py-2 pr-4">{r.name ?? "-"}</td>
+                      <td className="py-2 pr-4">{r.stage ?? "-"}</td>
+                      <td className="py-2 pr-4">{typeof r.amount === "number" ? fmMYR.format(r.amount) : "-"}</td>
+                      <td className="py-2 pr-4">{typeof r.overdue_days === "number" ? `${r.overdue_days}d` : "-"}</td>
+                      <td className="py-2">{r.last_reminder_at ? fmDT.format(new Date(r.last_reminder_at)) : "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
 
-          {/* Right column: Active Reminders & Recent Success can stay as you had them */}
-          {/* … (keep your existing cards / animations here) … */}
+        {/* Right column stack */}
+        <div className="grid grid-cols-1 gap-4">
+          <Card className="p-4">
+            <div className="text-lg font-semibold mb-3">Active Reminders</div>
+            {data.active_reminders.length === 0 ? (
+              <p className="text-sm text-gray-500">No active reminders scheduled.</p>
+            ) : (
+              <ul aria-label="Active reminders" className="space-y-2">
+                {data.active_reminders.map((r: any, i: number) => (
+                  <li key={i} className="flex items-center justify-between border rounded px-3 py-2">
+                    <div>
+                      <div className="font-medium">{r.recipient ?? "-"}</div>
+                      <div className="text-xs text-gray-500">{r.channel ?? "-"} · {r.scheduled_at ? fmDT.format(new Date(r.scheduled_at)) : "-"}</div>
+                    </div>
+                    <span className="text-xs px-2 py-1 rounded bg-gray-100">{r.status ?? "-"}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
+          <Card className="p-4">
+            <div className="text-lg font-semibold mb-3">Recent Success</div>
+            {data.recent_success.length === 0 ? (
+              <p className="text-sm text-gray-500">No recent payments.</p>
+            ) : (
+              <ul aria-label="Recent payments" className="space-y-2">
+                {data.recent_success.map((r: any, i: number) => (
+                  <li key={i} className="flex items-center justify-between border rounded px-3 py-2">
+                    <div>
+                      <div className="font-medium">{r.name ?? "-"}</div>
+                      <div className="text-xs text-gray-500">Paid {r.paid_at ? fmDT.format(new Date(r.paid_at)) : "-"} · {typeof r.days_to_pay === "number" ? `${r.days_to_pay} days` : "-"}</div>
+                    </div>
+                    <div className="text-sm font-semibold">{typeof r.amount === "number" ? fmMYR.format(r.amount) : "-"}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
         </div>
-      </motion.div>
+      </div>
 
-      {/* If you want Lead modal active, render it here when available */}
-      {/* {isLeadModalOpen && selectedLead && (
-        <LeadModal open={isLeadModalOpen} onOpenChange={setIsLeadModalOpen} lead={selectedLead} onAction={handleAction} />
-      )} */}
-    </>
+      {/* Import Wizard */}
+      <ImportWizardMock
+        isOpen={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onSeal={() => {
+          setTrustScore(100);
+          setTimeout(() => setTrustScore(95), 10000);
+          setDataLoadedAt(new Date());
+        }}
+      />
+
+      {/* Proof Modal */}
+      {proofModal.data && (
+        <ProofModalQuick
+          isOpen={proofModal.open}
+          onClose={() => setProofModal({ open: false, data: null })}
+          data={proofModal.data}
+        />
+      )}
+
+      {/* CFO Lens */}
+      <CFOLensTiles
+        safeMode={safeMode}
+        onProofClick={(field, value) => setProofModal({
+          open: true,
+          data: buildProofPayload(field, value)
+        })}
+      />
+    </div>
   );
 }
-
