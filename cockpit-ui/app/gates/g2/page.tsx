@@ -4,6 +4,13 @@ import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { logProofLoad } from "@/lib/telemetry";
 import type { G2Response } from "@/types/gates";
+import ProofChipQuick, { ProofChipCompact } from "@/components/ui/ProofChipQuick";
+import ProofFreshnessQuick from "@/components/ui/ProofFreshnessQuick";
+import ProofModalQuick from "@/components/ui/ProofModalQuick";
+import { handleImportSuccess } from "@/lib/utils/success-feedback-utils";
+import confetti from "canvas-confetti";
+import { toast, Toaster } from "react-hot-toast";
+import { motion } from "framer-motion";
 
 async function fetchGate(url: string): Promise<G2Response> {
   try {
@@ -27,11 +34,22 @@ export default function Gate2Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const telemetrySent = useRef(false);
 
+  const [proofModal, setProofModal] = useState<{
+    open: boolean;
+    data: { field: string; value: any } | null;
+  }>({
+    open: false,
+    data: null,
+  });
+
+  const [lastProofUpdate, setLastProofUpdate] = useState(new Date());
+
   useEffect(() => {
     (async () => {
       try {
         const resp = await fetchGate("/api/gates/g2/summary");
         setPayload(resp);
+        setLastProofUpdate(new Date());
         // Prevent double telemetry in Next.js StrictMode (dev only)
         if (!telemetrySent.current && resp?.rel && resp?.source) {
           logProofLoad(resp.rel, resp.source);
@@ -54,21 +72,64 @@ export default function Gate2Dashboard() {
   const pct = (v: unknown) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "-");
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
+    <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-1)] p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
+        <div className="flex items-center gap-6">
+          <ProofFreshnessQuick lastUpdated={lastProofUpdate} />
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+            <span className="text-xs text-[var(--text-3)]">LIVE</span>
+          </div>
+        </div>
+      </div>
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4">
-          <div className="text-sm text-gray-500">Total Recoverable</div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm text-gray-500">Total Recoverable</div>
+            <ProofChipCompact
+              onClick={() => setProofModal({
+                open: true,
+                data: {
+                  field: "total_recoverable",
+                  value: fmMYR.format(Number(data.summary.total_recoverable || 0)),
+                },
+              })}
+            />
+          </div>
           <div className="text-2xl font-bold">{fmMYR.format(Number(data.summary.total_recoverable || 0))}</div>
         </Card>
         <Card className="p-4">
-          <div className="text-sm text-gray-500">7-Day Recovery Rate</div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm text-gray-500">7-Day Recovery Rate</div>
+            <ProofChipCompact
+              onClick={() => setProofModal({
+                open: true,
+                data: {
+                  field: "recovery_rate_7d",
+                  value: pct(kpi["recovery_rate_7d"]),
+                },
+              })}
+            />
+          </div>
           <div className="text-2xl font-bold">{pct(kpi["recovery_rate_7d"])}</div>
           <div className="text-xs text-gray-500 mt-2">Avg days to pay: {kpi["average_days_to_payment"] ?? "-"}</div>
         </Card>
         <Card className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm text-gray-500">Activity Summary</div>
+            <ProofChipCompact
+              onClick={() => setProofModal({
+                open: true,
+                data: {
+                  field: "activity_summary",
+                  value: `${kpi["pending_cases"] ?? 0} pending, ${kpi["handover_queue"] ?? 0} in queue`,
+                },
+              })}
+            />
+          </div>
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-gray-500">Pending Cases</div>
@@ -126,13 +187,22 @@ export default function Gate2Dashboard() {
             ) : (
               <ul aria-label="Active reminders" className="space-y-2">
                 {data.active_reminders.map((r: any, i: number) => (
-                  <li key={i} className="flex items-center justify-between border rounded px-3 py-2">
+                  <motion.li
+                    key={i}
+                    className="rounded-xl bg-[var(--bg-card)] border border-[var(--stroke)] p-4
+                      hover:border-[color-mix(in_oklab,var(--stroke),white_12%)]
+                      hover:shadow-[0_10px_28px_-18px_rgba(91,140,255,.25)]
+                      transition-all duration-200 cursor-pointer flex items-center justify-between"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    whileHover={{ y: -2 }}
+                  >
                     <div>
                       <div className="font-medium">{r.recipient ?? "-"}</div>
-                      <div className="text-xs text-gray-500">{r.channel ?? "-"} · {r.scheduled_at ? fmDT.format(new Date(r.scheduled_at)) : "-"}</div>
+                      <div className="text-xs text-[var(--text-3)]">{r.channel ?? "-"} · {r.scheduled_at ? fmDT.format(new Date(r.scheduled_at)) : "-"}</div>
                     </div>
-                    <span className="text-xs px-2 py-1 rounded bg-gray-100">{r.status ?? "-"}</span>
-                  </li>
+                    <span className="text-xs px-2 py-1 rounded bg-[var(--bg-canvas)]">{r.status ?? "-"}</span>
+                  </motion.li>
                 ))}
               </ul>
             )}
@@ -145,19 +215,40 @@ export default function Gate2Dashboard() {
             ) : (
               <ul aria-label="Recent payments" className="space-y-2">
                 {data.recent_success.map((r: any, i: number) => (
-                  <li key={i} className="flex items-center justify-between border rounded px-3 py-2">
+                  <motion.li
+                    key={i}
+                    className="rounded-xl bg-[var(--bg-card)] border border-[var(--stroke)] p-4
+                      hover:border-[color-mix(in_oklab,var(--stroke),white_12%)]
+                      hover:shadow-[0_10px_28px_-18px_rgba(91,140,255,.25)]
+                      transition-all duration-200 cursor-pointer flex items-center justify-between"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    whileHover={{ y: -2 }}
+                  >
                     <div>
                       <div className="font-medium">{r.name ?? "-"}</div>
-                      <div className="text-xs text-gray-500">Paid {r.paid_at ? fmDT.format(new Date(r.paid_at)) : "-"} · {typeof r.days_to_pay === "number" ? `${r.days_to_pay} days` : "-"}</div>
+                      <div className="text-xs text-[var(--text-3)]">Paid {r.paid_at ? fmDT.format(new Date(r.paid_at)) : "-"} · {typeof r.days_to_pay === "number" ? `${r.days_to_pay} days` : "-"}</div>
                     </div>
                     <div className="text-sm font-semibold">{typeof r.amount === "number" ? fmMYR.format(r.amount) : "-"}</div>
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
             )}
           </Card>
         </div>
       </div>
+
+      {/* Add Toaster for notifications */}
+      <Toaster position="top-right" />
+
+      {/* Proof Modal */}
+      {proofModal.data && (
+        <ProofModalQuick
+          isOpen={proofModal.open}
+          onClose={() => setProofModal({ open: false, data: null })}
+          data={proofModal.data}
+        />
+      )}
     </div>
   );
 }
