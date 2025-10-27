@@ -3,6 +3,10 @@
 __pycache__/
 .pytest_cache/
 
+# environment files
+.env.local
+.env*.local
+
 # logs & local data
 logs/
 config/persona_matrix.csv
