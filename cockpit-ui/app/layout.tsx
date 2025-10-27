@@ -6,11 +6,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark cockpit">
       <head>
         <title>Qontrek Cockpit UI</title>
       </head>
-      <body>{children}</body>
+      <body style={{
+        background: 'var(--bg-canvas)',
+        color: 'var(--text-1)',
+        minHeight: '100vh'
+      }}>
+        {children}
+      </body>
     </html>
   );
 }

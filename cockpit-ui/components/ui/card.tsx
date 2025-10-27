@@ -1,16 +1,29 @@
 // components/ui/card.tsx
-// Simple Card component using Tailwind CSS
+// Trust Cockpit Card component with glass morphism
 
 import * as React from "react";
 
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'default' | 'glass';
+}
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className = "", ...props }, ref) => {
+  ({ className = "", variant = "default", style, ...props }, ref) => {
+    const baseStyles: React.CSSProperties = {
+      background: variant === 'glass' ? 'var(--bg-glass)' : 'var(--bg-card)',
+      border: '1px solid var(--stroke)',
+      borderRadius: 'var(--radius)',
+      boxShadow: 'var(--elev-1)',
+      transition: `all var(--duration-normal) var(--ease-out)`,
+      backdropFilter: variant === 'glass' ? 'blur(12px)' : undefined,
+      ...style
+    };
+
     return (
       <div
         ref={ref}
-        className={`rounded-lg border bg-white shadow-sm ${className}`}
+        className={className}
+        style={baseStyles}
         {...props}
       />
     );
