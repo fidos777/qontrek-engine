@@ -10,3 +10,44 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ============================================
+   QONTREK TRUST COCKPIT THEME
+   ============================================ */
+
+:root {
+  /* Design system */
+  --radius: 14px;
+  --ease-out: cubic-bezier(.22,.61,.36,1);
+  --duration-normal: 200ms;
+  --duration-reveal: 400ms;
+}
+
+/* Trust Cockpit Dark Theme */
+:root,
+:root.dark {
+  --bg-canvas: #0b1020;
+  --bg-panel: #0f1629;
+  --bg-card: #111a2e;
+  --bg-glass: rgba(17,26,46,.6);
+
+  --stroke: #1e2a44;
+  --stroke-sub: #15203a;
+
+  --text-1: #e8eefb;
+  --text-2: #b8c4e0;
+  --text-3: #8aa0c9;
+
+  --accent: #5b8cff;
+  --success: #19c37d;
+  --warn: #ffb454;
+  --danger: #ff6b6b;
+
+  --chip-20: #2dd4bf1a;
+  --chip-80: #60a5fa1a;
+}
+
+*:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent), white 25%);
+  outline-offset: 2px;
+}
