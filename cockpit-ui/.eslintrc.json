@@ -1,0 +1,11 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    "react/no-unknown-property": [
+      "error",
+      {
+        "ignore": ["animate", "whileHover", "whileTap", "initial", "exit", "variants", "transition", "whileInView", "viewport"]
+      }
+    ]
+  }
+}
