@@ -3,7 +3,25 @@
 // This file contains governance-level type contracts.
 // Changes must be approved by Commander (GPT-5).
 
+import { z } from "zod";
+
 export type SourceFlag = "real" | "fallback";
+
+// G2 Lead schema and type for Lead Detail Modal
+export const G2LeadSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  phone: z.string().optional(),
+  stage: z.string(),
+  amount: z.number(),
+  days_overdue: z.number(),
+  last_contact: z.string(),
+  next_action: z.string(),
+  system_size: z.number().optional(),
+  project_value: z.number().optional(),
+});
+
+export type G2Lead = z.infer<typeof G2LeadSchema>;
 
 export interface BaseEnvelope<T> {
   ok: boolean;

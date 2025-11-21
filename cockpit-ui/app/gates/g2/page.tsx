@@ -3,7 +3,9 @@
 import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { logProofLoad } from "@/lib/telemetry";
-import type { G2Response } from "@/types/gates";
+import { LeadDetailModal } from "@/components/voltek/LeadDetailModal";
+import { showErrorToast } from "@/lib/utils/toast-helpers";
+import { G2LeadSchema, type G2Lead, type G2Response } from "@/types/gates";
 
 async function fetchGate(url: string): Promise<G2Response> {
   try {
@@ -26,6 +28,8 @@ export default function Gate2Dashboard() {
   const [payload, setPayload] = useState<G2Response | null>(null);
   const [error, setError] = useState<string | null>(null);
   const telemetrySent = useRef(false);
+  const [selectedLead, setSelectedLead] = useState<G2Lead | null>(null);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -102,15 +106,50 @@ export default function Gate2Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.critical_leads.map((r: any, idx: number) => (
-                    <tr key={idx} className="border-t">
-                      <td className="py-2 pr-4">{r.name ?? "-"}</td>
-                      <td className="py-2 pr-4">{r.stage ?? "-"}</td>
-                      <td className="py-2 pr-4">{typeof r.amount === "number" ? fmMYR.format(r.amount) : "-"}</td>
-                      <td className="py-2 pr-4">{typeof r.overdue_days === "number" ? `${r.overdue_days}d` : "-"}</td>
-                      <td className="py-2">{r.last_reminder_at ? fmDT.format(new Date(r.last_reminder_at)) : "-"}</td>
-                    </tr>
-                  ))}
+                  {data.critical_leads.map((r: any, idx: number) => {
+                    const handleLeadClick = () => {
+                      // Transform data to match G2Lead schema
+                      const leadData = {
+                        id: `lead-${idx + 1}`,
+                        name: r.name ?? "Unknown",
+                        phone: r.phone,
+                        stage: r.stage ?? "Unknown",
+                        amount: typeof r.amount === "number" ? r.amount : 0,
+                        days_overdue: typeof r.overdue_days === "number" ? r.overdue_days : 0,
+                        last_contact: r.last_reminder_at
+                          ? fmDT.format(new Date(r.last_reminder_at))
+                          : "Not recorded",
+                        next_action: r.next_action ?? "Follow up on payment",
+                        system_size: r.system_size,
+                        project_value: r.project_value,
+                      };
+
+                      // Validate with Zod
+                      const parsed = G2LeadSchema.safeParse(leadData);
+                      if (!parsed.success) {
+                        showErrorToast("Invalid lead data");
+                        console.error("[VALIDATION]", parsed.error);
+                        return;
+                      }
+                      setSelectedLead(parsed.data);
+                      setIsLeadModalOpen(true);
+                    };
+
+                    return (
+                      <tr
+                        key={idx}
+                        className="border-t cursor-pointer hover:bg-gray-50 transition-colors"
+                        data-testid={`lead-row-${idx}`}
+                        onClick={handleLeadClick}
+                      >
+                        <td className="py-2 pr-4">{r.name ?? "-"}</td>
+                        <td className="py-2 pr-4">{r.stage ?? "-"}</td>
+                        <td className="py-2 pr-4">{typeof r.amount === "number" ? fmMYR.format(r.amount) : "-"}</td>
+                        <td className="py-2 pr-4">{typeof r.overdue_days === "number" ? `${r.overdue_days}d` : "-"}</td>
+                        <td className="py-2">{r.last_reminder_at ? fmDT.format(new Date(r.last_reminder_at)) : "-"}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -158,6 +197,19 @@ export default function Gate2Dashboard() {
           </Card>
         </div>
       </div>
+
+      <LeadDetailModal
+        lead={selectedLead}
+        open={isLeadModalOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsLeadModalOpen(false);
+            setSelectedLead(null);
+          } else {
+            setIsLeadModalOpen(true);
+          }
+        }}
+      />
     </div>
   );
 }
