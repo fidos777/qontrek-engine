@@ -1,9 +1,27 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import { logProofLoad } from "@/lib/telemetry";
 import type { G2Response } from "@/types/gates";
+
+const GovernanceHeaderStrip = dynamic(
+  () => import("@/components/voltek/GovernanceHeaderStrip"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-10 w-full rounded-lg bg-[var(--bg-muted,#f3f4f6)] animate-pulse" />
+    ),
+  }
+);
+
+const HologramBadge = dynamic(
+  () => import("@/components/voltek/HologramBadge"),
+  {
+    ssr: false,
+  }
+);
 
 async function fetchGate(url: string): Promise<G2Response> {
   try {
@@ -55,6 +73,7 @@ export default function Gate2Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
+      <GovernanceHeaderStrip />
       <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
 
       {/* KPI Row */}
@@ -158,6 +177,10 @@ export default function Gate2Dashboard() {
           </Card>
         </div>
       </div>
+
+      <footer className="mt-8 flex justify-end">
+        <HologramBadge text="Tower Certified" />
+      </footer>
     </div>
   );
 }
