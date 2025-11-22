@@ -1,0 +1,230 @@
+{
+  "ok": true,
+  "rel": "voltek_recovery_v1.0.json",
+  "source": "real",
+  "schemaVersion": "1.0.0",
+  "data": {
+    "summary": {
+      "total_recoverable": 180000,
+      "pending_amount": 92800,
+      "pending_percentage": 80,
+      "recovered_amount": 87200,
+      "critical_count": 8,
+      "total_leads": 12,
+      "recovery_rate_30d": 0.48,
+      "avg_days_overdue": 45
+    },
+    "leads": [
+      {
+        "id": "VTK-001",
+        "company": "Mega Construction Sdn Bhd",
+        "contact": "Ahmad Razak",
+        "phone": "+60123456789",
+        "email": "ahmad@megaconstruction.my",
+        "amount": 25000,
+        "status": "critical",
+        "overdue_days": 90,
+        "last_contact": "2025-11-10T09:30:00Z",
+        "next_action": "Legal notice",
+        "notes": "Multiple reminders sent. Escalate to legal.",
+        "priority": 1
+      },
+      {
+        "id": "VTK-002",
+        "company": "Syarikat Binaan Jaya",
+        "contact": "Tan Wei Ming",
+        "phone": "+60134567890",
+        "email": "weiming@binaanjaya.com",
+        "amount": 18500,
+        "status": "critical",
+        "overdue_days": 75,
+        "last_contact": "2025-11-12T14:00:00Z",
+        "next_action": "Final reminder call",
+        "notes": "Promised payment by month end. Follow up required.",
+        "priority": 2
+      },
+      {
+        "id": "VTK-003",
+        "company": "Prima Steel Industries",
+        "contact": "Muthu Krishnan",
+        "phone": "+60145678901",
+        "email": "muthu@primasteel.my",
+        "amount": 15200,
+        "status": "critical",
+        "overdue_days": 60,
+        "last_contact": "2025-11-15T10:00:00Z",
+        "next_action": "Schedule meeting",
+        "notes": "Cash flow issues reported. Negotiate payment plan.",
+        "priority": 3
+      },
+      {
+        "id": "VTK-004",
+        "company": "Horizon Development Group",
+        "contact": "Lee Siew Ling",
+        "phone": "+60156789012",
+        "email": "siewling@horizondev.com",
+        "amount": 12800,
+        "status": "critical",
+        "overdue_days": 55,
+        "last_contact": "2025-11-14T16:30:00Z",
+        "next_action": "WhatsApp follow-up",
+        "notes": "Partial payment received. Balance outstanding.",
+        "priority": 4
+      },
+      {
+        "id": "VTK-005",
+        "company": "Tenaga Elektrik Sdn Bhd",
+        "contact": "Farid Hassan",
+        "phone": "+60167890123",
+        "email": "farid@tenagaelektrik.my",
+        "amount": 9800,
+        "status": "critical",
+        "overdue_days": 50,
+        "last_contact": "2025-11-16T11:00:00Z",
+        "next_action": "Send payment reminder",
+        "notes": "Dispute on invoice amount. Clarification needed.",
+        "priority": 5
+      },
+      {
+        "id": "VTK-006",
+        "company": "Utara Logistics",
+        "contact": "Siti Aminah",
+        "phone": "+60178901234",
+        "email": "siti@utaralogistics.com",
+        "amount": 8500,
+        "status": "critical",
+        "overdue_days": 45,
+        "last_contact": "2025-11-17T09:00:00Z",
+        "next_action": "Escalate to management",
+        "notes": "No response to emails. Try direct call.",
+        "priority": 6
+      },
+      {
+        "id": "VTK-007",
+        "company": "Coastal Marine Services",
+        "contact": "James Wong",
+        "phone": "+60189012345",
+        "email": "james@coastalmarine.my",
+        "amount": 7200,
+        "status": "critical",
+        "overdue_days": 42,
+        "last_contact": "2025-11-18T14:30:00Z",
+        "next_action": "SMS reminder",
+        "notes": "Awaiting project payment from their client.",
+        "priority": 7
+      },
+      {
+        "id": "VTK-008",
+        "company": "Green Valley Farms",
+        "contact": "Raj Kumar",
+        "phone": "+60190123456",
+        "email": "raj@greenvalley.com",
+        "amount": 6500,
+        "status": "critical",
+        "overdue_days": 38,
+        "last_contact": "2025-11-19T10:00:00Z",
+        "next_action": "Payment plan discussion",
+        "notes": "Seasonal business. Willing to pay in installments.",
+        "priority": 8
+      },
+      {
+        "id": "VTK-009",
+        "company": "Metro Office Supplies",
+        "contact": "Christina Lim",
+        "phone": "+60112233445",
+        "email": "christina@metrooffice.my",
+        "amount": 5800,
+        "status": "pending",
+        "overdue_days": 28,
+        "last_contact": "2025-11-20T11:30:00Z",
+        "next_action": "Follow-up call",
+        "notes": "Payment in process. ETA 5 business days.",
+        "priority": 9
+      },
+      {
+        "id": "VTK-010",
+        "company": "Digital Solutions MY",
+        "contact": "Amir Hamzah",
+        "phone": "+60113344556",
+        "email": "amir@digitalsolutions.my",
+        "amount": 4200,
+        "status": "pending",
+        "overdue_days": 21,
+        "last_contact": "2025-11-21T09:00:00Z",
+        "next_action": "Send invoice copy",
+        "notes": "Requested duplicate invoice. Send today.",
+        "priority": 10
+      },
+      {
+        "id": "VTK-011",
+        "company": "Sarawak Timber Corp",
+        "contact": "David Ling",
+        "phone": "+60114455667",
+        "email": "david@sarawaktimber.com",
+        "amount": 35000,
+        "status": "recovered",
+        "overdue_days": 0,
+        "last_contact": "2025-11-18T15:00:00Z",
+        "next_action": "None - Paid",
+        "notes": "Full payment received via bank transfer.",
+        "priority": 11
+      },
+      {
+        "id": "VTK-012",
+        "company": "Penang Auto Parts",
+        "contact": "Ng Boon Huat",
+        "phone": "+60115566778",
+        "email": "boonhuat@penangauto.my",
+        "amount": 31500,
+        "status": "recovered",
+        "overdue_days": 0,
+        "last_contact": "2025-11-19T16:00:00Z",
+        "next_action": "None - Paid",
+        "notes": "Cheque cleared. Account settled.",
+        "priority": 12
+      }
+    ],
+    "activity_log": [
+      {
+        "id": "ACT-001",
+        "lead_id": "VTK-011",
+        "action": "payment_received",
+        "amount": 35000,
+        "timestamp": "2025-11-18T15:00:00Z",
+        "user": "Sarah Chen"
+      },
+      {
+        "id": "ACT-002",
+        "lead_id": "VTK-012",
+        "action": "payment_received",
+        "amount": 31500,
+        "timestamp": "2025-11-19T16:00:00Z",
+        "user": "Sarah Chen"
+      },
+      {
+        "id": "ACT-003",
+        "lead_id": "VTK-004",
+        "action": "partial_payment",
+        "amount": 5000,
+        "timestamp": "2025-11-14T16:30:00Z",
+        "user": "Ahmad Yusof"
+      },
+      {
+        "id": "ACT-004",
+        "lead_id": "VTK-001",
+        "action": "reminder_sent",
+        "channel": "email",
+        "timestamp": "2025-11-10T09:30:00Z",
+        "user": "Sarah Chen"
+      },
+      {
+        "id": "ACT-005",
+        "lead_id": "VTK-002",
+        "action": "call_made",
+        "duration": 480,
+        "timestamp": "2025-11-12T14:00:00Z",
+        "user": "Ahmad Yusof"
+      }
+    ]
+  }
+}
