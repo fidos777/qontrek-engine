@@ -1,0 +1,96 @@
+{
+  "summary": {
+    "total_recoverable": 125750.50,
+    "kpi": {
+      "recovery_rate_7d": 0.73,
+      "average_days_to_payment": 4.2,
+      "pending_cases": 24,
+      "handover_queue": 8,
+      "trust_index": 87
+    }
+  },
+  "critical_leads": [
+    {
+      "id": "lead-001",
+      "name": "Ahmad Razak",
+      "company": "Technovate Sdn Bhd",
+      "stage": "Final Notice",
+      "amount": 15200,
+      "overdue_days": 45,
+      "last_reminder_at": "2024-01-15T10:30:00Z",
+      "phone": "+60123456789",
+      "email": "ahmad@technovate.com",
+      "priority": "urgent"
+    },
+    {
+      "id": "lead-002",
+      "name": "Siti Nurhaliza",
+      "company": "Creative Solutions",
+      "stage": "Second Reminder",
+      "amount": 8500,
+      "overdue_days": 21,
+      "last_reminder_at": "2024-01-18T14:00:00Z",
+      "phone": "+60198765432",
+      "email": "siti@creative.com",
+      "priority": "high"
+    },
+    {
+      "id": "lead-003",
+      "name": "Raj Kumar",
+      "company": "Global Trade Ltd",
+      "stage": "First Notice",
+      "amount": 23100,
+      "overdue_days": 14,
+      "last_reminder_at": "2024-01-20T09:15:00Z",
+      "phone": "+60167891234",
+      "email": "raj@globaltrade.com",
+      "priority": "medium"
+    },
+    {
+      "id": "lead-004",
+      "name": "Lee Wei Ming",
+      "company": "Eastern Motors",
+      "stage": "Legal Review",
+      "amount": 42000,
+      "overdue_days": 67,
+      "last_reminder_at": "2024-01-10T08:00:00Z",
+      "phone": "+60145678901",
+      "email": "lee@easternmotors.com",
+      "priority": "urgent"
+    }
+  ],
+  "active_reminders": [
+    {
+      "recipient": "Ahmad Razak",
+      "channel": "WhatsApp",
+      "scheduled_at": "2024-01-22T10:00:00Z",
+      "status": "scheduled"
+    },
+    {
+      "recipient": "Siti Nurhaliza",
+      "channel": "SMS",
+      "scheduled_at": "2024-01-22T14:00:00Z",
+      "status": "pending"
+    },
+    {
+      "recipient": "Raj Kumar",
+      "channel": "Email",
+      "scheduled_at": "2024-01-23T09:00:00Z",
+      "status": "scheduled"
+    }
+  ],
+  "recent_success": [
+    {
+      "name": "Wong Mei Ling",
+      "amount": 12500,
+      "paid_at": "2024-01-21T16:30:00Z",
+      "days_to_pay": 3
+    },
+    {
+      "name": "Muthu Rajan",
+      "amount": 7800,
+      "paid_at": "2024-01-20T11:00:00Z",
+      "days_to_pay": 5
+    }
+  ]
+}
