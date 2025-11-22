@@ -1,0 +1,19 @@
+// components/ui/skeleton.tsx
+// Simple Skeleton component for loading states
+
+import * as React from "react";
+
+export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {}
+
+export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
+  ({ className = "", ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={`animate-pulse rounded-md bg-gray-200 ${className}`}
+        {...props}
+      />
+    );
+  }
+);
+Skeleton.displayName = "Skeleton";
