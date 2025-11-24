@@ -9,6 +9,43 @@ import {
 } from '@/lib/tower/receipts';
 
 /**
+ * Allowed origins for CORS
+ */
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') || [
+  'http://localhost:3000',
+  'https://localhost:3000',
+];
+
+/**
+ * Get CORS headers based on request origin
+ */
+function getCorsHeaders(request: NextRequest): Record<string, string> {
+  const origin = request.headers.get('origin') || '';
+  const isAllowed = ALLOWED_ORIGINS.includes(origin) ||
+    ALLOWED_ORIGINS.includes('*') ||
+    origin.endsWith('.vercel.app'); // Allow Vercel preview deployments
+
+  return {
+    'Access-Control-Allow-Origin': isAllowed ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Request-ID',
+    'Access-Control-Max-Age': '86400',
+  };
+}
+
+/**
+ * OPTIONS /api/tower/uploadProof
+ *
+ * Handle CORS preflight requests
+ */
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(request),
+  });
+}
+
+/**
  * POST /api/tower/uploadProof
  *
  * Validates factory runtime manifest, recomputes Merkle root,
@@ -34,6 +71,7 @@ import {
  * }
  */
 export async function POST(request: NextRequest) {
+  const corsHeaders = getCorsHeaders(request);
   try {
     const body = await request.json();
     const { manifest } = body;
@@ -42,21 +80,21 @@ export async function POST(request: NextRequest) {
     if (!manifest || !manifest.files || !Array.isArray(manifest.files)) {
       return NextResponse.json(
         { error: 'Invalid manifest: missing or invalid files array' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
     if (!manifest.merkleRoot) {
       return NextResponse.json(
         { error: 'Invalid manifest: missing merkleRoot' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
     if (!manifest.signature || !manifest.kid) {
       return NextResponse.json(
         { error: 'Invalid manifest: missing signature or kid' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -74,7 +112,7 @@ export async function POST(request: NextRequest) {
           expected: manifest.merkleRoot,
           computed: echoRoot,
         },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -123,13 +161,13 @@ export async function POST(request: NextRequest) {
       echoRoot: receipt.echoRoot,
       status: receipt.status,
       uploadedAt: receipt.uploadedAt,
-    });
+    }, { headers: corsHeaders });
 
   } catch (error) {
     console.error('Tower uploadProof error:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: (error as Error).message },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     );
   }
 }

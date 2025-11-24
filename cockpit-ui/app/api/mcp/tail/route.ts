@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { createRateLimiter } from '@/lib/redis/rateLimiter';
 
 /**
  * GET /api/mcp/tail
@@ -9,54 +10,17 @@ import { join } from 'path';
  * Adds X-RateLimit-* headers for governance evidence.
  */
 
-// Simple in-memory rate limiter (use Redis in production)
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
-
-const RATE_LIMIT = {
+// Redis-backed rate limiter configuration
+const RATE_LIMIT_CONFIG = {
   maxRequests: 100,
   windowMs: 60 * 1000, // 1 minute
-  maxLines: 1000, // Max lines per response
+  keyPrefix: 'mcp:tail',
 };
 
-/**
- * Check rate limit for client
- */
-function checkRateLimit(clientId: string): {
-  allowed: boolean;
-  remaining: number;
-  resetAt: number;
-} {
-  const now = Date.now();
-  const record = rateLimitStore.get(clientId);
+const MAX_LINES = 1000; // Max lines per response
 
-  // Reset window if expired
-  if (!record || now >= record.resetAt) {
-    const resetAt = now + RATE_LIMIT.windowMs;
-    rateLimitStore.set(clientId, { count: 1, resetAt });
-    return {
-      allowed: true,
-      remaining: RATE_LIMIT.maxRequests - 1,
-      resetAt,
-    };
-  }
-
-  // Check if limit exceeded
-  if (record.count >= RATE_LIMIT.maxRequests) {
-    return {
-      allowed: false,
-      remaining: 0,
-      resetAt: record.resetAt,
-    };
-  }
-
-  // Increment count
-  record.count++;
-  return {
-    allowed: true,
-    remaining: RATE_LIMIT.maxRequests - record.count,
-    resetAt: record.resetAt,
-  };
-}
+// Create rate limiter instance
+const rateLimiter = createRateLimiter(RATE_LIMIT_CONFIG);
 
 /**
  * Get client identifier
@@ -71,22 +35,16 @@ function getClientId(request: NextRequest): string {
 export async function GET(request: NextRequest) {
   const clientId = getClientId(request);
 
-  // Check rate limit
-  const rateLimit = checkRateLimit(clientId);
+  // Check rate limit using Redis
+  const rateLimitResult = await rateLimiter.check(clientId);
+  const rateLimitHeaders = rateLimiter.getHeaders(rateLimitResult);
 
   // Add rate limit headers
-  const headers = new Headers({
-    'X-RateLimit-Limit': RATE_LIMIT.maxRequests.toString(),
-    'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-    'X-RateLimit-Reset': new Date(rateLimit.resetAt).toISOString(),
-  });
+  const headers = new Headers(rateLimitHeaders);
 
-  if (!rateLimit.allowed) {
-    const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
-    headers.set('Retry-After', retryAfter.toString());
-
+  if (!rateLimitResult.allowed) {
     return NextResponse.json(
-      { error: 'Rate limit exceeded', retryAfter },
+      { error: 'Rate limit exceeded', retryAfter: rateLimitHeaders['Retry-After'] },
       { status: 429, headers }
     );
   }
@@ -96,7 +54,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const lines = Math.min(
       parseInt(searchParams.get('lines') || '100'),
-      RATE_LIMIT.maxLines
+      MAX_LINES
     );
     const filter = searchParams.get('filter');
 

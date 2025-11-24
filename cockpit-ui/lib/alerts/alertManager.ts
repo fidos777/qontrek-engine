@@ -163,10 +163,9 @@ export async function sendAlertNotification(alert: Alert): Promise<void> {
   console.log(`[ALERT] ${alert.severity.toUpperCase()}: ${alert.title}`);
   console.log(`  ${alert.message}`);
 
-  // Example Slack webhook (disabled by default)
+  // Slack webhook notification
   if (process.env.SLACK_WEBHOOK_URL) {
     try {
-      const fetch = (await import('node-fetch')).default;
       await fetch(process.env.SLACK_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -185,6 +184,32 @@ export async function sendAlertNotification(alert: Alert): Promise<void> {
       console.error('Failed to send Slack alert:', error);
     }
   }
+
+  // N8N webhook notification for workflow automation
+  if (process.env.N8N_WEBHOOK_URL) {
+    try {
+      await fetch(process.env.N8N_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'alert_triggered',
+          alert: {
+            id: alert.id,
+            severity: alert.severity,
+            title: alert.title,
+            message: alert.message,
+            source: alert.source,
+            createdAt: alert.createdAt,
+            metadata: alert.metadata,
+          },
+          environment: process.env.NODE_ENV || 'development',
+          timestamp: new Date().toISOString(),
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to send N8N webhook:', error);
+    }
+  }
 }
 
 /**
@@ -192,7 +217,6 @@ export async function sendAlertNotification(alert: Alert): Promise<void> {
  */
 export async function monitorAndAlert(healthEndpoint = 'http://localhost:3000/api/mcp/healthz'): Promise<void> {
   try {
-    const fetch = (await import('node-fetch')).default;
     const response = await fetch(healthEndpoint);
 
     if (!response.ok) {
