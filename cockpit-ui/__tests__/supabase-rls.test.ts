@@ -112,15 +112,20 @@ describe('Supabase RLS Tests', () => {
 });
 
 describe('Privacy Scrubber Tests', () => {
-  // Mock scrubber function
+  // Mock scrubber function - order matters: specific patterns before generic ones
   function scrubPII(text: string): string {
     return text
       .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '[EMAIL_REDACTED]')
-      .replace(/\b\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}\b/g, '[PHONE_REDACTED]')
+      // NRIC before phone (more specific pattern)
       .replace(/\b\d{6}-\d{2}-\d{4}\b/g, '[NRIC_REDACTED]')
+      // UUID before phone (contains dashes that phone pattern could partially match)
       .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi, '[UUID_REDACTED]')
-      .replace(/arn:aws:[a-z0-9-]+:[a-z0-9-]*:\d{12}:[a-zA-Z0-9/_-]+/gi, '[AWS_ARN_REDACTED]')
-      .replace(/AIza[0-9A-Za-z_-]{35}/g, '[API_KEY_REDACTED]');
+      // Phone after specific patterns
+      .replace(/\b\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}\b/g, '[PHONE_REDACTED]')
+      // AWS ARN - handles both standard ARNs and S3-style ARNs without account ID
+      .replace(/arn:aws:s3:::[a-zA-Z0-9/_.-]+|arn:aws:[a-z0-9-]+:[a-z0-9-]*:\d{12}:[a-zA-Z0-9/_-]+/gi, '[AWS_ARN_REDACTED]')
+      // Google API key - 32 chars after AIza prefix
+      .replace(/AIza[0-9A-Za-z_-]{32}/g, '[API_KEY_REDACTED]');
   }
 
   it('should redact email addresses', () => {
