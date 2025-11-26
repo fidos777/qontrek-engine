@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
+import GovernanceHeaderStrip from '@/components/voltek/GovernanceHeaderStrip';
+import ProofFreshnessIndicator from '@/components/voltek/ProofFreshnessIndicator';
+import ConfidenceMeterAnimated from '@/components/voltek/ConfidenceMeterAnimated';
 
 interface GovernanceData {
   version: string;
@@ -218,21 +221,26 @@ export default function GovernanceDashboard() {
     );
   };
 
+  // Calculate trust score from pass rate
+  const trustScore = governance
+    ? Math.round((governance.summary.passed / governance.summary.totalGates) * 100)
+    : 0;
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Governance Observatory</h1>
-          <p className="text-gray-600 mt-1">
-            Factory Runtime R1.4.4-R1.4.9 · Gates G13-G21
-            <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-sm">DEMO</span>
-          </p>
+    <>
+      <GovernanceHeaderStrip title="Governance Observatory" status="active" />
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Governance Observatory</h1>
+            <p className="text-gray-600 mt-1">
+              Factory Runtime R1.4.4-R1.4.9 · Gates G13-G21
+              <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-sm">DEMO</span>
+            </p>
+          </div>
+          <ProofFreshnessIndicator lastUpdated={governance?.generatedAt} freshnessThresholdMinutes={60} />
         </div>
-        <div className="text-right text-sm text-gray-500">
-          Last updated: {governance ? new Date(governance.generatedAt).toLocaleString() : '-'}
-        </div>
-      </div>
 
       {/* Panic Mode Alert */}
       {health?.panicMode.active && (
@@ -268,6 +276,13 @@ export default function GovernanceDashboard() {
           <div className="text-3xl font-bold text-yellow-600 mt-1">{governance?.summary.partial}</div>
         </Card>
       </div>
+
+      {/* Confidence Meter */}
+      <Card className="p-4">
+        <div className="max-w-md">
+          <ConfidenceMeterAnimated trust={trustScore} />
+        </div>
+      </Card>
 
       {/* SLO Health */}
       <Card className="p-6">
@@ -367,6 +382,7 @@ export default function GovernanceDashboard() {
       <div className="text-center text-sm text-gray-500 py-4">
         Powered by Qontrek Engine · Tower Federation Certified
       </div>
-    </div>
+      </div>
+    </>
   );
 }

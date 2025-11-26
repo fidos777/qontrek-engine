@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import type { G2Response } from "@/types/gates";
+import GovernanceHeaderStrip from "@/components/voltek/GovernanceHeaderStrip";
+import ProofFreshnessIndicator from "@/components/voltek/ProofFreshnessIndicator";
+import ConfidenceMeterAnimated from "@/components/voltek/ConfidenceMeterAnimated";
 
 // Static demo data for production builds
 const DEMO_DATA: G2Response = {
@@ -87,16 +90,31 @@ export default function Gate2Dashboard() {
 
   const pct = (v: unknown) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "-");
 
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
-        <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
-          DEMO MODE
-        </span>
-      </div>
+  // Calculate trust score from recovery rate
+  const trustScore = Math.round(Number(kpi["recovery_rate_7d"] ?? 0) * 100);
 
-      {/* KPI Row */}
+  return (
+    <>
+      <GovernanceHeaderStrip title="Gate 2 — Payment Recovery" status="active" />
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
+            <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
+              DEMO MODE
+            </span>
+          </div>
+          <ProofFreshnessIndicator lastUpdated={new Date()} freshnessThresholdMinutes={60} />
+        </div>
+
+        {/* Confidence Meter */}
+        <Card className="p-4">
+          <div className="max-w-md">
+            <ConfidenceMeterAnimated trust={trustScore} />
+          </div>
+        </Card>
+
+        {/* KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4">
           <div className="text-sm text-gray-500">Total Recoverable</div>
@@ -197,6 +215,7 @@ export default function Gate2Dashboard() {
           </Card>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

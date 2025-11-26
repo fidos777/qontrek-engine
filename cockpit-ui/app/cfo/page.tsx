@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import type { CFOResponse } from "@/types/gates";
+import GovernanceHeaderStrip from "@/components/voltek/GovernanceHeaderStrip";
+import ProofFreshnessIndicator from "@/components/voltek/ProofFreshnessIndicator";
+import ConfidenceMeterAnimated from "@/components/voltek/ConfidenceMeterAnimated";
 
 // Static demo data for production builds
 const DEMO_DATA: CFOResponse = {
@@ -88,16 +91,31 @@ export default function CFODashboard() {
 
   const currentTab = data.tabs[activeTab];
 
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-semibold">CFO Lens</h1>
-        <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
-          DEMO MODE
-        </span>
-      </div>
+  // Calculate trust score from collection rate
+  const trustScore = Math.round(Number(data.summary?.collection_rate ?? 0) * 100);
 
-      {/* Summary KPIs */}
+  return (
+    <>
+      <GovernanceHeaderStrip title="CFO Lens" status="active" />
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold">CFO Lens</h1>
+            <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
+              DEMO MODE
+            </span>
+          </div>
+          <ProofFreshnessIndicator lastUpdated={new Date()} freshnessThresholdMinutes={60} />
+        </div>
+
+        {/* Confidence Meter */}
+        <Card className="p-4">
+          <div className="max-w-md">
+            <ConfidenceMeterAnimated trust={trustScore} />
+          </div>
+        </Card>
+
+        {/* Summary KPIs */}
       {data.summary && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="p-4">
@@ -177,6 +195,7 @@ export default function CFODashboard() {
           </div>
         </Card>
       )}
-    </div>
+      </div>
+    </>
   );
 }
