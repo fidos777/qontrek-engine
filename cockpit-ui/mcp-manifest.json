@@ -1,0 +1,178 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schema/manifest.json",
+  "name": "qontrek-mcp",
+  "version": "1.0.0",
+  "description": "Qontrek MCP (Model Context Protocol) tools for AI-assisted operations",
+  "server": {
+    "baseUrl": "/api/mcp"
+  },
+  "tools": [
+    {
+      "name": "healthz",
+      "description": "Health check with SLO/SLI metrics, anti-replay stats, and key rotation status",
+      "endpoint": "/api/mcp/healthz",
+      "method": "GET",
+      "parameters": {},
+      "returns": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["healthy", "degraded", "unhealthy"] },
+          "slo": { "type": "object" },
+          "antiReplay": { "type": "object" },
+          "keyRotation": { "type": "object" }
+        }
+      }
+    },
+    {
+      "name": "governance",
+      "description": "Returns governance KPI snapshot for gates G13-G21",
+      "endpoint": "/api/mcp/governance",
+      "method": "GET",
+      "parameters": {},
+      "returns": {
+        "type": "object",
+        "properties": {
+          "version": { "type": "string" },
+          "generatedAt": { "type": "string", "format": "date-time" },
+          "gates": { "type": "object" },
+          "summary": { "type": "object" }
+        }
+      }
+    },
+    {
+      "name": "tail",
+      "description": "Stream operational logs with filtering and pagination",
+      "endpoint": "/api/mcp/tail",
+      "method": "GET",
+      "parameters": {
+        "limit": {
+          "type": "integer",
+          "description": "Maximum lines to return (max 1000)",
+          "default": 100
+        },
+        "filter": {
+          "type": "string",
+          "description": "Log level or pattern filter"
+        }
+      },
+      "rateLimit": {
+        "requests": 100,
+        "windowSeconds": 60
+      }
+    },
+    {
+      "name": "listGlobalPatterns",
+      "description": "List anonymized cross-tenant pattern insights for meta-learning. Returns statistical aggregates that meet k-anonymity requirements.",
+      "endpoint": "/api/mcp/patterns/global_insights",
+      "method": "GET",
+      "parameters": {
+        "gate": {
+          "type": "string",
+          "description": "Filter by gate (G0-G21)",
+          "enum": ["G0", "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "G17", "G18", "G19", "G20", "G21"]
+        },
+        "type": {
+          "type": "string",
+          "description": "Filter by insight type",
+          "enum": ["benchmark", "trend", "anomaly", "recommendation"]
+        },
+        "minSamples": {
+          "type": "integer",
+          "description": "Minimum sample count for k-anonymity (default: 5)",
+          "minimum": 5
+        }
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean" },
+          "rel": { "type": "string" },
+          "source": { "type": "string" },
+          "schemaVersion": { "type": "string" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "insights": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "pattern_key": { "type": "string" },
+                    "source_gate": { "type": "string" },
+                    "insight": { "type": "object" },
+                    "sample_count": { "type": "integer" },
+                    "updated_at": { "type": "string", "format": "date-time" }
+                  }
+                }
+              },
+              "meta": { "type": "object" }
+            }
+          }
+        }
+      },
+      "privacy": {
+        "tenantIsolation": true,
+        "piiScrubbing": true,
+        "kAnonymity": 5
+      }
+    },
+    {
+      "name": "aggregatePattern",
+      "description": "Aggregate a new pattern data point. Input is validated and anonymized before storage.",
+      "endpoint": "/api/mcp/patterns/global_insights",
+      "method": "POST",
+      "parameters": {
+        "pattern_key": {
+          "type": "string",
+          "description": "Pattern identifier in format category.metric (e.g., conversion.rate)",
+          "pattern": "^[a-z_]+\\.[a-z_]+$",
+          "required": true
+        },
+        "source_gate": {
+          "type": "string",
+          "description": "Gate identifier (G0-G21)",
+          "enum": ["G0", "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "G17", "G18", "G19", "G20", "G21"],
+          "required": true
+        },
+        "value": {
+          "type": ["number", "object"],
+          "description": "Value to aggregate (numeric for stats, object for categories)",
+          "required": true
+        }
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "pattern_key": { "type": "string" },
+              "source_gate": { "type": "string" },
+              "sample_count": { "type": "integer" },
+              "confidence_score": { "type": "number" }
+            }
+          }
+        }
+      },
+      "privacy": {
+        "tenantIsolation": true,
+        "piiScrubbing": true,
+        "aggregatesOnly": true
+      }
+    }
+  ],
+  "privacy": {
+    "description": "All MCP tools enforce tenant isolation and PII scrubbing",
+    "policies": [
+      "No tenant-identifiable data in cross-tenant patterns",
+      "PII automatically scrubbed from all inputs",
+      "K-anonymity enforced (minimum 5 samples)",
+      "Row-Level Security (RLS) active on tenant data"
+    ]
+  },
+  "authentication": {
+    "type": "supabase-rls",
+    "description": "Authentication handled via Supabase Row-Level Security"
+  }
+}
