@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
 
   // Add rate limit headers
   const headers = new Headers({
+    'X-Qontrek-MCP-Version': '1.0.0',
     'X-RateLimit-Limit': RATE_LIMIT.maxRequests.toString(),
     'X-RateLimit-Remaining': rateLimit.remaining.toString(),
     'X-RateLimit-Reset': new Date(rateLimit.resetAt).toISOString(),

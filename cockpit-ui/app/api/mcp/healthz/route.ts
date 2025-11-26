@@ -116,7 +116,11 @@ export async function GET() {
       },
     };
 
-    return NextResponse.json(health);
+    return NextResponse.json(health, {
+      headers: {
+        "X-Qontrek-MCP-Version": "1.0.0",
+      },
+    });
 
   } catch (error) {
     console.error('Healthz error:', error);
@@ -126,7 +130,12 @@ export async function GET() {
         error: (error as Error).message,
         timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "X-Qontrek-MCP-Version": "1.0.0",
+        },
+      }
     );
   }
 }

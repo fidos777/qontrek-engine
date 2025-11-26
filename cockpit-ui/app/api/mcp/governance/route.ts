@@ -149,13 +149,22 @@ export async function GET() {
       },
     };
 
-    return NextResponse.json(governance);
+    return NextResponse.json(governance, {
+      headers: {
+        "X-Qontrek-MCP-Version": "1.0.0",
+      },
+    });
 
   } catch (error) {
     console.error('Governance API error:', error);
     return NextResponse.json(
       { error: (error as Error).message },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "X-Qontrek-MCP-Version": "1.0.0",
+        },
+      }
     );
   }
 }
