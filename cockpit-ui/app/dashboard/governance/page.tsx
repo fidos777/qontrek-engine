@@ -220,6 +220,10 @@ export default function GovernanceDashboard() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <GovernanceHeaderStrip
+        title="Governance Observatory"
+        status={governance?.summary.failed === 0 ? "active" : "pending"}
+      />
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -229,9 +233,7 @@ export default function GovernanceDashboard() {
             <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-sm">DEMO</span>
           </p>
         </div>
-        <div className="text-right text-sm text-gray-500">
-          Last updated: {governance ? new Date(governance.generatedAt).toLocaleString() : '-'}
-        </div>
+        <ProofFreshnessIndicator lastUpdated={governance?.generatedAt} />
       </div>
 
       {/* Panic Mode Alert */}
@@ -268,6 +270,10 @@ export default function GovernanceDashboard() {
           <div className="text-3xl font-bold text-yellow-600 mt-1">{governance?.summary.partial}</div>
         </Card>
       </div>
+
+      <ConfidenceMeterAnimated
+        trust={Math.round((governance?.summary.passed ?? 0) / (governance?.summary.totalGates ?? 1) * 100)}
+      />
 
       {/* SLO Health */}
       <Card className="p-6">

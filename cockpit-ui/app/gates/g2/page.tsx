@@ -89,12 +89,16 @@ export default function Gate2Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
+      <GovernanceHeaderStrip title="G2 Payment Recovery" status="active" />
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
         <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
           DEMO MODE
         </span>
+        <ProofFreshnessIndicator lastUpdated={DEMO_DATA.data.recent_success[0]?.paid_at} />
       </div>
+
+      <ConfidenceMeterAnimated trust={Math.round((kpi["recovery_rate_30d"] as number) * 100)} />
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

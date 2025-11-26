@@ -90,12 +90,16 @@ export default function CFODashboard() {
 
   return (
     <div className="p-6 space-y-6">
+      <GovernanceHeaderStrip title="CFO Lens" status="active" />
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-semibold">CFO Lens</h1>
         <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
           DEMO MODE
         </span>
+        <ProofFreshnessIndicator lastUpdated={DEMO_DATA.data.tabs[0]?.metrics ? new Date().toISOString() : null} />
       </div>
+
+      <ConfidenceMeterAnimated trust={Math.round(data.summary.collection_rate * 100)} />
 
       {/* Summary KPIs */}
       {data.summary && (

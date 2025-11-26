@@ -111,12 +111,16 @@ export default function Gate0Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
+      <GovernanceHeaderStrip title="G0 Lead Qualification" status="active" />
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-semibold">Gate 0 — Lead Qualification</h1>
         <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
           DEMO MODE
         </span>
+        <ProofFreshnessIndicator lastUpdated={DEMO_DATA.data.activity[0]?.last_contact} />
       </div>
+
+      <ConfidenceMeterAnimated trust={Math.round(summary.qualified_rate * 100)} />
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
