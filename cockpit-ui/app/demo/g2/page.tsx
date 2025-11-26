@@ -1,74 +1,117 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { logProofLoad } from "@/lib/telemetry";
-import type { G2Response } from "@/types/gates";
 import ConfidenceMeterAnimated from "@/components/voltek/ConfidenceMeterAnimated";
 import GovernanceHeaderStrip from "@/components/voltek/GovernanceHeaderStrip";
 import ProofFreshnessIndicator from "@/components/voltek/ProofFreshnessIndicator";
 
-async function fetchGate(url: string): Promise<G2Response> {
-  try {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error("not ok");
-    return await res.json();
-  } catch {
-    // DEV-ONLY fallback to fixture
-    if (process.env.NODE_ENV !== "production") {
-      const mod = await import("@/tests/fixtures/g2.summary.json");
-      return mod.default as G2Response;
-    }
-    throw new Error("G2 summary endpoint unavailable");
-  }
-}
+// Static demo data - no API call needed for demo
+const DEMO_DATA = {
+  ok: true,
+  rel: "g2_dashboard_v19.1.json",
+  source: "demo",
+  schemaVersion: "1.0.0",
+  data: {
+    summary: {
+      total_recoverable: 152500,
+      kpi: {
+        recovery_rate_7d: 0.68,
+        recovery_rate_30d: 0.82,
+        average_days_to_payment: 8,
+        pending_cases: 14,
+        handover_queue: 5,
+      },
+    },
+    critical_leads: [
+      {
+        name: "Alpha Engineering",
+        stage: "OVERDUE",
+        amount: 18500,
+        overdue_days: 19,
+        last_reminder_at: "2025-10-14T03:20:00.000Z",
+      },
+      {
+        name: "Seri Mutiara Builders",
+        stage: "OVERDUE",
+        amount: 22800,
+        overdue_days: 22,
+        last_reminder_at: "2025-10-12T09:15:00.000Z",
+      },
+      {
+        name: "Metro Solar Sdn Bhd",
+        stage: "OVERDUE",
+        amount: 9900,
+        overdue_days: 17,
+        last_reminder_at: "2025-10-15T01:40:00.000Z",
+      },
+    ],
+    active_reminders: [
+      {
+        recipient: "alpha.finance@alphaeng.my",
+        channel: "email",
+        scheduled_at: "2025-10-21T02:00:00.000Z",
+        status: "queued",
+      },
+      {
+        recipient: "+60-12-345-6678",
+        channel: "whatsapp",
+        scheduled_at: "2025-10-21T06:30:00.000Z",
+        status: "queued",
+      },
+    ],
+    recent_success: [
+      {
+        name: "Bina Maju Trading",
+        stage: "PAID",
+        amount: 12500,
+        paid_at: "2025-10-19T08:10:00.000Z",
+        days_to_pay: 9,
+      },
+      {
+        name: "Kemuncak Glass",
+        stage: "PAID",
+        amount: 7800,
+        paid_at: "2025-10-18T04:55:00.000Z",
+        days_to_pay: 12,
+      },
+    ],
+  },
+};
 
 export default function DemoGate2Dashboard() {
-  const [payload, setPayload] = useState<G2Response | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const telemetrySent = useRef(false);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const resp = await fetchGate("/api/gates/g2/summary");
-        setPayload(resp);
-        setLastUpdated(new Date());
-        if (!telemetrySent.current && resp?.rel && resp?.source) {
-          logProofLoad(resp.rel, resp.source);
-          telemetrySent.current = true;
-        }
-      } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : "Unknown error";
-        setError(message);
-      }
-    })();
+    // Simulate loading for demo effect
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      setLastUpdated(new Date());
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
-  if (error) {
+  if (isLoading) {
     return (
-      <div className="p-6">
-        <p className="text-red-600" aria-live="polite">Error: {error}</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading demo data...</p>
+        </div>
       </div>
     );
   }
 
-  if (!payload) {
-    return <div className="p-6">Loading...</div>;
-  }
-
-  const { data } = payload;
-  const kpi = (data.summary.kpi ?? {}) as Record<string, number | string>;
+  const { data } = DEMO_DATA;
+  const kpi = data.summary.kpi;
   const fmMYR = new Intl.NumberFormat("en-MY", { style: "currency", currency: "MYR" });
   const fmDT = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" });
 
-  const pct = (v: unknown) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "-");
+  const pct = (v: number) => `${Math.round(v * 100)}%`;
 
   // Calculate trust score from recovery rate
-  const trustScore = typeof kpi["recovery_rate_7d"] === "number"
-    ? Math.round(kpi["recovery_rate_7d"] * 100)
-    : 75;
+  const trustScore = Math.round(kpi.recovery_rate_7d * 100);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -77,7 +120,12 @@ export default function DemoGate2Dashboard() {
       <div className="p-6 space-y-6">
         {/* Status Bar */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Voltek Demo Dashboard</h1>
+          <div>
+            <h1 className="text-2xl font-semibold">Voltek Demo Dashboard</h1>
+            <span className="inline-block mt-1 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
+              DEMO MODE
+            </span>
+          </div>
           <div className="flex items-center gap-4">
             <ProofFreshnessIndicator lastUpdated={lastUpdated} freshnessThresholdMinutes={5} />
           </div>
@@ -94,22 +142,22 @@ export default function DemoGate2Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="p-4">
             <div className="text-sm text-gray-500">Total Recoverable</div>
-            <div className="text-2xl font-bold">{fmMYR.format(Number(data.summary.total_recoverable || 0))}</div>
+            <div className="text-2xl font-bold">{fmMYR.format(data.summary.total_recoverable)}</div>
           </Card>
           <Card className="p-4">
             <div className="text-sm text-gray-500">7-Day Recovery Rate</div>
-            <div className="text-2xl font-bold">{pct(kpi["recovery_rate_7d"])}</div>
-            <div className="text-xs text-gray-500 mt-2">Avg days to pay: {kpi["average_days_to_payment"] ?? "-"}</div>
+            <div className="text-2xl font-bold">{pct(kpi.recovery_rate_7d)}</div>
+            <div className="text-xs text-gray-500 mt-2">Avg days to pay: {kpi.average_days_to_payment}</div>
           </Card>
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm text-gray-500">Pending Cases</div>
-                <div className="text-xl font-semibold">{kpi["pending_cases"] ?? 0}</div>
+                <div className="text-xl font-semibold">{kpi.pending_cases}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-500">Handover Queue</div>
-                <div className="text-xl font-semibold">{kpi["handover_queue"] ?? 0}</div>
+                <div className="text-xl font-semibold">{kpi.handover_queue}</div>
               </div>
             </div>
           </Card>
@@ -135,13 +183,13 @@ export default function DemoGate2Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.critical_leads.map((r: Record<string, unknown>, idx: number) => (
+                    {data.critical_leads.map((r, idx) => (
                       <tr key={idx} className="border-t">
-                        <td className="py-2 pr-4">{String(r.name ?? "-")}</td>
-                        <td className="py-2 pr-4">{String(r.stage ?? "-")}</td>
-                        <td className="py-2 pr-4">{typeof r.amount === "number" ? fmMYR.format(r.amount) : "-"}</td>
-                        <td className="py-2 pr-4">{typeof r.overdue_days === "number" ? `${r.overdue_days}d` : "-"}</td>
-                        <td className="py-2">{r.last_reminder_at ? fmDT.format(new Date(String(r.last_reminder_at))) : "-"}</td>
+                        <td className="py-2 pr-4">{r.name}</td>
+                        <td className="py-2 pr-4">{r.stage}</td>
+                        <td className="py-2 pr-4">{fmMYR.format(r.amount)}</td>
+                        <td className="py-2 pr-4">{r.overdue_days}d</td>
+                        <td className="py-2">{fmDT.format(new Date(r.last_reminder_at))}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -158,15 +206,15 @@ export default function DemoGate2Dashboard() {
                 <p className="text-sm text-gray-500">No active reminders scheduled.</p>
               ) : (
                 <ul aria-label="Active reminders" className="space-y-2">
-                  {data.active_reminders.map((r: Record<string, unknown>, i: number) => (
+                  {data.active_reminders.map((r, i) => (
                     <li key={i} className="flex items-center justify-between border rounded px-3 py-2">
                       <div>
-                        <div className="font-medium">{String(r.recipient ?? "-")}</div>
+                        <div className="font-medium">{r.recipient}</div>
                         <div className="text-xs text-gray-500">
-                          {String(r.channel ?? "-")} · {r.scheduled_at ? fmDT.format(new Date(String(r.scheduled_at))) : "-"}
+                          {r.channel} · {fmDT.format(new Date(r.scheduled_at))}
                         </div>
                       </div>
-                      <span className="text-xs px-2 py-1 rounded bg-gray-100">{String(r.status ?? "-")}</span>
+                      <span className="text-xs px-2 py-1 rounded bg-gray-100">{r.status}</span>
                     </li>
                   ))}
                 </ul>
@@ -179,21 +227,26 @@ export default function DemoGate2Dashboard() {
                 <p className="text-sm text-gray-500">No recent payments.</p>
               ) : (
                 <ul aria-label="Recent payments" className="space-y-2">
-                  {data.recent_success.map((r: Record<string, unknown>, i: number) => (
+                  {data.recent_success.map((r, i) => (
                     <li key={i} className="flex items-center justify-between border rounded px-3 py-2">
                       <div>
-                        <div className="font-medium">{String(r.name ?? "-")}</div>
+                        <div className="font-medium">{r.name}</div>
                         <div className="text-xs text-gray-500">
-                          Paid {r.paid_at ? fmDT.format(new Date(String(r.paid_at))) : "-"} · {typeof r.days_to_pay === "number" ? `${r.days_to_pay} days` : "-"}
+                          Paid {fmDT.format(new Date(r.paid_at))} · {r.days_to_pay} days
                         </div>
                       </div>
-                      <div className="text-sm font-semibold">{typeof r.amount === "number" ? fmMYR.format(r.amount) : "-"}</div>
+                      <div className="text-sm font-semibold">{fmMYR.format(r.amount)}</div>
                     </li>
                   ))}
                 </ul>
               )}
             </Card>
           </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center text-sm text-gray-500 py-4">
+          Powered by Qontrek Engine · Trust Index {trustScore}% · Tower Federation Certified
         </div>
       </div>
     </div>
