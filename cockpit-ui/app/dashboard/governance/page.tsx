@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
+import {
+  ConfidenceMeterAnimated,
+  GovernanceHeaderStrip,
+  ProofFreshnessIndicator,
+} from "@/components/voltek";
 
 interface GovernanceData {
   version: string;

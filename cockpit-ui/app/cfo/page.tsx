@@ -2,6 +2,11 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import {
+  ConfidenceMeterAnimated,
+  GovernanceHeaderStrip,
+  ProofFreshnessIndicator,
+} from "@/components/voltek";
 import type { CFOResponse } from "@/types/gates";
 
 // Static demo data for production builds
