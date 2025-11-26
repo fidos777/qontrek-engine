@@ -1,50 +1,99 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { logProofLoad } from "@/lib/telemetry";
 import type { G0Response } from "@/types/gates";
 
-async function fetchGate(url: string): Promise<G0Response> {
-  try {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error("not ok");
-    return await res.json();
-  } catch {
-    // DEV-ONLY fallback to fixture
-    // NOTE: This branch is dead code in production builds.
-    // Next.js will tree-shake this entire block when NODE_ENV=production
-    if (process.env.NODE_ENV !== "production") {
-      const mod = await import("@/tests/fixtures/g0.summary.json");
-      return mod.default as unknown as G0Response;
-    }
-    throw new Error("G0 summary endpoint unavailable");
-  }
-}
+// Static demo data for production builds
+const DEMO_DATA: G0Response = {
+  ok: true,
+  rel: "g0_dashboard_demo.json",
+  source: "fallback",
+  schemaVersion: "1.0.0",
+  data: {
+    summary: {
+      total_leads: 150,
+      hot_leads: 32,
+      warm_leads: 68,
+      cold_leads: 50,
+      conversion_rate: 0.21,
+      avg_response_time: 4.3,
+      leads_today: 12,
+      qualified_rate: 0.67,
+    },
+    activity: [
+      {
+        id: "L001",
+        company: "TechCorp Sdn Bhd",
+        contact: "Ahmad bin Hassan",
+        status: "hot",
+        score: 92,
+        source: "Website Form",
+        created_at: "2025-10-21T03:15:00.000Z",
+        last_contact: "2025-10-21T08:30:00.000Z",
+        response_time: 2.5,
+      },
+      {
+        id: "L002",
+        company: "Green Energy Solutions",
+        contact: "Siti Nurhaliza",
+        status: "hot",
+        score: 88,
+        source: "LinkedIn",
+        created_at: "2025-10-20T14:20:00.000Z",
+        last_contact: "2025-10-21T09:10:00.000Z",
+        response_time: 3.2,
+      },
+      {
+        id: "L003",
+        company: "Metro Builders",
+        contact: "David Tan",
+        status: "warm",
+        score: 72,
+        source: "Referral",
+        created_at: "2025-10-20T10:45:00.000Z",
+        last_contact: "2025-10-21T07:20:00.000Z",
+        response_time: 4.8,
+      },
+      {
+        id: "L004",
+        company: "Alpha Logistics",
+        contact: "Lee Mei Ling",
+        status: "warm",
+        score: 68,
+        source: "Google Ads",
+        created_at: "2025-10-19T16:30:00.000Z",
+        last_contact: "2025-10-20T11:15:00.000Z",
+        response_time: 5.1,
+      },
+      {
+        id: "L005",
+        company: "Sunrise Trading",
+        contact: "Kumar Rajesh",
+        status: "cold",
+        score: 45,
+        source: "Cold Outreach",
+        created_at: "2025-10-18T09:00:00.000Z",
+        last_contact: "2025-10-19T13:30:00.000Z",
+        response_time: 7.2,
+      },
+      {
+        id: "L006",
+        company: "Bright Future Consultancy",
+        contact: "Nurul Huda",
+        status: "hot",
+        score: 85,
+        source: "Website Form",
+        created_at: "2025-10-21T06:00:00.000Z",
+        last_contact: "2025-10-21T08:45:00.000Z",
+        response_time: 2.8,
+      },
+    ],
+  },
+};
 
 export default function Gate0Dashboard() {
-  const [payload, setPayload] = useState<G0Response | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const telemetrySent = useRef(false);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const resp = await fetchGate("/api/gates/g0/summary");
-        setPayload(resp);
-        // Prevent double telemetry in Next.js StrictMode (dev only)
-        if (!telemetrySent.current && resp?.rel && resp?.source) {
-          logProofLoad(resp.rel, resp.source);
-          telemetrySent.current = true;
-        }
-      } catch (e: any) {
-        setError(e?.message ?? "Unknown error");
-      }
-    })();
-  }, []);
-
-  if (error) return <div className="p-6"><p className="text-red-600" aria-live="polite">Error: {error}</p></div>;
-  if (!payload) return <div className="p-6">Loading...</div>;
+  const [payload] = useState<G0Response>(DEMO_DATA);
 
   const { data } = payload;
   const summary = data.summary;
@@ -62,7 +111,12 @@ export default function Gate0Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Gate 0 — Lead Qualification</h1>
+      <div className="flex items-center gap-3">
+        <h1 className="text-2xl font-semibold">Gate 0 — Lead Qualification</h1>
+        <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
+          DEMO MODE
+        </span>
+      </div>
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

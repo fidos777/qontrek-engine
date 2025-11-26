@@ -1,51 +1,85 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { logProofLoad } from "@/lib/telemetry";
 import type { CFOResponse } from "@/types/gates";
 
-async function fetchCFO(url: string): Promise<CFOResponse> {
-  try {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error("not ok");
-    return await res.json();
-  } catch {
-    // DEV-ONLY fallback to fixture
-    // NOTE: This branch is dead code in production builds.
-    // Next.js will tree-shake this entire block when NODE_ENV=production
-    if (process.env.NODE_ENV !== "production") {
-      const mod = await import("@/tests/fixtures/cfo.summary.json");
-      return mod.default as unknown as CFOResponse;
-    }
-    throw new Error("CFO summary endpoint unavailable");
-  }
-}
+// Static demo data for production builds
+const DEMO_DATA: CFOResponse = {
+  ok: true,
+  rel: "cfo_fulltabs_demo.json",
+  source: "fallback",
+  schemaVersion: "1.0.0",
+  data: {
+    summary: {
+      total_revenue: 2850000,
+      total_outstanding: 485000,
+      collection_rate: 0.87,
+      avg_margin: 0.42,
+    },
+    tabs: [
+      {
+        id: "cashflow",
+        title: "Cashflow",
+        metrics: {
+          cash_in_30d: 425000,
+          cash_out_30d: 198000,
+          net_cashflow: 227000,
+          runway_months: 18,
+          burn_rate: 12500,
+        },
+      },
+      {
+        id: "recovery",
+        title: "Recovery",
+        metrics: {
+          total_recoverable: 152500,
+          recovered_mtd: 89000,
+          recovery_rate: 0.58,
+          avg_days_to_pay: 11,
+          active_cases: 14,
+        },
+      },
+      {
+        id: "margin",
+        title: "Margin",
+        metrics: {
+          gross_margin: 0.42,
+          net_margin: 0.28,
+          avg_deal_margin: 0.35,
+          margin_trend: 0.03,
+          top_margin_segment: "Enterprise",
+        },
+      },
+      {
+        id: "forecast",
+        title: "Forecast",
+        metrics: {
+          q_forecast: 875000,
+          q_actual: 425000,
+          forecast_accuracy: 0.89,
+          revenue_at_risk: 45000,
+          pipeline_value: 1250000,
+        },
+      },
+      {
+        id: "variance",
+        title: "Variance",
+        metrics: {
+          revenue_variance: 0.05,
+          cost_variance: -0.08,
+          margin_variance: 0.12,
+          headcount_variance: 2,
+          budget_utilization: 0.78,
+        },
+      },
+    ],
+  },
+};
 
 export default function CFODashboard() {
-  const [payload, setPayload] = useState<CFOResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [payload] = useState<CFOResponse>(DEMO_DATA);
   const [activeTab, setActiveTab] = useState(0);
-  const telemetrySent = useRef(false);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const resp = await fetchCFO("/api/cfo/summary");
-        setPayload(resp);
-        // Prevent double telemetry in Next.js StrictMode (dev only)
-        if (!telemetrySent.current && resp?.rel && resp?.source) {
-          logProofLoad(resp.rel, resp.source);
-          telemetrySent.current = true;
-        }
-      } catch (e: any) {
-        setError(e?.message ?? "Unknown error");
-      }
-    })();
-  }, []);
-
-  if (error) return <div className="p-6"><p className="text-red-600" aria-live="polite">Error: {error}</p></div>;
-  if (!payload) return <div className="p-6">Loading...</div>;
 
   const { data } = payload;
   const fmMYR = new Intl.NumberFormat("en-MY", { style: "currency", currency: "MYR" });
@@ -56,7 +90,12 @@ export default function CFODashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">CFO Lens</h1>
+      <div className="flex items-center gap-3">
+        <h1 className="text-2xl font-semibold">CFO Lens</h1>
+        <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
+          DEMO MODE
+        </span>
+      </div>
 
       {/* Summary KPIs */}
       {data.summary && (
