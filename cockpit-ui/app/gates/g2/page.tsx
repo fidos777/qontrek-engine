@@ -1,50 +1,84 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { logProofLoad } from "@/lib/telemetry";
 import type { G2Response } from "@/types/gates";
 
-async function fetchGate(url: string): Promise<G2Response> {
-  try {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error("not ok");
-    return await res.json();
-  } catch {
-    // DEV-ONLY fallback to fixture
-    // NOTE: This branch is dead code in production builds.
-    // Next.js will tree-shake this entire block when NODE_ENV=production
-    if (process.env.NODE_ENV !== "production") {
-      const mod = await import("@/tests/fixtures/g2.summary.json");
-      return mod.default as G2Response;
-    }
-    throw new Error("G2 summary endpoint unavailable");
-  }
-}
+// Static demo data for production builds
+const DEMO_DATA: G2Response = {
+  ok: true,
+  rel: "g2_dashboard_demo.json",
+  source: "fallback",
+  schemaVersion: "1.0.0",
+  data: {
+    summary: {
+      total_recoverable: 152500,
+      kpi: {
+        recovery_rate_7d: 0.32,
+        recovery_rate_30d: 0.58,
+        average_days_to_payment: 11,
+        pending_cases: 14,
+        handover_queue: 5,
+      },
+    },
+    critical_leads: [
+      {
+        name: "Alpha Engineering",
+        stage: "OVERDUE",
+        amount: 18500,
+        overdue_days: 19,
+        last_reminder_at: "2025-10-14T03:20:00.000Z",
+      },
+      {
+        name: "Seri Mutiara Builders",
+        stage: "OVERDUE",
+        amount: 22800,
+        overdue_days: 22,
+        last_reminder_at: "2025-10-12T09:15:00.000Z",
+      },
+      {
+        name: "Metro Solar Sdn Bhd",
+        stage: "OVERDUE",
+        amount: 9900,
+        overdue_days: 17,
+        last_reminder_at: "2025-10-15T01:40:00.000Z",
+      },
+    ],
+    active_reminders: [
+      {
+        recipient: "alpha.finance@alphaeng.my",
+        channel: "email",
+        scheduled_at: "2025-10-21T02:00:00.000Z",
+        status: "queued",
+      },
+      {
+        recipient: "+60-12-345-6678",
+        channel: "whatsapp",
+        scheduled_at: "2025-10-21T06:30:00.000Z",
+        status: "queued",
+      },
+    ],
+    recent_success: [
+      {
+        name: "Bina Maju Trading",
+        stage: "PAID",
+        amount: 12500,
+        paid_at: "2025-10-19T08:10:00.000Z",
+        days_to_pay: 9,
+      },
+      {
+        name: "Kemuncak Glass",
+        stage: "PAID",
+        amount: 7800,
+        paid_at: "2025-10-18T04:55:00.000Z",
+        days_to_pay: 12,
+      },
+    ],
+  },
+};
 
 export default function Gate2Dashboard() {
-  const [payload, setPayload] = useState<G2Response | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const telemetrySent = useRef(false);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const resp = await fetchGate("/api/gates/g2/summary");
-        setPayload(resp);
-        // Prevent double telemetry in Next.js StrictMode (dev only)
-        if (!telemetrySent.current && resp?.rel && resp?.source) {
-          logProofLoad(resp.rel, resp.source);
-          telemetrySent.current = true;
-        }
-      } catch (e: any) {
-        setError(e?.message ?? "Unknown error");
-      }
-    })();
-  }, []);
-
-  if (error) return <div className="p-6"><p className="text-red-600" aria-live="polite">Error: {error}</p></div>;
-  if (!payload) return <div className="p-6">Loading...</div>;
+  const [payload] = useState<G2Response>(DEMO_DATA);
 
   const { data } = payload;
   const kpi = (data.summary.kpi ?? {}) as Record<string, number | string>;
@@ -55,7 +89,12 @@ export default function Gate2Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
+      <div className="flex items-center gap-3">
+        <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
+        <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
+          DEMO MODE
+        </span>
+      </div>
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
