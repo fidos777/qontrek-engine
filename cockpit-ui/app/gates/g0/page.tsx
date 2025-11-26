@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import { MotionCard } from "@/components/ui/motion-card";
+import { AnimatedNumber } from "@/components/ui/animated-number";
+import { BounceBadge } from "@/components/ui/bounce-badge";
 import type { G0Response } from "@/types/gates";
 
 // Static demo data for production builds
@@ -110,43 +113,67 @@ export default function Gate0Dashboard() {
   const fmDT = new Intl.DateTimeFormat("en-GB", { dateStyle: "short", timeStyle: "short" });
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="p-6 space-y-6"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="flex items-center gap-3"
+      >
         <h1 className="text-2xl font-semibold">Gate 0 — Lead Qualification</h1>
         <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
           DEMO MODE
         </span>
-      </div>
+      </motion.div>
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
+        <MotionCard delay={0.2} className="p-4">
           <div className="text-sm text-gray-500">Total Leads</div>
-          <div className="text-2xl font-bold">{fmNum(summary.total_leads)}</div>
-        </Card>
-        <Card className="p-4">
+          <div className="text-2xl font-bold">
+            <AnimatedNumber value={Number(summary.total_leads) || 0} delay={0.3} />
+          </div>
+        </MotionCard>
+        <MotionCard delay={0.3} className="p-4">
           <div className="text-sm text-gray-500">Conversion Rate</div>
-          <div className="text-2xl font-bold">{fmPct(summary.conversion_rate)}</div>
-        </Card>
-        <Card className="p-4">
+          <div className="text-2xl font-bold">
+            <AnimatedNumber value={Math.round(Number(summary.conversion_rate || 0) * 100)} suffix="%" delay={0.4} />
+          </div>
+        </MotionCard>
+        <MotionCard delay={0.4} className="p-4">
           <div className="text-sm text-gray-500">Avg Response Time</div>
-          <div className="text-2xl font-bold">{fmTime(summary.avg_response_time)}</div>
-        </Card>
-        <Card className="p-4">
+          <div className="text-2xl font-bold">
+            <AnimatedNumber value={Number(summary.avg_response_time) || 0} decimals={1} suffix="h" delay={0.5} />
+          </div>
+        </MotionCard>
+        <MotionCard delay={0.5} className="p-4">
           <div className="text-sm text-gray-500">Qualified Rate</div>
-          <div className="text-2xl font-bold">{fmPct(summary.qualified_rate)}</div>
-        </Card>
+          <div className="text-2xl font-bold">
+            <AnimatedNumber value={Math.round(Number(summary.qualified_rate || 0) * 100)} suffix="%" delay={0.6} />
+          </div>
+        </MotionCard>
       </div>
 
       {/* Lead Panels */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" aria-label="Lead qualification panels">
         {/* Hot Leads Panel */}
-        <Card className="p-4">
+        <MotionCard delay={0.6} className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Hot Leads</h2>
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-3 w-3 rounded-full bg-red-500"></span>
-              <span className="text-sm font-medium">{fmNum(summary.hot_leads)}</span>
+              <motion.span
+                className="inline-flex h-3 w-3 rounded-full bg-red-500"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+              <span className="text-sm font-medium">
+                <AnimatedNumber value={Number(summary.hot_leads) || 0} delay={0.7} />
+              </span>
             </div>
           </div>
 
@@ -155,28 +182,39 @@ export default function Gate0Dashboard() {
           ) : (
             <ul aria-label="Hot leads list" className="space-y-3">
               {hotLeads.map((lead: any, idx: number) => (
-                <li key={idx} className="border-l-4 border-red-500 pl-3 py-2">
+                <motion.li
+                  key={idx}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.7 + idx * 0.1 }}
+                  className="border-l-4 border-red-500 pl-3 py-2"
+                >
                   <div className="font-medium text-sm">{lead.company}</div>
                   <div className="text-xs text-gray-500">{lead.contact}</div>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded">
+                    <BounceBadge
+                      active={lead.score >= 90}
+                      className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded"
+                    >
                       Score: {lead.score}
-                    </span>
+                    </BounceBadge>
                     <span className="text-xs text-gray-500">{lead.source}</span>
                   </div>
-                </li>
+                </motion.li>
               ))}
             </ul>
           )}
-        </Card>
+        </MotionCard>
 
         {/* Warm Leads Panel */}
-        <Card className="p-4">
+        <MotionCard delay={0.7} className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Warm Leads</h2>
             <div className="flex items-center gap-2">
               <span className="inline-flex h-3 w-3 rounded-full bg-yellow-500"></span>
-              <span className="text-sm font-medium">{fmNum(summary.warm_leads)}</span>
+              <span className="text-sm font-medium">
+                <AnimatedNumber value={Number(summary.warm_leads) || 0} delay={0.8} />
+              </span>
             </div>
           </div>
 
@@ -185,7 +223,13 @@ export default function Gate0Dashboard() {
           ) : (
             <ul aria-label="Warm leads list" className="space-y-3">
               {warmLeads.map((lead: any, idx: number) => (
-                <li key={idx} className="border-l-4 border-yellow-500 pl-3 py-2">
+                <motion.li
+                  key={idx}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.8 + idx * 0.1 }}
+                  className="border-l-4 border-yellow-500 pl-3 py-2"
+                >
                   <div className="font-medium text-sm">{lead.company}</div>
                   <div className="text-xs text-gray-500">{lead.contact}</div>
                   <div className="flex items-center gap-2 mt-1">
@@ -194,19 +238,21 @@ export default function Gate0Dashboard() {
                     </span>
                     <span className="text-xs text-gray-500">{lead.source}</span>
                   </div>
-                </li>
+                </motion.li>
               ))}
             </ul>
           )}
-        </Card>
+        </MotionCard>
 
         {/* Cold Leads Panel */}
-        <Card className="p-4">
+        <MotionCard delay={0.8} className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Cold Leads</h2>
             <div className="flex items-center gap-2">
               <span className="inline-flex h-3 w-3 rounded-full bg-blue-500"></span>
-              <span className="text-sm font-medium">{fmNum(summary.cold_leads)}</span>
+              <span className="text-sm font-medium">
+                <AnimatedNumber value={Number(summary.cold_leads) || 0} delay={0.9} />
+              </span>
             </div>
           </div>
 
@@ -215,7 +261,13 @@ export default function Gate0Dashboard() {
           ) : (
             <ul aria-label="Cold leads list" className="space-y-3">
               {coldLeads.map((lead: any, idx: number) => (
-                <li key={idx} className="border-l-4 border-blue-500 pl-3 py-2">
+                <motion.li
+                  key={idx}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.9 + idx * 0.1 }}
+                  className="border-l-4 border-blue-500 pl-3 py-2"
+                >
                   <div className="font-medium text-sm">{lead.company}</div>
                   <div className="text-xs text-gray-500">{lead.contact}</div>
                   <div className="flex items-center gap-2 mt-1">
@@ -224,15 +276,15 @@ export default function Gate0Dashboard() {
                     </span>
                     <span className="text-xs text-gray-500">{lead.source}</span>
                   </div>
-                </li>
+                </motion.li>
               ))}
             </ul>
           )}
-        </Card>
+        </MotionCard>
       </div>
 
       {/* Recent Activity Table */}
-      <Card className="p-4">
+      <MotionCard delay={0.9} className="p-4">
         <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
         {data.activity.length === 0 ? (
           <p className="text-sm text-gray-500">No recent activity.</p>
@@ -252,7 +304,13 @@ export default function Gate0Dashboard() {
               </thead>
               <tbody>
                 {data.activity.map((activity: any, idx: number) => (
-                  <tr key={idx} className="border-t">
+                  <motion.tr
+                    key={idx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 1 + idx * 0.05 }}
+                    className="border-t"
+                  >
                     <td className="py-2 pr-4">{activity.company ?? "-"}</td>
                     <td className="py-2 pr-4">{activity.contact ?? "-"}</td>
                     <td className="py-2 pr-4">
@@ -274,13 +332,13 @@ export default function Gate0Dashboard() {
                     <td className="py-2">
                       {activity.last_contact ? fmDT.format(new Date(activity.last_contact)) : "-"}
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-      </Card>
-    </div>
+      </MotionCard>
+    </motion.div>
   );
 }

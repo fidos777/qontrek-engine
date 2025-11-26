@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MotionCard } from "@/components/ui/motion-card";
+import { AnimatedNumber } from "@/components/ui/animated-number";
 import { Card } from "@/components/ui/card";
 import type { CFOResponse } from "@/types/gates";
 
@@ -89,45 +92,88 @@ export default function CFODashboard() {
   const currentTab = data.tabs[activeTab];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="p-6 space-y-6"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="flex items-center gap-3"
+      >
         <h1 className="text-2xl font-semibold">CFO Lens</h1>
         <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
           DEMO MODE
         </span>
-      </div>
+      </motion.div>
 
       {/* Summary KPIs */}
       {data.summary && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="p-4">
+          <MotionCard delay={0.2} className="p-4">
             <div className="text-sm text-gray-500">Total Revenue</div>
-            <div className="text-2xl font-bold">{fmMYR.format(Number(data.summary.total_revenue || 0))}</div>
-          </Card>
-          <Card className="p-4">
+            <div className="text-2xl font-bold">
+              <AnimatedNumber
+                value={Number(data.summary.total_revenue || 0)}
+                prefix="RM "
+                duration={1.5}
+                delay={0.3}
+              />
+            </div>
+          </MotionCard>
+          <MotionCard delay={0.3} className="p-4">
             <div className="text-sm text-gray-500">Total Outstanding</div>
-            <div className="text-2xl font-bold">{fmMYR.format(Number(data.summary.total_outstanding || 0))}</div>
-          </Card>
-          <Card className="p-4">
+            <div className="text-2xl font-bold">
+              <AnimatedNumber
+                value={Number(data.summary.total_outstanding || 0)}
+                prefix="RM "
+                duration={1.5}
+                delay={0.4}
+              />
+            </div>
+          </MotionCard>
+          <MotionCard delay={0.4} className="p-4">
             <div className="text-sm text-gray-500">Collection Rate</div>
-            <div className="text-2xl font-bold">{fmPct(data.summary.collection_rate)}</div>
-          </Card>
-          <Card className="p-4">
+            <div className="text-2xl font-bold">
+              <AnimatedNumber
+                value={Math.round(Number(data.summary.collection_rate || 0) * 100)}
+                suffix="%"
+                delay={0.5}
+              />
+            </div>
+          </MotionCard>
+          <MotionCard delay={0.5} className="p-4">
             <div className="text-sm text-gray-500">Avg Margin</div>
-            <div className="text-2xl font-bold">{fmPct(data.summary.avg_margin)}</div>
-          </Card>
+            <div className="text-2xl font-bold">
+              <AnimatedNumber
+                value={Math.round(Number(data.summary.avg_margin || 0) * 100)}
+                suffix="%"
+                delay={0.6}
+              />
+            </div>
+          </MotionCard>
         </div>
       )}
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.5 }}
+        className="border-b border-gray-200"
+      >
         <nav className="-mb-px flex space-x-8" aria-label="CFO dashboard tabs">
           {data.tabs.map((tab, idx) => (
-            <button
+            <motion.button
               key={tab.id}
               onClick={() => setActiveTab(idx)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               className={`
-                whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+                whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
                 ${
                   idx === activeTab
                     ? "border-blue-500 text-blue-600"
@@ -137,46 +183,85 @@ export default function CFODashboard() {
               aria-current={idx === activeTab ? "page" : undefined}
             >
               {tab.title}
-            </button>
+            </motion.button>
           ))}
         </nav>
-      </div>
+      </motion.div>
 
       {/* Active Tab Content */}
-      {currentTab && (
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">{currentTab.title}</h2>
+      <AnimatePresence mode="wait">
+        {currentTab && (
+          <motion.div
+            key={currentTab.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4">{currentTab.title}</h2>
 
-          {Object.keys(currentTab.metrics).length === 0 ? (
-            <p className="text-sm text-gray-500">No metrics available for this tab.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Object.entries(currentTab.metrics).map(([key, value]) => (
-                <div key={key} className="border rounded p-4">
-                  <div className="text-sm text-gray-500 mb-1 capitalize">
-                    {key.replace(/_/g, " ")}
-                  </div>
-                  <div className="text-lg font-semibold">
-                    {typeof value === "number" ? (
-                      value > 0 && value < 1 ? fmPct(value) :
-                      key.includes("cash") || key.includes("revenue") || key.includes("value") || key.includes("burn") || key.includes("recoverable") || key.includes("recovered") || key.includes("forecast") || key.includes("risk") ? fmMYR.format(value) :
-                      fmNum(value)
-                    ) : (
-                      value
-                    )}
-                  </div>
+              {Object.keys(currentTab.metrics).length === 0 ? (
+                <p className="text-sm text-gray-500">No metrics available for this tab.</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Object.entries(currentTab.metrics).map(([key, value], idx) => (
+                    <motion.div
+                      key={key}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: idx * 0.05 }}
+                      className="border rounded p-4"
+                    >
+                      <div className="text-sm text-gray-500 mb-1 capitalize">
+                        {key.replace(/_/g, " ")}
+                      </div>
+                      <div className="text-lg font-semibold">
+                        {typeof value === "number" ? (
+                          value > 0 && value < 1 ? (
+                            <AnimatedNumber
+                              value={Math.round(value * 100)}
+                              suffix="%"
+                              duration={0.8}
+                              delay={0.1 + idx * 0.05}
+                            />
+                          ) : key.includes("cash") || key.includes("revenue") || key.includes("value") || key.includes("burn") || key.includes("recoverable") || key.includes("recovered") || key.includes("forecast") || key.includes("risk") ? (
+                            <AnimatedNumber
+                              value={value}
+                              prefix="RM "
+                              duration={1}
+                              delay={0.1 + idx * 0.05}
+                            />
+                          ) : (
+                            <AnimatedNumber
+                              value={value}
+                              duration={0.8}
+                              delay={0.1 + idx * 0.05}
+                            />
+                          )
+                        ) : (
+                          value
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
+              )}
 
-          {/* Placeholder for future chart */}
-          <div className="mt-6 p-8 border-2 border-dashed border-gray-300 rounded-lg text-center">
-            <p className="text-sm text-gray-500">Chart visualization placeholder</p>
-            <p className="text-xs text-gray-400 mt-1">Future: Mini chart for {currentTab.title} metrics</p>
-          </div>
-        </Card>
-      )}
-    </div>
+              {/* Placeholder for future chart */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                className="mt-6 p-8 border-2 border-dashed border-gray-300 rounded-lg text-center"
+              >
+                <p className="text-sm text-gray-500">Chart visualization placeholder</p>
+                <p className="text-xs text-gray-400 mt-1">Future: Mini chart for {currentTab.title} metrics</p>
+              </motion.div>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }

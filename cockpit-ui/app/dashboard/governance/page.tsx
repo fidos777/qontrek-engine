@@ -1,7 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
+import { MotionCard } from '@/components/ui/motion-card';
+import { AnimatedNumber } from '@/components/ui/animated-number';
+import { PulseIndicator } from '@/components/ui/pulse-indicator';
 
 interface GovernanceData {
   version: string;
@@ -212,16 +216,30 @@ export default function GovernanceDashboard() {
     const color = colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
 
     return (
-      <span className={`px-2 py-1 rounded text-sm font-medium ${color}`}>
+      <motion.span
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className={`px-2 py-1 rounded text-sm font-medium ${color}`}
+      >
         {status.toUpperCase()}
-      </span>
+      </motion.span>
     );
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="container mx-auto p-6 space-y-6"
+    >
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="flex justify-between items-center"
+      >
         <div>
           <h1 className="text-3xl font-bold">Governance Observatory</h1>
           <p className="text-gray-600 mt-1">
@@ -232,113 +250,174 @@ export default function GovernanceDashboard() {
         <div className="text-right text-sm text-gray-500">
           Last updated: {governance ? new Date(governance.generatedAt).toLocaleString() : '-'}
         </div>
-      </div>
+      </motion.div>
 
       {/* Panic Mode Alert */}
       {health?.panicMode.active && (
-        <Card className="bg-red-50 border-red-200 p-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">!</span>
-            <div>
-              <div className="font-bold text-red-900">Panic Mode Active</div>
-              <div className="text-red-700 text-sm">
-                {health.panicMode.triggers.join(', ')}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <PulseIndicator intensity="strong">
+            <Card className="bg-red-50 border-red-200 p-4">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">!</span>
+                <div>
+                  <div className="font-bold text-red-900">Panic Mode Active</div>
+                  <div className="text-red-700 text-sm">
+                    {health.panicMode.triggers.join(', ')}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </Card>
+            </Card>
+          </PulseIndicator>
+        </motion.div>
       )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
+        <MotionCard delay={0.2} className="p-4">
           <div className="text-sm text-gray-600">Total Gates</div>
-          <div className="text-3xl font-bold mt-1">{governance?.summary.totalGates}</div>
-        </Card>
-        <Card className="p-4">
+          <div className="text-3xl font-bold mt-1">
+            <AnimatedNumber value={governance?.summary.totalGates || 0} delay={0.3} />
+          </div>
+        </MotionCard>
+        <MotionCard delay={0.3} className="p-4">
           <div className="text-sm text-gray-600">Passed</div>
-          <div className="text-3xl font-bold text-green-600 mt-1">{governance?.summary.passed}</div>
-        </Card>
-        <Card className="p-4">
+          <div className="text-3xl font-bold text-green-600 mt-1">
+            <AnimatedNumber value={governance?.summary.passed || 0} delay={0.4} />
+          </div>
+        </MotionCard>
+        <MotionCard delay={0.4} className="p-4">
           <div className="text-sm text-gray-600">Pending</div>
-          <div className="text-3xl font-bold text-blue-600 mt-1">{governance?.summary.pending}</div>
-        </Card>
-        <Card className="p-4">
+          <div className="text-3xl font-bold text-blue-600 mt-1">
+            <AnimatedNumber value={governance?.summary.pending || 0} delay={0.5} />
+          </div>
+        </MotionCard>
+        <MotionCard delay={0.5} className="p-4">
           <div className="text-sm text-gray-600">Partial</div>
-          <div className="text-3xl font-bold text-yellow-600 mt-1">{governance?.summary.partial}</div>
-        </Card>
+          <div className="text-3xl font-bold text-yellow-600 mt-1">
+            <AnimatedNumber value={governance?.summary.partial || 0} delay={0.6} />
+          </div>
+        </MotionCard>
       </div>
 
       {/* SLO Health */}
-      <Card className="p-6">
+      <MotionCard delay={0.6} hover={false} className="p-6">
         <h2 className="text-xl font-bold mb-4">SLO Health</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.7 }}
+          >
             <div className="text-sm text-gray-600">ACK Latency (P95)</div>
             <div className={`text-2xl font-bold ${health?.slo.ackLatency.healthy ? 'text-green-600' : 'text-red-600'}`}>
-              {health?.slo.ackLatency.p95Ms}ms
+              <AnimatedNumber value={health?.slo.ackLatency.p95Ms || 0} suffix="ms" delay={0.8} />
             </div>
             <div className="text-xs text-gray-500">Target: {health?.slo.ackLatency.targetP95Ms}ms</div>
-          </div>
-          <div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.8 }}
+          >
             <div className="text-sm text-gray-600">Clock Skew (P95)</div>
             <div className={`text-2xl font-bold ${health?.slo.clockSkew.healthy ? 'text-green-600' : 'text-red-600'}`}>
-              {health?.slo.clockSkew.p95Ms}ms
+              <AnimatedNumber value={health?.slo.clockSkew.p95Ms || 0} suffix="ms" delay={0.9} />
             </div>
             <div className="text-xs text-gray-500">Target: {health?.slo.clockSkew.targetP95Ms}ms</div>
-          </div>
-          <div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.9 }}
+          >
             <div className="text-sm text-gray-600">Error Rate</div>
             <div className={`text-2xl font-bold ${health?.slo.errorRate.healthy ? 'text-green-600' : 'text-red-600'}`}>
-              {health?.slo.errorRate.current}%
+              <AnimatedNumber value={health?.slo.errorRate.current || 0} decimals={2} suffix="%" delay={1} />
             </div>
             <div className="text-xs text-gray-500">Target: &lt;{health?.slo.errorRate.targetPercent}%</div>
-          </div>
-          <div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 1 }}
+          >
             <div className="text-sm text-gray-600">Coverage</div>
-            <div className={`text-2xl font-bold ${health?.slo.coverage.healthy ? 'text-green-600' : 'text-red-600'}`}>
-              {health?.slo.coverage.current}%
-            </div>
+            <PulseIndicator intensity="subtle">
+              <div className={`text-2xl font-bold ${health?.slo.coverage.healthy ? 'text-green-600' : 'text-red-600'}`}>
+                <AnimatedNumber value={health?.slo.coverage.current || 0} decimals={1} suffix="%" delay={1.1} />
+              </div>
+            </PulseIndicator>
             <div className="text-xs text-gray-500">Target: &gt;{health?.slo.coverage.targetPercent}%</div>
-          </div>
+          </motion.div>
         </div>
-      </Card>
+      </MotionCard>
 
       {/* Key Rotation Status */}
-      <Card className="p-6">
+      <MotionCard delay={0.7} hover={false} className="p-6">
         <h2 className="text-xl font-bold mb-4">Key Rotation Status</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.8 }}
+          >
             <div className="text-sm text-gray-600">Active Keys</div>
-            <div className="text-2xl font-bold">{health?.keyRotation.activeKeys}</div>
-          </div>
-          <div>
+            <div className="text-2xl font-bold">
+              <AnimatedNumber value={health?.keyRotation.activeKeys || 0} delay={0.9} />
+            </div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.9 }}
+          >
             <div className="text-sm text-gray-600">Needs Rotation</div>
             <div className={`text-2xl font-bold ${health?.keyRotation.needsRotation === 0 ? 'text-green-600' : 'text-yellow-600'}`}>
-              {health?.keyRotation.needsRotation}
+              <AnimatedNumber value={health?.keyRotation.needsRotation || 0} delay={1} />
             </div>
-          </div>
-          <div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 1 }}
+          >
             <div className="text-sm text-gray-600">Critical</div>
             <div className={`text-2xl font-bold ${health?.keyRotation.critical === 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {health?.keyRotation.critical}
+              <AnimatedNumber value={health?.keyRotation.critical || 0} delay={1.1} />
             </div>
-          </div>
-          <div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 1.1 }}
+          >
             <div className="text-sm text-gray-600">Min Days Until Rotation</div>
             <div className="text-2xl font-bold">
-              {health?.keyRotation.minDaysUntilRotation !== null ? health?.keyRotation.minDaysUntilRotation : '-'}
+              {health?.keyRotation.minDaysUntilRotation != null ? (
+                <AnimatedNumber value={health.keyRotation.minDaysUntilRotation} delay={1.2} />
+              ) : '-'}
             </div>
-          </div>
+          </motion.div>
         </div>
-      </Card>
+      </MotionCard>
 
       {/* Governance Gates */}
-      <Card className="p-6">
+      <MotionCard delay={0.8} hover={false} className="p-6">
         <h2 className="text-xl font-bold mb-4">Governance Gates (G13-G21)</h2>
         <div className="space-y-3">
-          {governance && Object.entries(governance.gates).map(([gateId, gate]) => (
-            <div key={gateId} className="border rounded p-4">
+          {governance && Object.entries(governance.gates).map(([gateId, gate], idx) => (
+            <motion.div
+              key={gateId}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.9 + idx * 0.05 }}
+              className="border rounded p-4"
+              whileHover={{ scale: 1.01, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}
+            >
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <div className="font-bold">{gateId}: {gate.name}</div>
@@ -350,23 +429,36 @@ export default function GovernanceDashboard() {
               </div>
               {Object.keys(gate.kpis).length > 0 && (
                 <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-                  {Object.entries(gate.kpis).map(([key, value]) => (
-                    <div key={key} className="bg-gray-50 p-2 rounded">
+                  {Object.entries(gate.kpis).map(([key, value], kpiIdx) => (
+                    <motion.div
+                      key={key}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2, delay: 1 + idx * 0.05 + kpiIdx * 0.02 }}
+                      className="bg-gray-50 p-2 rounded"
+                    >
                       <div className="text-gray-600 text-xs">{key}</div>
-                      <div className="font-medium">{value}</div>
-                    </div>
+                      <div className="font-medium">
+                        <AnimatedNumber value={value} delay={1 + idx * 0.05 + kpiIdx * 0.02} duration={0.6} />
+                      </div>
+                    </motion.div>
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           ))}
         </div>
-      </Card>
+      </MotionCard>
 
       {/* Footer */}
-      <div className="text-center text-sm text-gray-500 py-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 1.5 }}
+        className="text-center text-sm text-gray-500 py-4"
+      >
         Powered by Qontrek Engine · Tower Federation Certified
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
