@@ -88,7 +88,8 @@ export default function Gate2Dashboard() {
   const pct = (v: unknown) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "-");
 
   return (
-    <div className="p-6 space-y-6">
+    <>
+      <div className="p-6 space-y-6">
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-semibold">Gate 2 — Payment Recovery</h1>
         <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
@@ -197,6 +198,7 @@ export default function Gate2Dashboard() {
           </Card>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

@@ -219,7 +219,8 @@ export default function GovernanceDashboard() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <>
+      <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -367,6 +368,7 @@ export default function GovernanceDashboard() {
       <div className="text-center text-sm text-gray-500 py-4">
         Powered by Qontrek Engine · Tower Federation Certified
       </div>
-    </div>
+      </div>
+    </>
   );
 }
