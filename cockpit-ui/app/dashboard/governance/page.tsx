@@ -9,7 +9,7 @@ interface GovernanceData {
   gates: Record<string, {
     name: string;
     status: 'pass' | 'partial' | 'pending' | 'fail';
-    evidence: Record<string, any>;
+    evidence: Record<string, unknown>;
     kpis: Record<string, number>;
   }>;
   summary: {
@@ -60,54 +60,143 @@ interface HealthData {
   };
 }
 
+// Static demo data for governance dashboard
+const MOCK_GOVERNANCE: GovernanceData = {
+  version: "R1.4.9",
+  generatedAt: new Date().toISOString(),
+  gates: {
+    "G13": {
+      name: "Trust Anchor Verification",
+      status: "pass",
+      evidence: { anchorsVerified: 12, lastCheck: new Date().toISOString() },
+      kpis: { verificationRate: 100, avgLatencyMs: 45 },
+    },
+    "G14": {
+      name: "Key Rotation Compliance",
+      status: "pass",
+      evidence: { rotatedKeys: 8, pendingRotation: 0 },
+      kpis: { rotationCompliance: 100, daysToNextRotation: 28 },
+    },
+    "G15": {
+      name: "Audit Log Integrity",
+      status: "pass",
+      evidence: { logsVerified: 1250, integrityScore: 100 },
+      kpis: { logCoverage: 100, hashMismatches: 0 },
+    },
+    "G16": {
+      name: "SLO Compliance",
+      status: "partial",
+      evidence: { sloChecks: 24, passing: 22 },
+      kpis: { complianceRate: 92, breaches24h: 2 },
+    },
+    "G17": {
+      name: "Federation Sync",
+      status: "pass",
+      evidence: { peersConnected: 5, lastSync: new Date().toISOString() },
+      kpis: { syncLatencyMs: 120, peerHealth: 100 },
+    },
+    "G18": {
+      name: "Data Residency",
+      status: "pass",
+      evidence: { regionsCompliant: 3, violations: 0 },
+      kpis: { complianceScore: 100, dataFlowAudited: 850 },
+    },
+    "G19": {
+      name: "Access Control",
+      status: "pass",
+      evidence: { policiesActive: 45, lastReview: new Date().toISOString() },
+      kpis: { policyCompliance: 98, unauthorizedAttempts: 0 },
+    },
+    "G20": {
+      name: "Incident Response",
+      status: "pending",
+      evidence: { drillsCompleted: 2, lastDrill: "2025-10-15" },
+      kpis: { mttrMinutes: 15, incidentsOpen: 0 },
+    },
+    "G21": {
+      name: "Continuous Monitoring",
+      status: "pass",
+      evidence: { monitorsActive: 128, alertsTriggered: 3 },
+      kpis: { uptimePercent: 99.95, falsePositiveRate: 2 },
+    },
+  },
+  summary: {
+    totalGates: 9,
+    passed: 7,
+    pending: 1,
+    partial: 1,
+    failed: 0,
+  },
+};
+
+const MOCK_HEALTH: HealthData = {
+  status: "healthy",
+  timestamp: new Date().toISOString(),
+  slo: {
+    ackLatency: {
+      p50Ms: 12,
+      p95Ms: 45,
+      targetP50Ms: 50,
+      targetP95Ms: 100,
+      healthy: true,
+    },
+    clockSkew: {
+      p95Ms: 8,
+      targetP95Ms: 50,
+      healthy: true,
+    },
+    errorRate: {
+      current: 0.02,
+      targetPercent: 1,
+      healthy: true,
+    },
+    coverage: {
+      current: 98.5,
+      targetPercent: 95,
+      healthy: true,
+    },
+  },
+  panicMode: {
+    active: false,
+    triggers: [],
+  },
+  keyRotation: {
+    activeKeys: 8,
+    needsRotation: 0,
+    critical: 0,
+    minDaysUntilRotation: 28,
+  },
+};
+
 export default function GovernanceDashboard() {
   const [governance, setGovernance] = useState<GovernanceData | null>(null);
   const [health, setHealth] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [govRes, healthRes] = await Promise.all([
-          fetch('/api/mcp/governance'),
-          fetch('/api/mcp/healthz'),
-        ]);
+    // Simulate loading with mock data
+    const timer = setTimeout(() => {
+      setGovernance({
+        ...MOCK_GOVERNANCE,
+        generatedAt: new Date().toISOString(),
+      });
+      setHealth({
+        ...MOCK_HEALTH,
+        timestamp: new Date().toISOString(),
+      });
+      setLoading(false);
+    }, 500);
 
-        if (!govRes.ok || !healthRes.ok) {
-          throw new Error('Failed to fetch governance data');
-        }
-
-        const govData = await govRes.json();
-        const healthData = await healthRes.json();
-
-        setGovernance(govData);
-        setHealth(healthData);
-      } catch (err) {
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-    const interval = setInterval(fetchData, 30000); // Refresh every 30s
-
-    return () => clearInterval(interval);
+    return () => clearTimeout(timer);
   }, []);
 
   if (loading) {
     return (
       <div className="container mx-auto p-6">
-        <div className="text-center">Loading governance dashboard...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="text-red-600">Error: {error}</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Loading governance dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -136,11 +225,12 @@ export default function GovernanceDashboard() {
         <div>
           <h1 className="text-3xl font-bold">Governance Observatory</h1>
           <p className="text-gray-600 mt-1">
-            Factory Runtime R1.4.4–R1.4.9 · Gates G13–G21
+            Factory Runtime R1.4.4-R1.4.9 · Gates G13-G21
+            <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-sm">DEMO</span>
           </p>
         </div>
         <div className="text-right text-sm text-gray-500">
-          Last updated: {governance ? new Date(governance.generatedAt).toLocaleString() : '—'}
+          Last updated: {governance ? new Date(governance.generatedAt).toLocaleString() : '-'}
         </div>
       </div>
 
@@ -148,7 +238,7 @@ export default function GovernanceDashboard() {
       {health?.panicMode.active && (
         <Card className="bg-red-50 border-red-200 p-4">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🚨</span>
+            <span className="text-2xl">!</span>
             <div>
               <div className="font-bold text-red-900">Panic Mode Active</div>
               <div className="text-red-700 text-sm">
@@ -237,7 +327,7 @@ export default function GovernanceDashboard() {
           <div>
             <div className="text-sm text-gray-600">Min Days Until Rotation</div>
             <div className="text-2xl font-bold">
-              {health?.keyRotation.minDaysUntilRotation !== null ? health?.keyRotation.minDaysUntilRotation : '—'}
+              {health?.keyRotation.minDaysUntilRotation !== null ? health?.keyRotation.minDaysUntilRotation : '-'}
             </div>
           </div>
         </div>
@@ -245,7 +335,7 @@ export default function GovernanceDashboard() {
 
       {/* Governance Gates */}
       <Card className="p-6">
-        <h2 className="text-xl font-bold mb-4">Governance Gates (G13–G21)</h2>
+        <h2 className="text-xl font-bold mb-4">Governance Gates (G13-G21)</h2>
         <div className="space-y-3">
           {governance && Object.entries(governance.gates).map(([gateId, gate]) => (
             <div key={gateId} className="border rounded p-4">
@@ -272,6 +362,11 @@ export default function GovernanceDashboard() {
           ))}
         </div>
       </Card>
+
+      {/* Footer */}
+      <div className="text-center text-sm text-gray-500 py-4">
+        Powered by Qontrek Engine · Tower Federation Certified
+      </div>
     </div>
   );
 }
