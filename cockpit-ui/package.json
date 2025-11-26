@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
+    "test:mcp": "bash scripts/test-mcp.sh",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
