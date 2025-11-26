@@ -1,0 +1,217 @@
+{
+  "$schema": "https://mcp.anthropic.com/schemas/manifest/v1",
+  "name": "qontrek-governance",
+  "version": "2.0.0",
+  "description": "Qontrek Governance MCP - Pattern-based scoring with percentile modifiers for governance gates (Phase 3.3)",
+  "publisher": "qontrek",
+  "license": "MIT",
+  "capabilities": {
+    "resources": true,
+    "tools": true,
+    "prompts": false
+  },
+  "tools": [
+    {
+      "name": "governance_snapshot",
+      "description": "Get governance KPI snapshot with pattern-based scoring for G13-G21 gates",
+      "endpoint": "/api/mcp/governance",
+      "method": "GET",
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "version": { "type": "string" },
+          "generatedAt": { "type": "string", "format": "date-time" },
+          "patternIntegration": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "thresholds": {
+                "type": "object",
+                "properties": {
+                  "PENALTY": { "type": "number", "description": "Below this percentile triggers penalty" },
+                  "BONUS": { "type": "number", "description": "Above this percentile triggers bonus" }
+                }
+              },
+              "modifiers": {
+                "type": "object",
+                "properties": {
+                  "PENALTY": { "type": "number" },
+                  "BONUS": { "type": "number" }
+                }
+              }
+            }
+          },
+          "patternScore": {
+            "type": "object",
+            "properties": {
+              "base_score": { "type": "number" },
+              "pattern_modifier": { "type": "number" },
+              "final_score": { "type": "number" },
+              "privacy_safe": { "type": "boolean" }
+            }
+          },
+          "gates": { "type": "object" },
+          "summary": { "type": "object" }
+        }
+      }
+    },
+    {
+      "name": "governance_update_metrics",
+      "description": "Submit metric records for pattern scoring - updates global statistics and returns scores",
+      "endpoint": "/api/mcp/governance",
+      "method": "POST",
+      "request_schema": {
+        "type": "object",
+        "required": ["records"],
+        "properties": {
+          "records": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["recorded_at", "tenant_id", "channel", "success_rate", "retry_rate", "dlq_depth", "jitter_ms_avg", "metric_id"],
+              "properties": {
+                "recorded_at": { "type": "string", "format": "date-time" },
+                "tenant_id": { "type": "string" },
+                "channel": { "type": "string" },
+                "success_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+                "retry_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+                "dlq_depth": { "type": "integer", "minimum": 0 },
+                "jitter_ms_avg": { "type": "number", "minimum": 0 },
+                "metric_id": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "patternScore": { "type": "object" },
+          "globalStats": { "type": "object" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    {
+      "name": "healthz",
+      "description": "Health check endpoint with SLO/SLI metrics, ACK latency, key rotation status, and anti-replay stats",
+      "endpoint": "/api/mcp/healthz",
+      "method": "GET",
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["healthy", "degraded", "error"] },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "slo": { "type": "object" },
+          "panicMode": { "type": "object" },
+          "antiReplay": { "type": "object" },
+          "keyRotation": { "type": "object" }
+        }
+      }
+    },
+    {
+      "name": "tail_logs",
+      "description": "Get tail of MCP logs with rate limiting and size caps",
+      "endpoint": "/api/mcp/tail",
+      "method": "GET",
+      "parameters": [
+        {
+          "name": "lines",
+          "description": "Number of log lines to return (max 1000)",
+          "type": "integer",
+          "default": 100
+        },
+        {
+          "name": "filter",
+          "description": "Filter logs by keyword",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "logs": { "type": "array" },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "total": { "type": "integer" },
+              "returned": { "type": "integer" },
+              "filtered": { "type": "boolean" }
+            }
+          }
+        }
+      },
+      "rate_limit": {
+        "max_requests": 100,
+        "window_seconds": 60
+      }
+    }
+  ],
+  "resources": [
+    {
+      "name": "governance_gates",
+      "description": "Governance gates G13-G21 with pattern-based scoring",
+      "uri": "/api/mcp/governance",
+      "mime_type": "application/json"
+    },
+    {
+      "name": "pattern_statistics",
+      "description": "Global pattern statistics for percentile calculations",
+      "uri": "/api/mcp/governance",
+      "mime_type": "application/json"
+    },
+    {
+      "name": "system_health",
+      "description": "System health with SLO/SLI metrics",
+      "uri": "/api/mcp/healthz",
+      "mime_type": "application/json"
+    }
+  ],
+  "scoring_config": {
+    "description": "Pattern-based scoring configuration for governance gates",
+    "thresholds": {
+      "penalty_percentile": 20,
+      "bonus_percentile": 80
+    },
+    "modifiers": {
+      "penalty": -0.1,
+      "bonus": 0.1,
+      "min_score": 0.0,
+      "max_score": 1.0
+    },
+    "metrics": [
+      {
+        "name": "success_rate",
+        "description": "Success rate of operations",
+        "higher_is_better": true
+      },
+      {
+        "name": "retry_rate",
+        "description": "Rate of retried operations",
+        "higher_is_better": false
+      },
+      {
+        "name": "dlq_depth",
+        "description": "Dead letter queue depth",
+        "higher_is_better": false
+      },
+      {
+        "name": "jitter_ms_avg",
+        "description": "Average jitter in milliseconds",
+        "higher_is_better": false
+      }
+    ],
+    "privacy": {
+      "safe_by_default": true,
+      "scrubber_enabled": true,
+      "pii_patterns_covered": ["email", "phone", "nric", "uuid", "aws_arn", "jwt", "api_key"]
+    }
+  },
+  "metadata": {
+    "phase": "3.3",
+    "feature": "Governance x Pattern Integration",
+    "last_updated": "2025-11-26"
+  }
+}
