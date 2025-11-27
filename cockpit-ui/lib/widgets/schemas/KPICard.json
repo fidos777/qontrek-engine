@@ -1,0 +1,369 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qontrek.io/schemas/widgets/kpi-card.json",
+  "title": "KPI Card Widget Schema",
+  "description": "Displays a single metric with trend indicator and optional sparkline for ChatGPT Apps",
+  "type": "object",
+  "required": ["type", "schemaVersion", "title", "metric"],
+  "properties": {
+    "type": {
+      "const": "kpi_card",
+      "description": "Widget type identifier"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "default": "1.0.0",
+      "description": "Schema version for compatibility"
+    },
+    "title": {
+      "type": "string",
+      "description": "Widget title with template support (e.g., '{{metric.label}} Overview')"
+    },
+    "subtitle": {
+      "type": "string",
+      "description": "Optional subtitle or description"
+    },
+    "metric": {
+      "type": "object",
+      "required": ["value", "label", "format"],
+      "properties": {
+        "value": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/$defs/dataBinding" }
+          ],
+          "description": "Main metric value (e.g., '{{data.totalRevenue}}')"
+        },
+        "label": {
+          "type": "string",
+          "description": "Metric label"
+        },
+        "format": {
+          "type": "string",
+          "enum": ["number", "currency", "percentage"],
+          "description": "Value format"
+        },
+        "precision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 2,
+          "description": "Decimal precision"
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$",
+          "description": "ISO 4217 currency code"
+        }
+      }
+    },
+    "trend": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/$defs/dataBinding" }
+          ],
+          "description": "Trend value (e.g., '{{data.trendPercentage}}')"
+        },
+        "compareLabel": {
+          "type": "string",
+          "default": "vs last period",
+          "description": "Comparison period label"
+        },
+        "invertColors": {
+          "type": "boolean",
+          "default": false,
+          "description": "Invert colors (green for down, red for up)"
+        }
+      }
+    },
+    "secondaryMetrics": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": ["value", "label", "format"],
+        "properties": {
+          "value": {
+            "oneOf": [
+              { "type": "string" },
+              { "$ref": "#/$defs/dataBinding" }
+            ]
+          },
+          "label": { "type": "string" },
+          "format": { "$ref": "#/$defs/fieldFormat" }
+        }
+      },
+      "description": "Additional metrics to display"
+    },
+    "sparkline": {
+      "oneOf": [
+        { "type": "string" },
+        { "$ref": "#/$defs/dataBinding" }
+      ],
+      "description": "Path to sparkline data array"
+    },
+    "goal": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/$defs/dataBinding" }
+          ]
+        },
+        "label": { "type": "string", "default": "Goal" }
+      },
+      "description": "Target/goal value to display"
+    },
+    "fields": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/widgetField" },
+      "description": "Additional data fields"
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/widgetAction" },
+      "description": "Available user actions"
+    },
+    "conditions": { "$ref": "#/$defs/condition" },
+    "styling": { "$ref": "#/$defs/styleHints" },
+    "responsive": { "$ref": "#/$defs/responsiveHints" },
+    "accessibility": { "$ref": "#/$defs/accessibilityHints" },
+    "refreshInterval": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Auto-refresh interval in seconds (0 = disabled)"
+    }
+  },
+  "$defs": {
+    "dataBinding": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Dot-notation path to data (e.g., 'lead.company.name')"
+        },
+        "fallback": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "number" },
+            { "type": "boolean" }
+          ],
+          "description": "Fallback value if path is undefined"
+        },
+        "transform": {
+          "type": "string",
+          "enum": ["uppercase", "lowercase", "capitalize", "truncate", "format_currency", "format_date", "format_number"],
+          "description": "Transform function to apply"
+        }
+      }
+    },
+    "fieldFormat": {
+      "type": "string",
+      "enum": [
+        "text", "number", "currency", "percentage", "date", "datetime",
+        "email", "phone", "url", "badge", "progress", "trend",
+        "avatar", "icon", "color", "json", "markdown", "html",
+        "file", "image", "signature", "hash"
+      ]
+    },
+    "widgetField": {
+      "type": "object",
+      "required": ["id", "label", "binding", "format"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "binding": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/$defs/dataBinding" }
+          ]
+        },
+        "format": { "$ref": "#/$defs/fieldFormat" },
+        "conditions": { "$ref": "#/$defs/condition" },
+        "accessibility": { "$ref": "#/$defs/accessibilityHints" },
+        "responsive": { "$ref": "#/$defs/responsiveHints" },
+        "styling": { "$ref": "#/$defs/styleHints" }
+      }
+    },
+    "widgetAction": {
+      "type": "object",
+      "required": ["id", "label", "type", "handler"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["primary", "secondary", "danger", "success", "warning", "ghost", "link"]
+        },
+        "icon": { "type": "string" },
+        "handler": { "type": "string" },
+        "params": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "confirm": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string" },
+            "message": { "type": "string" },
+            "confirmLabel": { "type": "string" },
+            "cancelLabel": { "type": "string" }
+          }
+        },
+        "loadingLabel": { "type": "string" },
+        "successMessage": { "type": "string" },
+        "errorMessage": { "type": "string" },
+        "conditions": { "$ref": "#/$defs/condition" },
+        "accessibility": { "$ref": "#/$defs/accessibilityHints" },
+        "styling": { "$ref": "#/$defs/styleHints" },
+        "shortcut": { "type": "string" }
+      }
+    },
+    "conditionRule": {
+      "type": "object",
+      "required": ["field", "operator"],
+      "properties": {
+        "field": { "type": "string" },
+        "operator": {
+          "type": "string",
+          "enum": ["eq", "neq", "gt", "gte", "lt", "lte", "contains", "not_contains", "in", "not_in", "exists", "not_exists", "matches"]
+        },
+        "value": {},
+        "logic": {
+          "type": "string",
+          "enum": ["and", "or"]
+        }
+      }
+    },
+    "condition": {
+      "type": "object",
+      "properties": {
+        "show": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/conditionRule" }
+        },
+        "hide": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/conditionRule" }
+        },
+        "enable": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/conditionRule" }
+        },
+        "disable": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/conditionRule" }
+        }
+      }
+    },
+    "accessibilityHints": {
+      "type": "object",
+      "properties": {
+        "ariaLabel": { "type": "string" },
+        "ariaDescription": { "type": "string" },
+        "role": { "type": "string" },
+        "tabIndex": { "type": "integer" },
+        "shortcut": { "type": "string" },
+        "ariaLive": {
+          "type": "string",
+          "enum": ["polite", "assertive", "off"]
+        }
+      }
+    },
+    "responsiveHints": {
+      "type": "object",
+      "properties": {
+        "hideOn": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["mobile", "tablet", "desktop", "wide"]
+          }
+        },
+        "showOn": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["mobile", "tablet", "desktop", "wide"]
+          }
+        },
+        "columns": {
+          "type": "object",
+          "properties": {
+            "mobile": { "type": "integer", "minimum": 1, "maximum": 12 },
+            "tablet": { "type": "integer", "minimum": 1, "maximum": 12 },
+            "desktop": { "type": "integer", "minimum": 1, "maximum": 12 },
+            "wide": { "type": "integer", "minimum": 1, "maximum": 12 }
+          }
+        },
+        "stack": {
+          "type": "object",
+          "properties": {
+            "mobile": { "type": "string", "enum": ["horizontal", "vertical"] },
+            "tablet": { "type": "string", "enum": ["horizontal", "vertical"] },
+            "desktop": { "type": "string", "enum": ["horizontal", "vertical"] },
+            "wide": { "type": "string", "enum": ["horizontal", "vertical"] }
+          }
+        }
+      }
+    },
+    "styleHints": {
+      "type": "object",
+      "properties": {
+        "urgency": {
+          "type": "string",
+          "enum": ["critical", "high", "medium", "low", "info"]
+        },
+        "variant": {
+          "type": "string",
+          "enum": ["default", "outlined", "filled", "ghost"]
+        },
+        "size": {
+          "type": "string",
+          "enum": ["xs", "sm", "md", "lg", "xl"]
+        },
+        "className": { "type": "string" },
+        "style": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "animation": {
+          "type": "string",
+          "enum": ["none", "fade", "slide", "scale", "pulse"]
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "type": "kpi_card",
+      "schemaVersion": "1.0.0",
+      "title": "Total Revenue",
+      "metric": {
+        "value": "{{data.totalRevenue}}",
+        "label": "Revenue",
+        "format": "currency",
+        "currency": "USD"
+      },
+      "trend": {
+        "value": "{{data.revenueTrend}}",
+        "compareLabel": "vs last month"
+      },
+      "sparkline": "{{data.revenueHistory}}",
+      "styling": {
+        "urgency": "info",
+        "size": "lg"
+      },
+      "accessibility": {
+        "ariaLabel": "Total Revenue KPI showing {{data.totalRevenue}} with {{data.revenueTrend}} trend"
+      }
+    }
+  ]
+}

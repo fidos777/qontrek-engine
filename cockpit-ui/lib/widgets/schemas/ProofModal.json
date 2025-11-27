@@ -1,0 +1,321 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qontrek.io/schemas/widgets/proof-modal.json",
+  "title": "Proof Modal Widget Schema",
+  "description": "Cryptographic proof viewer with verification chain display for ChatGPT Apps",
+  "type": "object",
+  "required": ["type", "schemaVersion", "title", "proofId", "proofType", "sections"],
+  "properties": {
+    "type": {
+      "const": "proof_modal",
+      "description": "Widget type identifier"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "default": "1.0.0"
+    },
+    "title": {
+      "type": "string",
+      "description": "Widget title"
+    },
+    "subtitle": {
+      "type": "string"
+    },
+    "proofId": {
+      "oneOf": [
+        { "type": "string" },
+        { "$ref": "#/$defs/dataBinding" }
+      ],
+      "description": "Unique proof identifier"
+    },
+    "proofType": {
+      "type": "string",
+      "enum": ["transaction", "document", "approval", "governance", "custom"],
+      "description": "Type of proof"
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "type", "data"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique section identifier"
+          },
+          "title": {
+            "type": "string",
+            "description": "Section title"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["hash", "signature", "merkle", "certificate", "timeline", "raw"],
+            "description": "Section type"
+          },
+          "data": {
+            "oneOf": [
+              { "type": "string" },
+              { "$ref": "#/$defs/dataBinding" }
+            ],
+            "description": "Section data path"
+          },
+          "verified": {
+            "oneOf": [
+              { "type": "string" },
+              { "$ref": "#/$defs/dataBinding" }
+            ],
+            "description": "Verification status path"
+          },
+          "expandable": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enable expandable JSON view"
+          },
+          "copyable": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show copy button"
+          }
+        }
+      },
+      "description": "Proof sections"
+    },
+    "chain": {
+      "type": "object",
+      "properties": {
+        "blocks": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/$defs/dataBinding" }
+          ],
+          "description": "Verification chain blocks path"
+        },
+        "currentBlock": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/$defs/dataBinding" }
+          ],
+          "description": "Current block path"
+        }
+      },
+      "description": "Verification chain display"
+    },
+    "downloadable": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable proof bundle download"
+    },
+    "externalVerifyUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "External verification URL"
+    },
+    "showQR": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show QR code for verification"
+    },
+    "timestamp": {
+      "type": "object",
+      "properties": {
+        "created": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/$defs/dataBinding" }
+          ]
+        },
+        "verified": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/$defs/dataBinding" }
+          ]
+        },
+        "expires": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/$defs/dataBinding" }
+          ]
+        }
+      },
+      "description": "Timestamp information"
+    },
+    "fields": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/widgetField" }
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/widgetAction" }
+    },
+    "conditions": { "$ref": "#/$defs/condition" },
+    "styling": { "$ref": "#/$defs/styleHints" },
+    "responsive": { "$ref": "#/$defs/responsiveHints" },
+    "accessibility": { "$ref": "#/$defs/accessibilityHints" }
+  },
+  "$defs": {
+    "dataBinding": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": { "type": "string" },
+        "fallback": { "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] },
+        "transform": { "type": "string", "enum": ["uppercase", "lowercase", "capitalize", "truncate", "format_currency", "format_date", "format_number"] }
+      }
+    },
+    "fieldFormat": {
+      "type": "string",
+      "enum": ["text", "number", "currency", "percentage", "date", "datetime", "email", "phone", "url", "badge", "progress", "trend", "avatar", "icon", "color", "json", "markdown", "html", "file", "image", "signature", "hash"]
+    },
+    "widgetField": {
+      "type": "object",
+      "required": ["id", "label", "binding", "format"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "binding": { "oneOf": [{ "type": "string" }, { "$ref": "#/$defs/dataBinding" }] },
+        "format": { "$ref": "#/$defs/fieldFormat" },
+        "conditions": { "$ref": "#/$defs/condition" },
+        "accessibility": { "$ref": "#/$defs/accessibilityHints" },
+        "responsive": { "$ref": "#/$defs/responsiveHints" },
+        "styling": { "$ref": "#/$defs/styleHints" }
+      }
+    },
+    "widgetAction": {
+      "type": "object",
+      "required": ["id", "label", "type", "handler"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "type": { "type": "string", "enum": ["primary", "secondary", "danger", "success", "warning", "ghost", "link"] },
+        "icon": { "type": "string" },
+        "handler": { "type": "string" },
+        "params": { "type": "object" },
+        "confirm": { "type": "object" },
+        "conditions": { "$ref": "#/$defs/condition" },
+        "accessibility": { "$ref": "#/$defs/accessibilityHints" },
+        "styling": { "$ref": "#/$defs/styleHints" }
+      }
+    },
+    "conditionRule": {
+      "type": "object",
+      "required": ["field", "operator"],
+      "properties": {
+        "field": { "type": "string" },
+        "operator": { "type": "string", "enum": ["eq", "neq", "gt", "gte", "lt", "lte", "contains", "not_contains", "in", "not_in", "exists", "not_exists", "matches"] },
+        "value": {},
+        "logic": { "type": "string", "enum": ["and", "or"] }
+      }
+    },
+    "condition": {
+      "type": "object",
+      "properties": {
+        "show": { "type": "array", "items": { "$ref": "#/$defs/conditionRule" } },
+        "hide": { "type": "array", "items": { "$ref": "#/$defs/conditionRule" } },
+        "enable": { "type": "array", "items": { "$ref": "#/$defs/conditionRule" } },
+        "disable": { "type": "array", "items": { "$ref": "#/$defs/conditionRule" } }
+      }
+    },
+    "accessibilityHints": {
+      "type": "object",
+      "properties": {
+        "ariaLabel": { "type": "string" },
+        "ariaDescription": { "type": "string" },
+        "role": { "type": "string" },
+        "tabIndex": { "type": "integer" },
+        "shortcut": { "type": "string" },
+        "ariaLive": { "type": "string", "enum": ["polite", "assertive", "off"] }
+      }
+    },
+    "responsiveHints": {
+      "type": "object",
+      "properties": {
+        "hideOn": { "type": "array", "items": { "type": "string" } },
+        "showOn": { "type": "array", "items": { "type": "string" } },
+        "columns": { "type": "object" },
+        "stack": { "type": "object" }
+      }
+    },
+    "styleHints": {
+      "type": "object",
+      "properties": {
+        "urgency": { "type": "string", "enum": ["critical", "high", "medium", "low", "info"] },
+        "variant": { "type": "string", "enum": ["default", "outlined", "filled", "ghost"] },
+        "size": { "type": "string", "enum": ["xs", "sm", "md", "lg", "xl"] },
+        "className": { "type": "string" },
+        "style": { "type": "object" },
+        "animation": { "type": "string", "enum": ["none", "fade", "slide", "scale", "pulse"] }
+      }
+    }
+  },
+  "examples": [
+    {
+      "type": "proof_modal",
+      "schemaVersion": "1.0.0",
+      "title": "Transaction Proof",
+      "proofId": "{{proof.id}}",
+      "proofType": "transaction",
+      "sections": [
+        {
+          "id": "document_hash",
+          "title": "Document Hash",
+          "type": "hash",
+          "data": "{{proof.documentHash}}",
+          "verified": "{{proof.documentVerified}}",
+          "copyable": true
+        },
+        {
+          "id": "signature",
+          "title": "Digital Signature",
+          "type": "signature",
+          "data": "{{proof.signature}}",
+          "verified": "{{proof.signatureVerified}}",
+          "expandable": true
+        },
+        {
+          "id": "merkle_proof",
+          "title": "Merkle Proof",
+          "type": "merkle",
+          "data": "{{proof.merkleProof}}",
+          "verified": "{{proof.merkleVerified}}",
+          "expandable": true
+        },
+        {
+          "id": "certificate",
+          "title": "Certificate Chain",
+          "type": "certificate",
+          "data": "{{proof.certificateChain}}",
+          "verified": "{{proof.certificateVerified}}"
+        },
+        {
+          "id": "audit_trail",
+          "title": "Audit Trail",
+          "type": "timeline",
+          "data": "{{proof.auditTrail}}"
+        }
+      ],
+      "chain": {
+        "blocks": "{{proof.verificationChain}}",
+        "currentBlock": "{{proof.currentBlock}}"
+      },
+      "downloadable": true,
+      "externalVerifyUrl": "https://verify.qontrek.io/proof/{{proof.id}}",
+      "showQR": true,
+      "timestamp": {
+        "created": "{{proof.createdAt}}",
+        "verified": "{{proof.verifiedAt}}",
+        "expires": "{{proof.expiresAt}}"
+      },
+      "actions": [
+        { "id": "download", "label": "Download Proof", "type": "primary", "icon": "download", "handler": "downloadProof" },
+        { "id": "verify", "label": "Re-verify", "type": "secondary", "icon": "shield-check", "handler": "reverifyProof" },
+        { "id": "share", "label": "Share", "type": "ghost", "icon": "share-2", "handler": "shareProof" }
+      ],
+      "accessibility": {
+        "ariaLabel": "Cryptographic proof viewer for transaction {{proof.id}}",
+        "role": "dialog"
+      }
+    }
+  ]
+}

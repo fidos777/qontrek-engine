@@ -1,0 +1,560 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qontrek.io/schemas/widgets/form-generator.json",
+  "title": "Form Generator Widget Schema",
+  "description": "Dynamic form generation from schema with validation for ChatGPT Apps",
+  "type": "object",
+  "required": ["type", "schemaVersion", "title", "formId", "sections", "onSubmit"],
+  "properties": {
+    "type": {
+      "const": "form_generator",
+      "description": "Widget type identifier"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "default": "1.0.0"
+    },
+    "title": {
+      "type": "string",
+      "description": "Widget title"
+    },
+    "subtitle": {
+      "type": "string"
+    },
+    "formId": {
+      "type": "string",
+      "description": "Unique form identifier"
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "fields"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique section identifier"
+          },
+          "title": {
+            "type": "string",
+            "description": "Section title"
+          },
+          "description": {
+            "type": "string",
+            "description": "Section description"
+          },
+          "fields": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/formField" }
+          },
+          "collapsible": {
+            "type": "boolean",
+            "default": false
+          },
+          "collapsed": {
+            "type": "boolean",
+            "default": false
+          },
+          "conditions": { "$ref": "#/$defs/condition" }
+        }
+      },
+      "description": "Form sections"
+    },
+    "onSubmit": {
+      "type": "string",
+      "description": "Submit handler identifier"
+    },
+    "submitLabel": {
+      "type": "string",
+      "default": "Submit",
+      "description": "Submit button label"
+    },
+    "cancelLabel": {
+      "type": "string",
+      "default": "Cancel",
+      "description": "Cancel button label"
+    },
+    "showCancel": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show cancel button"
+    },
+    "onCancel": {
+      "type": "string",
+      "description": "Cancel handler identifier"
+    },
+    "autoSave": {
+      "type": "boolean",
+      "default": false,
+      "description": "Auto-save draft"
+    },
+    "autoSaveInterval": {
+      "type": "integer",
+      "minimum": 5,
+      "default": 30,
+      "description": "Auto-save interval in seconds"
+    },
+    "showProgress": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show progress indicator"
+    },
+    "layout": {
+      "type": "string",
+      "enum": ["single", "wizard", "tabs"],
+      "default": "single",
+      "description": "Form layout type"
+    },
+    "prefillData": {
+      "oneOf": [
+        { "type": "string" },
+        { "$ref": "#/$defs/dataBinding" }
+      ],
+      "description": "Pre-fill data path"
+    },
+    "onSuccess": {
+      "type": "object",
+      "properties": {
+        "message": { "type": "string" },
+        "redirect": { "type": "string" },
+        "action": { "$ref": "#/$defs/widgetAction" }
+      },
+      "description": "Success handling"
+    },
+    "onError": {
+      "type": "object",
+      "properties": {
+        "message": { "type": "string" },
+        "retry": { "type": "boolean", "default": true }
+      },
+      "description": "Error handling"
+    },
+    "fields": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/widgetField" }
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/widgetAction" }
+    },
+    "conditions": { "$ref": "#/$defs/condition" },
+    "styling": { "$ref": "#/$defs/styleHints" },
+    "responsive": { "$ref": "#/$defs/responsiveHints" },
+    "accessibility": { "$ref": "#/$defs/accessibilityHints" }
+  },
+  "$defs": {
+    "formFieldType": {
+      "type": "string",
+      "enum": [
+        "text", "textarea", "number", "email", "phone", "url", "password",
+        "date", "datetime", "time", "select", "multiselect", "checkbox",
+        "radio", "toggle", "slider", "file", "image", "signature",
+        "rich_text", "code", "json", "currency", "percentage", "color", "hidden"
+      ]
+    },
+    "validationRule": {
+      "type": "object",
+      "required": ["type", "message"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["required", "min", "max", "minLength", "maxLength", "pattern", "email", "url", "phone", "custom"]
+        },
+        "value": {},
+        "message": { "type": "string" },
+        "customValidator": { "type": "string" }
+      }
+    },
+    "formFieldOption": {
+      "type": "object",
+      "required": ["value", "label"],
+      "properties": {
+        "value": { "oneOf": [{ "type": "string" }, { "type": "number" }] },
+        "label": { "type": "string" },
+        "disabled": { "type": "boolean", "default": false },
+        "icon": { "type": "string" }
+      }
+    },
+    "formField": {
+      "type": "object",
+      "required": ["id", "name", "label", "type"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique field identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Form field name for submission"
+        },
+        "label": {
+          "type": "string",
+          "description": "Display label"
+        },
+        "type": { "$ref": "#/$defs/formFieldType" },
+        "placeholder": { "type": "string" },
+        "helpText": { "type": "string" },
+        "defaultValue": {},
+        "options": {
+          "oneOf": [
+            { "type": "array", "items": { "$ref": "#/$defs/formFieldOption" } },
+            { "type": "string" },
+            { "$ref": "#/$defs/dataBinding" }
+          ],
+          "description": "Options for select/radio/checkbox"
+        },
+        "validation": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/validationRule" }
+        },
+        "conditions": { "$ref": "#/$defs/condition" },
+        "readOnly": { "type": "boolean", "default": false },
+        "disabled": { "type": "boolean", "default": false },
+        "accessibility": { "$ref": "#/$defs/accessibilityHints" },
+        "responsive": { "$ref": "#/$defs/responsiveHints" },
+        "styling": { "$ref": "#/$defs/styleHints" },
+        "autoComplete": { "type": "string" },
+        "group": { "type": "string" },
+        "mask": { "type": "string" },
+        "step": { "type": "number" },
+        "min": { "oneOf": [{ "type": "number" }, { "type": "string" }] },
+        "max": { "oneOf": [{ "type": "number" }, { "type": "string" }] },
+        "rows": { "type": "integer", "minimum": 1 },
+        "accept": { "type": "string" },
+        "maxFileSize": { "type": "integer" }
+      }
+    },
+    "dataBinding": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": { "type": "string" },
+        "fallback": { "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] },
+        "transform": { "type": "string", "enum": ["uppercase", "lowercase", "capitalize", "truncate", "format_currency", "format_date", "format_number"] }
+      }
+    },
+    "fieldFormat": {
+      "type": "string",
+      "enum": ["text", "number", "currency", "percentage", "date", "datetime", "email", "phone", "url", "badge", "progress", "trend", "avatar", "icon", "color", "json", "markdown", "html", "file", "image", "signature", "hash"]
+    },
+    "widgetField": {
+      "type": "object",
+      "required": ["id", "label", "binding", "format"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "binding": { "oneOf": [{ "type": "string" }, { "$ref": "#/$defs/dataBinding" }] },
+        "format": { "$ref": "#/$defs/fieldFormat" },
+        "conditions": { "$ref": "#/$defs/condition" },
+        "accessibility": { "$ref": "#/$defs/accessibilityHints" },
+        "responsive": { "$ref": "#/$defs/responsiveHints" },
+        "styling": { "$ref": "#/$defs/styleHints" }
+      }
+    },
+    "widgetAction": {
+      "type": "object",
+      "required": ["id", "label", "type", "handler"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "type": { "type": "string", "enum": ["primary", "secondary", "danger", "success", "warning", "ghost", "link"] },
+        "icon": { "type": "string" },
+        "handler": { "type": "string" },
+        "params": { "type": "object" },
+        "confirm": { "type": "object" },
+        "conditions": { "$ref": "#/$defs/condition" },
+        "accessibility": { "$ref": "#/$defs/accessibilityHints" },
+        "styling": { "$ref": "#/$defs/styleHints" }
+      }
+    },
+    "conditionRule": {
+      "type": "object",
+      "required": ["field", "operator"],
+      "properties": {
+        "field": { "type": "string" },
+        "operator": { "type": "string", "enum": ["eq", "neq", "gt", "gte", "lt", "lte", "contains", "not_contains", "in", "not_in", "exists", "not_exists", "matches"] },
+        "value": {},
+        "logic": { "type": "string", "enum": ["and", "or"] }
+      }
+    },
+    "condition": {
+      "type": "object",
+      "properties": {
+        "show": { "type": "array", "items": { "$ref": "#/$defs/conditionRule" } },
+        "hide": { "type": "array", "items": { "$ref": "#/$defs/conditionRule" } },
+        "enable": { "type": "array", "items": { "$ref": "#/$defs/conditionRule" } },
+        "disable": { "type": "array", "items": { "$ref": "#/$defs/conditionRule" } }
+      }
+    },
+    "accessibilityHints": {
+      "type": "object",
+      "properties": {
+        "ariaLabel": { "type": "string" },
+        "ariaDescription": { "type": "string" },
+        "role": { "type": "string" },
+        "tabIndex": { "type": "integer" },
+        "shortcut": { "type": "string" },
+        "ariaLive": { "type": "string", "enum": ["polite", "assertive", "off"] }
+      }
+    },
+    "responsiveHints": {
+      "type": "object",
+      "properties": {
+        "hideOn": { "type": "array", "items": { "type": "string" } },
+        "showOn": { "type": "array", "items": { "type": "string" } },
+        "columns": { "type": "object" },
+        "stack": { "type": "object" }
+      }
+    },
+    "styleHints": {
+      "type": "object",
+      "properties": {
+        "urgency": { "type": "string", "enum": ["critical", "high", "medium", "low", "info"] },
+        "variant": { "type": "string", "enum": ["default", "outlined", "filled", "ghost"] },
+        "size": { "type": "string", "enum": ["xs", "sm", "md", "lg", "xl"] },
+        "className": { "type": "string" },
+        "style": { "type": "object" },
+        "animation": { "type": "string", "enum": ["none", "fade", "slide", "scale", "pulse"] }
+      }
+    }
+  },
+  "examples": [
+    {
+      "type": "form_generator",
+      "schemaVersion": "1.0.0",
+      "title": "New Lead Form",
+      "formId": "new_lead_form",
+      "layout": "single",
+      "sections": [
+        {
+          "id": "basic_info",
+          "title": "Basic Information",
+          "description": "Enter the lead's basic contact information",
+          "fields": [
+            {
+              "id": "first_name",
+              "name": "firstName",
+              "label": "First Name",
+              "type": "text",
+              "placeholder": "Enter first name",
+              "validation": [
+                { "type": "required", "message": "First name is required" },
+                { "type": "minLength", "value": 2, "message": "Name must be at least 2 characters" }
+              ],
+              "autoComplete": "given-name"
+            },
+            {
+              "id": "last_name",
+              "name": "lastName",
+              "label": "Last Name",
+              "type": "text",
+              "placeholder": "Enter last name",
+              "validation": [
+                { "type": "required", "message": "Last name is required" }
+              ],
+              "autoComplete": "family-name"
+            },
+            {
+              "id": "email",
+              "name": "email",
+              "label": "Email Address",
+              "type": "email",
+              "placeholder": "name@company.com",
+              "validation": [
+                { "type": "required", "message": "Email is required" },
+                { "type": "email", "message": "Please enter a valid email" }
+              ],
+              "autoComplete": "email"
+            },
+            {
+              "id": "phone",
+              "name": "phone",
+              "label": "Phone Number",
+              "type": "phone",
+              "placeholder": "+1 (555) 000-0000",
+              "mask": "+1 (###) ###-####",
+              "validation": [
+                { "type": "phone", "message": "Please enter a valid phone number" }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "company_info",
+          "title": "Company Information",
+          "collapsible": true,
+          "fields": [
+            {
+              "id": "company",
+              "name": "company",
+              "label": "Company Name",
+              "type": "text",
+              "placeholder": "Enter company name"
+            },
+            {
+              "id": "industry",
+              "name": "industry",
+              "label": "Industry",
+              "type": "select",
+              "options": [
+                { "value": "technology", "label": "Technology" },
+                { "value": "finance", "label": "Finance" },
+                { "value": "healthcare", "label": "Healthcare" },
+                { "value": "retail", "label": "Retail" },
+                { "value": "manufacturing", "label": "Manufacturing" },
+                { "value": "other", "label": "Other" }
+              ]
+            },
+            {
+              "id": "company_size",
+              "name": "companySize",
+              "label": "Company Size",
+              "type": "radio",
+              "options": [
+                { "value": "1-10", "label": "1-10 employees" },
+                { "value": "11-50", "label": "11-50 employees" },
+                { "value": "51-200", "label": "51-200 employees" },
+                { "value": "201-500", "label": "201-500 employees" },
+                { "value": "500+", "label": "500+ employees" }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "opportunity",
+          "title": "Opportunity Details",
+          "collapsible": true,
+          "collapsed": true,
+          "fields": [
+            {
+              "id": "deal_value",
+              "name": "dealValue",
+              "label": "Estimated Deal Value",
+              "type": "currency",
+              "placeholder": "0.00",
+              "validation": [
+                { "type": "min", "value": 0, "message": "Deal value must be positive" }
+              ]
+            },
+            {
+              "id": "probability",
+              "name": "probability",
+              "label": "Win Probability",
+              "type": "slider",
+              "min": 0,
+              "max": 100,
+              "step": 5,
+              "defaultValue": 50
+            },
+            {
+              "id": "close_date",
+              "name": "closeDate",
+              "label": "Expected Close Date",
+              "type": "date",
+              "min": "{{today}}"
+            },
+            {
+              "id": "notes",
+              "name": "notes",
+              "label": "Notes",
+              "type": "textarea",
+              "rows": 4,
+              "placeholder": "Add any additional notes..."
+            }
+          ]
+        }
+      ],
+      "onSubmit": "createLead",
+      "submitLabel": "Create Lead",
+      "showCancel": true,
+      "cancelLabel": "Cancel",
+      "onCancel": "closeForm",
+      "autoSave": true,
+      "autoSaveInterval": 30,
+      "onSuccess": {
+        "message": "Lead created successfully!",
+        "redirect": "/leads/{{response.id}}"
+      },
+      "onError": {
+        "message": "Failed to create lead. Please try again.",
+        "retry": true
+      },
+      "accessibility": {
+        "ariaLabel": "Create new lead form",
+        "role": "form"
+      }
+    },
+    {
+      "type": "form_generator",
+      "schemaVersion": "1.0.0",
+      "title": "Contract Approval Request",
+      "formId": "contract_approval",
+      "layout": "wizard",
+      "showProgress": true,
+      "sections": [
+        {
+          "id": "contract_details",
+          "title": "Contract Details",
+          "fields": [
+            {
+              "id": "contract_type",
+              "name": "contractType",
+              "label": "Contract Type",
+              "type": "select",
+              "options": "{{options.contractTypes}}",
+              "validation": [{ "type": "required", "message": "Contract type is required" }]
+            },
+            {
+              "id": "contract_value",
+              "name": "contractValue",
+              "label": "Contract Value",
+              "type": "currency",
+              "validation": [
+                { "type": "required", "message": "Contract value is required" },
+                { "type": "min", "value": 1000, "message": "Minimum contract value is $1,000" }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "parties",
+          "title": "Parties Involved",
+          "fields": [
+            {
+              "id": "counterparty",
+              "name": "counterparty",
+              "label": "Counterparty",
+              "type": "text",
+              "validation": [{ "type": "required", "message": "Counterparty is required" }]
+            }
+          ]
+        },
+        {
+          "id": "attachments",
+          "title": "Attachments",
+          "fields": [
+            {
+              "id": "contract_file",
+              "name": "contractFile",
+              "label": "Contract Document",
+              "type": "file",
+              "accept": ".pdf,.doc,.docx",
+              "maxFileSize": 10485760,
+              "validation": [{ "type": "required", "message": "Contract document is required" }]
+            },
+            {
+              "id": "signature",
+              "name": "signature",
+              "label": "Requestor Signature",
+              "type": "signature"
+            }
+          ]
+        }
+      ],
+      "onSubmit": "submitContractApproval",
+      "submitLabel": "Submit for Approval"
+    }
+  ]
+}

@@ -1,0 +1,527 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Qontrek Widget Render Output Examples",
+  "description": "Example rendered outputs for each widget type with sample data",
+  "version": "1.0.0",
+  "examples": {
+    "kpi_card": {
+      "description": "KPI Card showing total revenue with trend",
+      "input": {
+        "schema": {
+          "type": "kpi_card",
+          "schemaVersion": "1.0.0",
+          "title": "Total Revenue",
+          "metric": {
+            "value": "{{data.totalRevenue}}",
+            "label": "Revenue",
+            "format": "currency",
+            "currency": "USD"
+          },
+          "trend": {
+            "value": "{{data.revenueTrend}}",
+            "compareLabel": "vs last month"
+          },
+          "sparkline": "{{data.revenueHistory}}",
+          "styling": {
+            "urgency": "info",
+            "size": "lg"
+          }
+        },
+        "data": {
+          "data": {
+            "totalRevenue": 1250000,
+            "revenueTrend": 12.5,
+            "revenueHistory": [980000, 1050000, 1100000, 1180000, 1250000]
+          }
+        }
+      },
+      "output": {
+        "rendered": {
+          "type": "kpi_card",
+          "schemaVersion": "1.0.0",
+          "title": "Total Revenue",
+          "metric": {
+            "value": "$1,250,000.00",
+            "label": "Revenue",
+            "format": "currency",
+            "displayValue": "1.25M"
+          },
+          "trend": {
+            "value": "+12.5%",
+            "direction": "up",
+            "color": "green",
+            "compareLabel": "vs last month"
+          },
+          "sparkline": {
+            "data": [980000, 1050000, 1100000, 1180000, 1250000],
+            "trend": "up"
+          }
+        },
+        "html": "<div class=\"kpi-card kpi-card--lg\" role=\"article\" aria-label=\"Total Revenue KPI showing $1,250,000.00 with +12.5% trend\">\n  <div class=\"kpi-card__header\">\n    <h3 class=\"kpi-card__title\">Total Revenue</h3>\n  </div>\n  <div class=\"kpi-card__body\">\n    <div class=\"kpi-card__metric\">\n      <span class=\"kpi-card__value\">$1.25M</span>\n      <span class=\"kpi-card__label\">Revenue</span>\n    </div>\n    <div class=\"kpi-card__trend kpi-card__trend--up\">\n      <svg class=\"trend-icon\" aria-hidden=\"true\"><!-- up arrow --></svg>\n      <span class=\"trend-value\">+12.5%</span>\n      <span class=\"trend-label\">vs last month</span>\n    </div>\n    <div class=\"kpi-card__sparkline\" aria-hidden=\"true\">\n      <!-- SVG sparkline visualization -->\n    </div>\n  </div>\n</div>"
+      }
+    },
+    "lead_detail_card": {
+      "description": "Lead detail card with contact info and opportunity details",
+      "input": {
+        "schema": {
+          "type": "lead_detail_card",
+          "schemaVersion": "1.0.0",
+          "title": "Lead Details",
+          "header": {
+            "name": "{{lead.name}}",
+            "subtitle": "{{lead.company}} - {{lead.title}}",
+            "status": "{{lead.status}}",
+            "statusColorMap": {
+              "qualified": "green",
+              "nurturing": "blue"
+            }
+          },
+          "sections": [
+            {
+              "id": "contact",
+              "title": "Contact Information",
+              "fields": [
+                { "id": "email", "label": "Email", "binding": "{{lead.email}}", "format": "email" },
+                { "id": "phone", "label": "Phone", "binding": "{{lead.phone}}", "format": "phone" }
+              ]
+            }
+          ]
+        },
+        "data": {
+          "lead": {
+            "name": "Sarah Johnson",
+            "company": "TechCorp Inc",
+            "title": "VP of Engineering",
+            "status": "qualified",
+            "email": "sarah.johnson@techcorp.com",
+            "phone": "+1 (555) 123-4567"
+          }
+        }
+      },
+      "output": {
+        "rendered": {
+          "header": {
+            "name": "Sarah Johnson",
+            "subtitle": "TechCorp Inc - VP of Engineering",
+            "status": "qualified",
+            "statusColor": "green"
+          },
+          "sections": [
+            {
+              "id": "contact",
+              "title": "Contact Information",
+              "fields": [
+                { "id": "email", "label": "Email", "value": "sarah.johnson@techcorp.com", "format": "email" },
+                { "id": "phone", "label": "Phone", "value": "+1 (555) 123-4567", "format": "phone" }
+              ]
+            }
+          ]
+        },
+        "html": "<article class=\"lead-detail-card\" aria-label=\"Lead details for Sarah Johnson\">\n  <header class=\"lead-detail-card__header\">\n    <div class=\"lead-detail-card__avatar\">SJ</div>\n    <div class=\"lead-detail-card__info\">\n      <h2 class=\"lead-detail-card__name\">Sarah Johnson</h2>\n      <p class=\"lead-detail-card__subtitle\">TechCorp Inc - VP of Engineering</p>\n    </div>\n    <span class=\"lead-detail-card__status badge badge--green\">Qualified</span>\n  </header>\n  <section class=\"lead-detail-card__section\" aria-labelledby=\"section-contact\">\n    <h3 id=\"section-contact\" class=\"section__title\">Contact Information</h3>\n    <dl class=\"section__fields\">\n      <div class=\"field\">\n        <dt class=\"field__label\">Email</dt>\n        <dd class=\"field__value\"><a href=\"mailto:sarah.johnson@techcorp.com\">sarah.johnson@techcorp.com</a></dd>\n      </div>\n      <div class=\"field\">\n        <dt class=\"field__label\">Phone</dt>\n        <dd class=\"field__value\"><a href=\"tel:+15551234567\">+1 (555) 123-4567</a></dd>\n      </div>\n    </dl>\n  </section>\n</article>"
+      }
+    },
+    "pipeline_board": {
+      "description": "Sales pipeline board with 4 stages",
+      "input": {
+        "schema": {
+          "type": "pipeline_board",
+          "schemaVersion": "1.0.0",
+          "title": "Sales Pipeline",
+          "columns": [
+            { "id": "prospecting", "title": "Prospecting", "items": "{{pipeline.prospecting}}" },
+            { "id": "qualification", "title": "Qualification", "items": "{{pipeline.qualification}}" },
+            { "id": "proposal", "title": "Proposal", "items": "{{pipeline.proposal}}" },
+            { "id": "closed", "title": "Closed Won", "items": "{{pipeline.closed}}" }
+          ],
+          "cardTemplate": {
+            "title": "{{item.company}}",
+            "subtitle": "{{item.contact}}",
+            "value": { "path": "{{item.value}}", "format": "currency" }
+          },
+          "draggable": true
+        },
+        "data": {
+          "pipeline": {
+            "prospecting": [
+              { "id": "1", "company": "Acme Corp", "contact": "John Doe", "value": 50000 }
+            ],
+            "qualification": [
+              { "id": "2", "company": "Beta Inc", "contact": "Jane Smith", "value": 75000 }
+            ],
+            "proposal": [
+              { "id": "3", "company": "Gamma LLC", "contact": "Bob Wilson", "value": 120000 }
+            ],
+            "closed": []
+          }
+        }
+      },
+      "output": {
+        "rendered": {
+          "columns": [
+            {
+              "id": "prospecting",
+              "title": "Prospecting",
+              "count": 1,
+              "total": "$50,000",
+              "cards": [
+                { "id": "1", "title": "Acme Corp", "subtitle": "John Doe", "value": "$50,000" }
+              ]
+            },
+            {
+              "id": "qualification",
+              "title": "Qualification",
+              "count": 1,
+              "total": "$75,000",
+              "cards": [
+                { "id": "2", "title": "Beta Inc", "subtitle": "Jane Smith", "value": "$75,000" }
+              ]
+            },
+            {
+              "id": "proposal",
+              "title": "Proposal",
+              "count": 1,
+              "total": "$120,000",
+              "cards": [
+                { "id": "3", "title": "Gamma LLC", "subtitle": "Bob Wilson", "value": "$120,000" }
+              ]
+            },
+            {
+              "id": "closed",
+              "title": "Closed Won",
+              "count": 0,
+              "total": "$0",
+              "cards": []
+            }
+          ]
+        },
+        "html": "<div class=\"pipeline-board\" role=\"application\" aria-label=\"Sales pipeline board\">\n  <div class=\"pipeline-board__column\" data-column=\"prospecting\">\n    <header class=\"column__header\">\n      <h3 class=\"column__title\">Prospecting</h3>\n      <span class=\"column__count\">1</span>\n      <span class=\"column__total\">$50,000</span>\n    </header>\n    <div class=\"column__cards\" role=\"listbox\">\n      <div class=\"pipeline-card\" draggable=\"true\" role=\"option\" aria-selected=\"false\">\n        <h4 class=\"pipeline-card__title\">Acme Corp</h4>\n        <p class=\"pipeline-card__subtitle\">John Doe</p>\n        <span class=\"pipeline-card__value\">$50,000</span>\n      </div>\n    </div>\n  </div>\n  <!-- Additional columns... -->\n</div>"
+      }
+    },
+    "action_panel": {
+      "description": "Lead action panel with communication and workflow actions",
+      "input": {
+        "schema": {
+          "type": "action_panel",
+          "schemaVersion": "1.0.0",
+          "title": "Lead Actions",
+          "layout": "horizontal",
+          "context": {
+            "title": "{{selection.lead.name}}",
+            "subtitle": "{{selection.lead.company}}"
+          },
+          "groups": [
+            {
+              "id": "communication",
+              "title": "Communication",
+              "actions": [
+                { "id": "call", "label": "Call", "type": "primary", "icon": "phone", "handler": "initiateCall" },
+                { "id": "email", "label": "Email", "type": "secondary", "icon": "mail", "handler": "composeEmail" }
+              ]
+            }
+          ]
+        },
+        "data": {
+          "selection": {
+            "lead": {
+              "name": "Sarah Johnson",
+              "company": "TechCorp Inc"
+            }
+          }
+        }
+      },
+      "output": {
+        "rendered": {
+          "context": {
+            "title": "Sarah Johnson",
+            "subtitle": "TechCorp Inc"
+          },
+          "groups": [
+            {
+              "id": "communication",
+              "title": "Communication",
+              "actions": [
+                { "id": "call", "label": "Call", "type": "primary", "icon": "phone", "enabled": true },
+                { "id": "email", "label": "Email", "type": "secondary", "icon": "mail", "enabled": true }
+              ]
+            }
+          ]
+        },
+        "html": "<div class=\"action-panel\" role=\"toolbar\" aria-label=\"Actions for lead Sarah Johnson\">\n  <div class=\"action-panel__context\">\n    <span class=\"context__title\">Sarah Johnson</span>\n    <span class=\"context__subtitle\">TechCorp Inc</span>\n  </div>\n  <div class=\"action-panel__groups\">\n    <div class=\"action-group\" role=\"group\" aria-label=\"Communication\">\n      <button class=\"action-btn action-btn--primary\" aria-label=\"Call Sarah Johnson\">\n        <svg class=\"action-btn__icon\"><!-- phone icon --></svg>\n        <span>Call</span>\n      </button>\n      <button class=\"action-btn action-btn--secondary\" aria-label=\"Email Sarah Johnson\">\n        <svg class=\"action-btn__icon\"><!-- mail icon --></svg>\n        <span>Email</span>\n      </button>\n    </div>\n  </div>\n</div>"
+      }
+    },
+    "governance_status": {
+      "description": "Governance compliance status showing G13-G21 gates",
+      "input": {
+        "schema": {
+          "type": "governance_status",
+          "schemaVersion": "1.0.0",
+          "title": "Governance Compliance",
+          "overallScore": { "value": "{{governance.overallScore}}", "threshold": 85 },
+          "layout": "list",
+          "gates": [
+            {
+              "id": "g13",
+              "gateId": "G13",
+              "name": "Data Privacy",
+              "status": "{{governance.gates.g13.status}}",
+              "progress": "{{governance.gates.g13.progress}}"
+            },
+            {
+              "id": "g14",
+              "gateId": "G14",
+              "name": "Access Control",
+              "status": "{{governance.gates.g14.status}}",
+              "progress": "{{governance.gates.g14.progress}}"
+            }
+          ]
+        },
+        "data": {
+          "governance": {
+            "overallScore": 92,
+            "gates": {
+              "g13": { "status": "passed", "progress": 100 },
+              "g14": { "status": "pending", "progress": 75 }
+            }
+          }
+        }
+      },
+      "output": {
+        "rendered": {
+          "overallScore": {
+            "value": 92,
+            "threshold": 85,
+            "passing": true,
+            "color": "green"
+          },
+          "gates": [
+            { "gateId": "G13", "name": "Data Privacy", "status": "passed", "progress": 100, "color": "green" },
+            { "gateId": "G14", "name": "Access Control", "status": "pending", "progress": 75, "color": "yellow" }
+          ]
+        },
+        "html": "<div class=\"governance-status\" role=\"region\" aria-label=\"Governance compliance status showing 92% overall compliance\">\n  <header class=\"governance-status__header\">\n    <h2 class=\"governance-status__title\">Governance Compliance</h2>\n    <div class=\"governance-status__score governance-status__score--passing\">\n      <span class=\"score__value\">92%</span>\n      <span class=\"score__label\">Overall Score</span>\n    </div>\n  </header>\n  <ul class=\"governance-status__gates\" role=\"list\">\n    <li class=\"gate gate--passed\" role=\"listitem\">\n      <span class=\"gate__id\">G13</span>\n      <span class=\"gate__name\">Data Privacy</span>\n      <div class=\"gate__progress\" role=\"progressbar\" aria-valuenow=\"100\" aria-valuemin=\"0\" aria-valuemax=\"100\">\n        <div class=\"progress__bar\" style=\"width: 100%\"></div>\n      </div>\n      <span class=\"gate__status badge badge--green\">Passed</span>\n    </li>\n    <li class=\"gate gate--pending\" role=\"listitem\">\n      <span class=\"gate__id\">G14</span>\n      <span class=\"gate__name\">Access Control</span>\n      <div class=\"gate__progress\" role=\"progressbar\" aria-valuenow=\"75\" aria-valuemin=\"0\" aria-valuemax=\"100\">\n        <div class=\"progress__bar\" style=\"width: 75%\"></div>\n      </div>\n      <span class=\"gate__status badge badge--yellow\">Pending</span>\n    </li>\n  </ul>\n</div>"
+      }
+    },
+    "approval_flow": {
+      "description": "Contract approval workflow with 3 steps",
+      "input": {
+        "schema": {
+          "type": "approval_flow",
+          "schemaVersion": "1.0.0",
+          "title": "Contract Approval",
+          "layout": "horizontal",
+          "currentStep": "{{approval.currentStep}}",
+          "steps": [
+            { "id": "legal", "name": "Legal Review", "status": "{{approval.steps.legal}}" },
+            { "id": "finance", "name": "Finance Review", "status": "{{approval.steps.finance}}" },
+            { "id": "executive", "name": "Executive Approval", "status": "{{approval.steps.executive}}" }
+          ]
+        },
+        "data": {
+          "approval": {
+            "currentStep": 1,
+            "steps": {
+              "legal": "approved",
+              "finance": "pending",
+              "executive": "not_started"
+            }
+          }
+        }
+      },
+      "output": {
+        "rendered": {
+          "currentStep": 1,
+          "steps": [
+            { "id": "legal", "name": "Legal Review", "status": "approved", "complete": true, "color": "green" },
+            { "id": "finance", "name": "Finance Review", "status": "pending", "current": true, "color": "blue" },
+            { "id": "executive", "name": "Executive Approval", "status": "not_started", "pending": true, "color": "gray" }
+          ]
+        },
+        "html": "<nav class=\"approval-flow approval-flow--horizontal\" role=\"navigation\" aria-label=\"Contract approval workflow - currently at step 2 of 3\">\n  <ol class=\"approval-flow__steps\">\n    <li class=\"step step--completed\" aria-current=\"false\">\n      <div class=\"step__indicator\"><svg><!-- check icon --></svg></div>\n      <span class=\"step__name\">Legal Review</span>\n      <span class=\"step__status\">Approved</span>\n    </li>\n    <li class=\"step step--current\" aria-current=\"step\">\n      <div class=\"step__indicator\">2</div>\n      <span class=\"step__name\">Finance Review</span>\n      <span class=\"step__status\">In Progress</span>\n    </li>\n    <li class=\"step step--pending\" aria-current=\"false\">\n      <div class=\"step__indicator\">3</div>\n      <span class=\"step__name\">Executive Approval</span>\n      <span class=\"step__status\">Waiting</span>\n    </li>\n  </ol>\n</nav>"
+      }
+    },
+    "alert_widget": {
+      "description": "Alert widget showing payment notifications",
+      "input": {
+        "schema": {
+          "type": "alert_widget",
+          "schemaVersion": "1.0.0",
+          "title": "System Alerts",
+          "alerts": "{{alerts.active}}",
+          "maxVisible": 5,
+          "groupBySeverity": true
+        },
+        "data": {
+          "alerts": {
+            "active": [
+              {
+                "id": "alert_1",
+                "severity": "critical",
+                "title": "Payment Failed",
+                "message": "Payment for Invoice #12345 failed after 3 retries",
+                "timestamp": "2024-01-15T10:30:00Z"
+              },
+              {
+                "id": "alert_2",
+                "severity": "high",
+                "title": "Large Transaction",
+                "message": "Unusual transaction of $50,000 detected",
+                "timestamp": "2024-01-15T09:15:00Z"
+              }
+            ]
+          }
+        }
+      },
+      "output": {
+        "rendered": {
+          "groups": {
+            "critical": [
+              {
+                "id": "alert_1",
+                "severity": "critical",
+                "title": "Payment Failed",
+                "message": "Payment for Invoice #12345 failed after 3 retries",
+                "timestamp": "10:30 AM",
+                "relativeTime": "5 minutes ago"
+              }
+            ],
+            "high": [
+              {
+                "id": "alert_2",
+                "severity": "high",
+                "title": "Large Transaction",
+                "message": "Unusual transaction of $50,000 detected",
+                "timestamp": "9:15 AM",
+                "relativeTime": "1 hour ago"
+              }
+            ]
+          }
+        },
+        "html": "<div class=\"alert-widget\" role=\"alert\" aria-live=\"assertive\" aria-label=\"System alerts - 1 critical, 1 high priority\">\n  <header class=\"alert-widget__header\">\n    <h2 class=\"alert-widget__title\">System Alerts</h2>\n    <span class=\"alert-widget__count\">2 alerts</span>\n  </header>\n  <div class=\"alert-widget__group alert-widget__group--critical\">\n    <h3 class=\"group__title\">Critical</h3>\n    <div class=\"alert alert--critical\" role=\"alertdialog\">\n      <div class=\"alert__icon\"><svg><!-- warning icon --></svg></div>\n      <div class=\"alert__content\">\n        <h4 class=\"alert__title\">Payment Failed</h4>\n        <p class=\"alert__message\">Payment for Invoice #12345 failed after 3 retries</p>\n        <time class=\"alert__timestamp\">5 minutes ago</time>\n      </div>\n      <button class=\"alert__dismiss\" aria-label=\"Dismiss alert\">&times;</button>\n    </div>\n  </div>\n  <div class=\"alert-widget__group alert-widget__group--high\">\n    <h3 class=\"group__title\">High Priority</h3>\n    <div class=\"alert alert--high\" role=\"alertdialog\">\n      <div class=\"alert__icon\"><svg><!-- alert icon --></svg></div>\n      <div class=\"alert__content\">\n        <h4 class=\"alert__title\">Large Transaction</h4>\n        <p class=\"alert__message\">Unusual transaction of $50,000 detected</p>\n        <time class=\"alert__timestamp\">1 hour ago</time>\n      </div>\n      <button class=\"alert__dismiss\" aria-label=\"Dismiss alert\">&times;</button>\n    </div>\n  </div>\n</div>"
+      }
+    },
+    "proof_modal": {
+      "description": "Cryptographic proof viewer for transaction verification",
+      "input": {
+        "schema": {
+          "type": "proof_modal",
+          "schemaVersion": "1.0.0",
+          "title": "Transaction Proof",
+          "proofId": "{{proof.id}}",
+          "proofType": "transaction",
+          "sections": [
+            { "id": "hash", "title": "Document Hash", "type": "hash", "data": "{{proof.documentHash}}" },
+            { "id": "signature", "title": "Digital Signature", "type": "signature", "data": "{{proof.signature}}" }
+          ],
+          "downloadable": true,
+          "showQR": true
+        },
+        "data": {
+          "proof": {
+            "id": "proof_abc123",
+            "documentHash": "sha256:a7f8d9e2c1b4a5f6d7e8c9b0a1f2d3e4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0",
+            "signature": "MEUCIQD8pX7...base64signature..."
+          }
+        }
+      },
+      "output": {
+        "rendered": {
+          "proofId": "proof_abc123",
+          "sections": [
+            {
+              "id": "hash",
+              "title": "Document Hash",
+              "type": "hash",
+              "value": "sha256:a7f8d9e2c1b4a5f6d7e8c9b0a1f2d3e4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0",
+              "truncated": "sha256:a7f8d9e2...b8c9d0",
+              "verified": true
+            },
+            {
+              "id": "signature",
+              "title": "Digital Signature",
+              "type": "signature",
+              "value": "MEUCIQD8pX7...base64signature...",
+              "verified": true
+            }
+          ],
+          "qrCodeData": "qontrek://verify/proof_abc123"
+        },
+        "html": "<div class=\"proof-modal\" role=\"dialog\" aria-label=\"Cryptographic proof viewer for transaction proof_abc123\">\n  <header class=\"proof-modal__header\">\n    <h2 class=\"proof-modal__title\">Transaction Proof</h2>\n    <span class=\"proof-modal__id\">ID: proof_abc123</span>\n  </header>\n  <div class=\"proof-modal__sections\">\n    <section class=\"proof-section\" aria-labelledby=\"section-hash\">\n      <h3 id=\"section-hash\" class=\"proof-section__title\">\n        <svg class=\"verified-icon\"><!-- check icon --></svg>\n        Document Hash\n      </h3>\n      <div class=\"proof-section__content\">\n        <code class=\"hash-display\">sha256:a7f8d9e2...b8c9d0</code>\n        <button class=\"copy-btn\" aria-label=\"Copy full hash\">Copy</button>\n      </div>\n    </section>\n    <section class=\"proof-section\" aria-labelledby=\"section-signature\">\n      <h3 id=\"section-signature\" class=\"proof-section__title\">\n        <svg class=\"verified-icon\"><!-- check icon --></svg>\n        Digital Signature\n      </h3>\n      <div class=\"proof-section__content\">\n        <code class=\"signature-display\">MEUCIQD8pX7...</code>\n        <button class=\"expand-btn\" aria-label=\"Expand signature\">Expand</button>\n      </div>\n    </section>\n  </div>\n  <footer class=\"proof-modal__footer\">\n    <div class=\"qr-code\" aria-label=\"QR code for external verification\">\n      <!-- QR Code SVG -->\n    </div>\n    <div class=\"proof-modal__actions\">\n      <button class=\"btn btn--primary\">Download Proof</button>\n      <button class=\"btn btn--secondary\">Verify Externally</button>\n    </div>\n  </footer>\n</div>"
+      }
+    },
+    "form_generator": {
+      "description": "Dynamic lead creation form",
+      "input": {
+        "schema": {
+          "type": "form_generator",
+          "schemaVersion": "1.0.0",
+          "title": "New Lead Form",
+          "formId": "new_lead",
+          "layout": "single",
+          "sections": [
+            {
+              "id": "basic",
+              "title": "Basic Info",
+              "fields": [
+                {
+                  "id": "name",
+                  "name": "name",
+                  "label": "Full Name",
+                  "type": "text",
+                  "validation": [{ "type": "required", "message": "Name is required" }]
+                },
+                {
+                  "id": "email",
+                  "name": "email",
+                  "label": "Email",
+                  "type": "email",
+                  "validation": [
+                    { "type": "required", "message": "Email is required" },
+                    { "type": "email", "message": "Invalid email" }
+                  ]
+                }
+              ]
+            }
+          ],
+          "onSubmit": "createLead",
+          "submitLabel": "Create Lead"
+        },
+        "data": {
+          "prefill": {
+            "name": "",
+            "email": ""
+          }
+        }
+      },
+      "output": {
+        "rendered": {
+          "formId": "new_lead",
+          "sections": [
+            {
+              "id": "basic",
+              "title": "Basic Info",
+              "fields": [
+                {
+                  "id": "name",
+                  "name": "name",
+                  "label": "Full Name",
+                  "type": "text",
+                  "required": true,
+                  "value": ""
+                },
+                {
+                  "id": "email",
+                  "name": "email",
+                  "label": "Email",
+                  "type": "email",
+                  "required": true,
+                  "value": ""
+                }
+              ]
+            }
+          ]
+        },
+        "html": "<form class=\"form-generator\" id=\"form-new_lead\" role=\"form\" aria-label=\"Create new lead form\">\n  <fieldset class=\"form-section\">\n    <legend class=\"form-section__title\">Basic Info</legend>\n    <div class=\"form-field\">\n      <label class=\"form-field__label\" for=\"field-name\">\n        Full Name <span class=\"required\" aria-label=\"required\">*</span>\n      </label>\n      <input type=\"text\" id=\"field-name\" name=\"name\" class=\"form-field__input\" required aria-required=\"true\" />\n    </div>\n    <div class=\"form-field\">\n      <label class=\"form-field__label\" for=\"field-email\">\n        Email <span class=\"required\" aria-label=\"required\">*</span>\n      </label>\n      <input type=\"email\" id=\"field-email\" name=\"email\" class=\"form-field__input\" required aria-required=\"true\" />\n    </div>\n  </fieldset>\n  <div class=\"form-actions\">\n    <button type=\"submit\" class=\"btn btn--primary\">Create Lead</button>\n  </div>\n</form>"
+      }
+    }
+  }
+}
