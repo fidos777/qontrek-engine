@@ -1,0 +1,12 @@
+-- =============================================================================
+-- RLS Policies - DEPRECATED LOCATION
+-- =============================================================================
+-- RLS policies have been moved to: supabase/migrations/001_rls_policies.sql
+-- This file is kept for backward compatibility.
+-- =============================================================================
+
+-- See supabase/migrations/001_rls_policies.sql for:
+-- - Helper functions: auth.tenant_id(), auth.user_role(), auth.user_id()
+-- - Table definitions: tenants, leads, pipelines, proofs, governance_logs
+-- - RLS policies for all tables (SELECT, INSERT, UPDATE, DELETE)
+-- - Test queries: supabase/migrations/002_rls_test_queries.sql
