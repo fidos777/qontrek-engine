@@ -1,0 +1,556 @@
+{
+  "version": "1.0.0",
+  "name": "qontrek-mcp-tools",
+  "description": "Qontrek OS Layer 2 - MCP Tool Fabric. Enterprise governance and sales operations tools.",
+  "base_url": "/api/mcp/tools",
+  "tools": [
+    {
+      "name": "listTenants",
+      "description": "Lists available tenants with filtering and pagination. Returns tenant information including status, tier, and features.",
+      "version": "1.0.0",
+      "category": "tenant",
+      "endpoint": "/api/mcp/tools/listTenants",
+      "method": "POST",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "filter": {
+            "type": "string",
+            "enum": ["all", "active", "suspended"],
+            "default": "active",
+            "description": "Filter tenants by status"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50,
+            "description": "Maximum number of tenants to return"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "tenants": { "type": "array" },
+          "total": { "type": "integer" },
+          "has_more": { "type": "boolean" }
+        }
+      },
+      "rate_limit": {
+        "requests": 100,
+        "window_seconds": 60
+      },
+      "requires_auth": true,
+      "governance_gate": "G13"
+    },
+    {
+      "name": "getGovernanceStatus",
+      "description": "Returns governance gate status for G13-G21. Includes evidence and KPIs for compliance tracking.",
+      "version": "1.0.0",
+      "category": "governance",
+      "endpoint": "/api/mcp/tools/getGovernanceStatus",
+      "method": "POST",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "gates": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^G\\d+$" },
+            "description": "Specific gates to query (e.g., ['G13', 'G14']). Empty for all gates."
+          },
+          "include_evidence": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include detailed evidence for each gate"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "gates": { "type": "array" },
+          "summary": { "type": "object" },
+          "health_score": { "type": "integer" }
+        }
+      },
+      "rate_limit": {
+        "requests": 100,
+        "window_seconds": 60
+      },
+      "requires_auth": true,
+      "governance_gate": "G13"
+    },
+    {
+      "name": "refreshProof",
+      "description": "Triggers regeneration of governance proof files. Supports selective or full proof refresh with hash continuity tracking.",
+      "version": "1.0.0",
+      "category": "governance",
+      "endpoint": "/api/mcp/tools/refreshProof",
+      "method": "POST",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "proof_type": {
+            "type": "string",
+            "enum": ["tower_receipt", "key_rotation", "governance_snapshot", "audit_mirror", "federation_sync", "all"],
+            "description": "Type of proof to refresh"
+          },
+          "force": {
+            "type": "boolean",
+            "default": false,
+            "description": "Force refresh even if proof is recent"
+          }
+        },
+        "required": ["proof_type"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "proof_type": { "type": "string" },
+          "path": { "type": "string" },
+          "hash": { "type": "string" },
+          "generated_at": { "type": "string" },
+          "previous_hash": { "type": "string" }
+        }
+      },
+      "rate_limit": {
+        "requests": 10,
+        "window_seconds": 60
+      },
+      "requires_auth": true,
+      "governance_gate": "G13"
+    },
+    {
+      "name": "getPipelineSummary",
+      "description": "Returns sales pipeline summary with stage metrics. Supports time range filtering for trend analysis.",
+      "version": "1.0.0",
+      "category": "pipeline",
+      "endpoint": "/api/mcp/tools/getPipelineSummary",
+      "method": "POST",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "pipeline_id": {
+            "type": "string",
+            "description": "Specific pipeline ID (optional, defaults to main pipeline)"
+          },
+          "time_range": {
+            "type": "string",
+            "enum": ["1h", "24h", "7d", "30d"],
+            "default": "24h",
+            "description": "Time range for metrics"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "pipeline_id": { "type": "string" },
+          "name": { "type": "string" },
+          "stages": { "type": "array" },
+          "totals": { "type": "object" },
+          "last_updated": { "type": "string" }
+        }
+      },
+      "rate_limit": {
+        "requests": 100,
+        "window_seconds": 60
+      },
+      "requires_auth": true,
+      "governance_gate": "G13"
+    },
+    {
+      "name": "getCriticalLeads",
+      "description": "Returns critical and high-priority leads requiring attention. Supports filtering by priority and custom sorting.",
+      "version": "1.0.0",
+      "category": "leads",
+      "endpoint": "/api/mcp/tools/getCriticalLeads",
+      "method": "POST",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20,
+            "description": "Maximum number of leads to return"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "all"],
+            "default": "critical",
+            "description": "Filter by priority level"
+          },
+          "sort_by": {
+            "type": "string",
+            "enum": ["value", "urgency", "created_at"],
+            "default": "urgency",
+            "description": "Sort order for results"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "leads": { "type": "array" },
+          "total": { "type": "integer" },
+          "total_value": { "type": "number" },
+          "has_more": { "type": "boolean" }
+        }
+      },
+      "rate_limit": {
+        "requests": 100,
+        "window_seconds": 60
+      },
+      "requires_auth": true,
+      "governance_gate": "G13"
+    },
+    {
+      "name": "getLeadDetails",
+      "description": "Returns detailed information about a specific lead. Includes activity history, change log, and related leads.",
+      "version": "1.0.0",
+      "category": "leads",
+      "endpoint": "/api/mcp/tools/getLeadDetails",
+      "method": "POST",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "lead_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The lead ID to retrieve"
+          },
+          "include_history": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include field change history"
+          },
+          "include_activities": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include activity timeline"
+          }
+        },
+        "required": ["lead_id"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "lead": { "type": "object" },
+          "activities": { "type": "array" },
+          "history": { "type": "array" },
+          "related_leads": { "type": "array" }
+        }
+      },
+      "rate_limit": {
+        "requests": 200,
+        "window_seconds": 60
+      },
+      "requires_auth": true,
+      "governance_gate": "G13"
+    },
+    {
+      "name": "updateLeadStatus",
+      "description": "Updates the status of a lead with optional note. Validates status transitions and logs changes for audit.",
+      "version": "1.0.0",
+      "category": "leads",
+      "endpoint": "/api/mcp/tools/updateLeadStatus",
+      "method": "POST",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "lead_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The lead ID to update"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["new", "contacted", "qualified", "proposal", "negotiation", "won", "lost"],
+            "description": "New status for the lead"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000,
+            "description": "Optional note for the status change"
+          }
+        },
+        "required": ["lead_id", "status"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "lead_id": { "type": "string" },
+          "previous_status": { "type": "string" },
+          "new_status": { "type": "string" },
+          "updated_at": { "type": "string" },
+          "updated_by": { "type": "string" }
+        }
+      },
+      "rate_limit": {
+        "requests": 50,
+        "window_seconds": 60
+      },
+      "requires_auth": true,
+      "governance_gate": "G13"
+    },
+    {
+      "name": "getKPISnapshot",
+      "description": "Returns KPI metrics snapshot by category. Supports sales, governance, operations, and finance metrics with trend data.",
+      "version": "1.0.0",
+      "category": "pipeline",
+      "endpoint": "/api/mcp/tools/getKPISnapshot",
+      "method": "POST",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": ["sales", "governance", "operations", "finance", "all"],
+            "default": "all",
+            "description": "KPI category to retrieve"
+          },
+          "time_range": {
+            "type": "string",
+            "enum": ["today", "week", "month", "quarter", "year"],
+            "default": "month",
+            "description": "Time range for metrics comparison"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "category": { "type": "string" },
+          "time_range": { "type": "string" },
+          "metrics": { "type": "array" },
+          "generated_at": { "type": "string" }
+        }
+      },
+      "rate_limit": {
+        "requests": 100,
+        "window_seconds": 60
+      },
+      "requires_auth": true,
+      "governance_gate": "G13"
+    },
+    {
+      "name": "triggerWorkflow",
+      "description": "Triggers execution of a defined workflow. Supports manual, scheduled, and event-based triggers with priority control.",
+      "version": "1.0.0",
+      "category": "workflow",
+      "endpoint": "/api/mcp/tools/triggerWorkflow",
+      "method": "POST",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "workflow_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The workflow ID to trigger"
+          },
+          "trigger_type": {
+            "type": "string",
+            "enum": ["manual", "scheduled", "event"],
+            "description": "Type of trigger"
+          },
+          "payload": {
+            "type": "object",
+            "description": "Optional payload data for the workflow"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["low", "normal", "high", "urgent"],
+            "default": "normal",
+            "description": "Execution priority"
+          }
+        },
+        "required": ["workflow_id", "trigger_type"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "execution_id": { "type": "string" },
+          "workflow_id": { "type": "string" },
+          "status": { "type": "string" },
+          "triggered_at": { "type": "string" },
+          "estimated_completion": { "type": "string" }
+        }
+      },
+      "rate_limit": {
+        "requests": 20,
+        "window_seconds": 60
+      },
+      "requires_auth": true,
+      "governance_gate": "G13"
+    },
+    {
+      "name": "logProofEvent",
+      "description": "Logs governance and compliance events with proof generation. Maintains audit trail for G13 lineage with merkle continuity.",
+      "version": "1.0.0",
+      "category": "governance",
+      "endpoint": "/api/mcp/tools/logProofEvent",
+      "method": "POST",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "event_type": {
+            "type": "string",
+            "enum": ["audit_entry", "governance_check", "compliance_event", "security_event", "federation_sync"],
+            "description": "Type of event to log"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["info", "warning", "error", "critical"],
+            "default": "info",
+            "description": "Event severity level"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "Event message/description"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Additional event metadata"
+          }
+        },
+        "required": ["event_type", "message"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "event_id": { "type": "string" },
+          "logged_at": { "type": "string" },
+          "proof_hash": { "type": "string" },
+          "lineage_updated": { "type": "boolean" }
+        }
+      },
+      "rate_limit": {
+        "requests": 100,
+        "window_seconds": 60
+      },
+      "requires_auth": true,
+      "governance_gate": "G13"
+    },
+    {
+      "name": "getWidgetData",
+      "description": "Returns data for dashboard widgets. Supports caching and refresh control with TTL management.",
+      "version": "1.0.0",
+      "category": "widget",
+      "endpoint": "/api/mcp/tools/getWidgetData",
+      "method": "POST",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "widget_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The widget ID to fetch data for"
+          },
+          "params": {
+            "type": "object",
+            "description": "Optional widget-specific parameters"
+          },
+          "refresh": {
+            "type": "boolean",
+            "default": false,
+            "description": "Force cache refresh"
+          }
+        },
+        "required": ["widget_id"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "widget_id": { "type": "string" },
+          "widget_type": { "type": "string" },
+          "data": { "type": "object" },
+          "cached": { "type": "boolean" },
+          "cache_ttl": { "type": "integer" },
+          "rendered_at": { "type": "string" }
+        }
+      },
+      "rate_limit": {
+        "requests": 200,
+        "window_seconds": 60
+      },
+      "requires_auth": true,
+      "governance_gate": "G13"
+    },
+    {
+      "name": "getAgentContext",
+      "description": "Returns agent context including permissions, available tools, and session information for MCP clients.",
+      "version": "1.0.0",
+      "category": "agent",
+      "endpoint": "/api/mcp/tools/getAgentContext",
+      "method": "POST",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "context_type": {
+            "type": "string",
+            "enum": ["full", "summary", "permissions", "history"],
+            "default": "full",
+            "description": "Type of context to retrieve"
+          },
+          "include_tools": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include available tools list"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "agent_id": { "type": "string" },
+          "tenant_id": { "type": "string" },
+          "permissions": { "type": "array" },
+          "available_tools": { "type": "array" },
+          "session": { "type": "object" },
+          "governance": { "type": "object" }
+        }
+      },
+      "rate_limit": {
+        "requests": 50,
+        "window_seconds": 60
+      },
+      "requires_auth": true,
+      "governance_gate": "G13"
+    }
+  ],
+  "governance": {
+    "lineage_gate": "G13",
+    "audit_enabled": true,
+    "pii_scrubbing": true
+  },
+  "authentication": {
+    "type": "jwt",
+    "tenant_claim": "tenant_id",
+    "header": "Authorization",
+    "scheme": "Bearer"
+  },
+  "errors": {
+    "codes": {
+      "E001": "Invalid input parameters",
+      "E002": "Unauthorized - authentication required",
+      "E003": "Forbidden - insufficient permissions",
+      "E004": "Resource not found",
+      "E005": "Rate limit exceeded",
+      "E006": "Internal server error",
+      "E007": "Governance violation",
+      "E008": "Tenant mismatch",
+      "E009": "Proof generation failed",
+      "E010": "Workflow execution failed"
+    }
+  },
+  "metadata": {
+    "created_at": "2024-11-27T00:00:00Z",
+    "schema_version": "1.0.0",
+    "documentation_url": "/docs/mcp-tools"
+  }
+}
