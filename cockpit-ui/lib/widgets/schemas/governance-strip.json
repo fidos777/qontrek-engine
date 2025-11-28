@@ -1,0 +1,87 @@
+{
+  "id": "widget-governance-strip",
+  "type": "governance_strip",
+  "version": "1.0.0",
+  "title": "Governance Status",
+  "description": "Badge strip showing G13-G21 gate compliance status",
+  "category": "governance",
+  "data_source": {
+    "mcp_tool": "getGovernanceStatus",
+    "params": { "gates": ["G13", "G14", "G15", "G16", "G17", "G18", "G19", "G20", "G21"] },
+    "refresh_interval_ms": 30000
+  },
+  "layout": {
+    "default_cols": 3,
+    "default_rows": 1,
+    "min_width": 500,
+    "min_height": 80
+  },
+  "fields": [
+    {
+      "key": "gates",
+      "label": "Gates",
+      "type": "list",
+      "binding": "{{gates}}",
+      "format": "badge-strip"
+    },
+    {
+      "key": "overall_status",
+      "label": "Overall Status",
+      "type": "badge",
+      "binding": "{{overall_status}}",
+      "style": {
+        "compliant": "bg-green-500",
+        "partial": "bg-yellow-500",
+        "non_compliant": "bg-red-500",
+        "pending": "bg-gray-400"
+      }
+    },
+    {
+      "key": "compliance_score",
+      "label": "Compliance",
+      "type": "percentage",
+      "binding": "{{compliance_score}}"
+    },
+    {
+      "key": "last_audit",
+      "label": "Last Audit",
+      "type": "date",
+      "binding": "{{last_audit}}",
+      "format": "relative"
+    },
+    {
+      "key": "next_review",
+      "label": "Next Review",
+      "type": "date",
+      "binding": "{{next_review}}"
+    },
+    {
+      "key": "actions",
+      "label": "Actions",
+      "type": "action",
+      "binding": "{{governance_id}}",
+      "actions": [
+        {
+          "id": "view_details",
+          "label": "View Details",
+          "icon": "eye",
+          "mcp_tool": "viewGovernanceDetails",
+          "params": {}
+        },
+        {
+          "id": "request_audit",
+          "label": "Request Audit",
+          "icon": "clipboard-check",
+          "mcp_tool": "requestAudit",
+          "params": {},
+          "confirm": true
+        }
+      ]
+    }
+  ],
+  "governance": {
+    "gate_id": "G13",
+    "proof_required": true,
+    "audit_actions": true
+  }
+}

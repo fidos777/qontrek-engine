@@ -1,0 +1,117 @@
+{
+  "id": "widget-wa-contact",
+  "type": "whatsapp:contact_card",
+  "version": "1.0.0",
+  "title": "Contact Card",
+  "description": "Lead/contact snapshot with WhatsApp status",
+  "category": "whatsapp",
+  "data_source": {
+    "mcp_tool": "getWidgetData",
+    "params": { "widget_type": "whatsapp:contact_card" },
+    "refresh_interval_ms": 60000
+  },
+  "layout": {
+    "default_cols": 1,
+    "default_rows": 1,
+    "min_width": 280,
+    "min_height": 220
+  },
+  "fields": [
+    {
+      "key": "name",
+      "label": "Name",
+      "type": "text",
+      "binding": "{{contact.name}}",
+      "style": { "size": "lg", "weight": "bold" }
+    },
+    {
+      "key": "company",
+      "label": "Company",
+      "type": "text",
+      "binding": "{{contact.company}}"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text",
+      "binding": "{{contact.phone}}"
+    },
+    {
+      "key": "whatsapp_status",
+      "label": "WhatsApp",
+      "type": "badge",
+      "binding": "{{contact.whatsapp_status}}",
+      "style": {
+        "active": "bg-green-500",
+        "inactive": "bg-gray-400",
+        "blocked": "bg-red-500"
+      }
+    },
+    {
+      "key": "last_contact",
+      "label": "Last Contact",
+      "type": "date",
+      "binding": "{{contact.last_contact}}",
+      "format": "relative"
+    },
+    {
+      "key": "total_messages",
+      "label": "Total Messages",
+      "type": "number",
+      "binding": "{{contact.total_messages}}"
+    },
+    {
+      "key": "lead_value",
+      "label": "Deal Value",
+      "type": "currency",
+      "binding": "{{contact.lead_value}}"
+    },
+    {
+      "key": "lead_stage",
+      "label": "Stage",
+      "type": "badge",
+      "binding": "{{contact.lead_stage}}",
+      "style": {
+        "new": "bg-blue-500",
+        "contacted": "bg-yellow-500",
+        "qualified": "bg-purple-500",
+        "proposal": "bg-orange-500",
+        "negotiation": "bg-pink-500",
+        "won": "bg-green-500",
+        "lost": "bg-red-500"
+      }
+    },
+    {
+      "key": "actions",
+      "label": "Actions",
+      "type": "action",
+      "binding": "{{contact.id}}",
+      "actions": [
+        {
+          "id": "send_whatsapp",
+          "label": "WhatsApp",
+          "icon": "message-circle",
+          "mcp_tool": "openSendPanel",
+          "params": { "contact_id": "{{contact.id}}" }
+        },
+        {
+          "id": "call",
+          "label": "Call",
+          "icon": "phone",
+          "mcp_tool": "initiateCall",
+          "params": { "contact_id": "{{contact.id}}" }
+        },
+        {
+          "id": "view_profile",
+          "label": "Profile",
+          "icon": "user",
+          "mcp_tool": "viewContactProfile",
+          "params": { "contact_id": "{{contact.id}}" }
+        }
+      ]
+    }
+  ],
+  "governance": {
+    "audit_actions": true
+  }
+}

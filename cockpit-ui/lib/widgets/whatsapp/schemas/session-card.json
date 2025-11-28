@@ -1,0 +1,102 @@
+{
+  "id": "widget-wa-session",
+  "type": "whatsapp:session_card",
+  "version": "1.0.0",
+  "title": "WhatsApp Session",
+  "description": "24-hour session window tracking with expiry countdown",
+  "category": "whatsapp",
+  "data_source": {
+    "mcp_tool": "getWidgetData",
+    "params": { "widget_type": "whatsapp:session_card" },
+    "refresh_interval_ms": 60000
+  },
+  "layout": {
+    "default_cols": 1,
+    "default_rows": 1,
+    "min_width": 280,
+    "min_height": 180
+  },
+  "fields": [
+    {
+      "key": "contact_name",
+      "label": "Contact",
+      "type": "text",
+      "binding": "{{session.contact.name}}"
+    },
+    {
+      "key": "contact_company",
+      "label": "Company",
+      "type": "text",
+      "binding": "{{session.contact.company}}"
+    },
+    {
+      "key": "session_status",
+      "label": "Status",
+      "type": "badge",
+      "binding": "{{session.status}}",
+      "style": {
+        "active": "bg-green-500",
+        "expiring": "bg-yellow-500",
+        "expired": "bg-red-500"
+      }
+    },
+    {
+      "key": "time_remaining",
+      "label": "Time Left",
+      "type": "text",
+      "binding": "{{session.expires_in}}",
+      "format": "countdown",
+      "style": { "size": "lg", "weight": "bold" }
+    },
+    {
+      "key": "category",
+      "label": "Category",
+      "type": "badge",
+      "binding": "{{session.category}}",
+      "style": {
+        "marketing": "bg-purple-500",
+        "utility": "bg-blue-500",
+        "service": "bg-gray-500",
+        "authentication": "bg-cyan-500"
+      }
+    },
+    {
+      "key": "messages_sent",
+      "label": "Sent",
+      "type": "number",
+      "binding": "{{session.messages_sent}}"
+    },
+    {
+      "key": "messages_received",
+      "label": "Received",
+      "type": "number",
+      "binding": "{{session.messages_received}}"
+    },
+    {
+      "key": "actions",
+      "label": "Actions",
+      "type": "action",
+      "binding": "{{session.id}}",
+      "actions": [
+        {
+          "id": "send_message",
+          "label": "Send Message",
+          "icon": "message-circle",
+          "mcp_tool": "openSendPanel",
+          "params": { "session_id": "{{session.id}}" }
+        },
+        {
+          "id": "view_conversation",
+          "label": "View Chat",
+          "icon": "messages",
+          "mcp_tool": "viewConversation",
+          "params": { "contact_id": "{{session.contact.id}}" }
+        }
+      ]
+    }
+  ],
+  "show_if": "{{session.status}} !== 'expired'",
+  "governance": {
+    "audit_actions": true
+  }
+}
