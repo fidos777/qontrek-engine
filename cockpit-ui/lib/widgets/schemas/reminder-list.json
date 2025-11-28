@@ -1,0 +1,91 @@
+{
+  "id": "widget-reminder-list",
+  "type": "reminder_list",
+  "version": "1.0.0",
+  "title": "Active Reminders",
+  "description": "List of pending reminders with actions",
+  "category": "data",
+  "data_source": {
+    "mcp_tool": "getWidgetData",
+    "params": { "widget_type": "reminder_list", "status": "pending" },
+    "refresh_interval_ms": 30000
+  },
+  "layout": {
+    "default_cols": 1,
+    "default_rows": 2,
+    "min_width": 300,
+    "min_height": 350
+  },
+  "fields": [
+    {
+      "key": "title",
+      "label": "Reminder",
+      "type": "text",
+      "binding": "{{reminder.title}}"
+    },
+    {
+      "key": "lead_name",
+      "label": "Contact",
+      "type": "text",
+      "binding": "{{reminder.lead_name}}"
+    },
+    {
+      "key": "due_at",
+      "label": "Due",
+      "type": "date",
+      "binding": "{{reminder.due_at}}",
+      "format": "relative",
+      "style": {
+        "overdue": "text-red-500",
+        "today": "text-orange-500",
+        "upcoming": "text-gray-500"
+      }
+    },
+    {
+      "key": "priority",
+      "label": "Priority",
+      "type": "badge",
+      "binding": "{{reminder.priority}}",
+      "style": {
+        "high": "bg-red-500",
+        "medium": "bg-yellow-500",
+        "low": "bg-gray-400"
+      }
+    },
+    {
+      "key": "actions",
+      "label": "Actions",
+      "type": "action",
+      "binding": "{{reminder.id}}",
+      "actions": [
+        {
+          "id": "complete",
+          "label": "Complete",
+          "icon": "check",
+          "mcp_tool": "completeReminder",
+          "params": { "reminder_id": "{{reminder.id}}" },
+          "confirm": false
+        },
+        {
+          "id": "snooze",
+          "label": "Snooze",
+          "icon": "clock",
+          "mcp_tool": "snoozeReminder",
+          "params": { "reminder_id": "{{reminder.id}}", "duration_minutes": 30 }
+        },
+        {
+          "id": "delete",
+          "label": "Delete",
+          "icon": "trash",
+          "mcp_tool": "deleteReminder",
+          "params": { "reminder_id": "{{reminder.id}}" },
+          "confirm": true
+        }
+      ]
+    }
+  ],
+  "governance": {
+    "gate_id": "G2",
+    "audit_actions": true
+  }
+}

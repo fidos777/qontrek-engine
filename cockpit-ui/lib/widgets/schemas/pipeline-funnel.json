@@ -1,0 +1,57 @@
+{
+  "id": "widget-pipeline-funnel",
+  "type": "pipeline_funnel",
+  "version": "1.0.0",
+  "title": "Sales Pipeline",
+  "description": "Visual funnel showing lead progression through pipeline stages",
+  "category": "metrics",
+  "data_source": {
+    "mcp_tool": "getWidgetData",
+    "params": { "widget_type": "pipeline_funnel" },
+    "refresh_interval_ms": 60000
+  },
+  "layout": {
+    "default_cols": 2,
+    "default_rows": 2,
+    "min_width": 400,
+    "min_height": 300
+  },
+  "fields": [
+    {
+      "key": "total_leads",
+      "label": "Total Leads",
+      "type": "number",
+      "binding": "{{pipeline.total_leads}}"
+    },
+    {
+      "key": "stages",
+      "label": "Pipeline Stages",
+      "type": "chart",
+      "binding": "{{pipeline.stages}}",
+      "format": "funnel"
+    },
+    {
+      "key": "conversion_rate",
+      "label": "Conversion Rate",
+      "type": "percentage",
+      "binding": "{{pipeline.conversion_rate}}",
+      "style": { "color": "success" }
+    },
+    {
+      "key": "total_value",
+      "label": "Pipeline Value",
+      "type": "currency",
+      "binding": "{{pipeline.total_value}}"
+    },
+    {
+      "key": "avg_deal_size",
+      "label": "Avg Deal Size",
+      "type": "currency",
+      "binding": "{{pipeline.avg_deal_size}}"
+    }
+  ],
+  "governance": {
+    "gate_id": "G0",
+    "audit_actions": true
+  }
+}

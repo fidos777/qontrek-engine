@@ -1,0 +1,62 @@
+{
+  "id": "widget-kpi-card",
+  "type": "kpi_card",
+  "version": "1.0.0",
+  "title": "KPI Card",
+  "description": "Single KPI display with trend indicator",
+  "category": "metrics",
+  "data_source": {
+    "mcp_tool": "getWidgetData",
+    "params": { "widget_type": "kpi_card", "kpi_id": "{{kpi_id}}" },
+    "refresh_interval_ms": 30000
+  },
+  "layout": {
+    "default_cols": 1,
+    "default_rows": 1,
+    "min_width": 180,
+    "min_height": 120
+  },
+  "fields": [
+    {
+      "key": "value",
+      "label": "Value",
+      "type": "number",
+      "binding": "{{kpi.value}}",
+      "style": { "size": "2xl", "weight": "bold" }
+    },
+    {
+      "key": "label",
+      "label": "Metric",
+      "type": "text",
+      "binding": "{{kpi.label}}"
+    },
+    {
+      "key": "trend",
+      "label": "Trend",
+      "type": "percentage",
+      "binding": "{{kpi.trend}}",
+      "format": "{{value}}% vs last period",
+      "style": {
+        "positive": "text-green-500",
+        "negative": "text-red-500",
+        "neutral": "text-gray-500"
+      }
+    },
+    {
+      "key": "target",
+      "label": "Target",
+      "type": "text",
+      "binding": "{{kpi.target}}",
+      "format": "Target: {{value}}"
+    },
+    {
+      "key": "progress",
+      "label": "Progress",
+      "type": "progress",
+      "binding": "{{kpi.progress}}"
+    }
+  ],
+  "governance": {
+    "audit_actions": false
+  }
+}

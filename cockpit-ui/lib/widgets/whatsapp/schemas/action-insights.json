@@ -1,0 +1,122 @@
+{
+  "id": "widget-wa-insights",
+  "type": "whatsapp:action_insights",
+  "version": "1.0.0",
+  "title": "AI Recommended Actions",
+  "description": "AI-powered action recommendations for WhatsApp outreach",
+  "category": "whatsapp",
+  "data_source": {
+    "mcp_tool": "getWidgetData",
+    "params": { "widget_type": "whatsapp:action_insights", "limit": 5 },
+    "refresh_interval_ms": 120000
+  },
+  "layout": {
+    "default_cols": 2,
+    "default_rows": 2,
+    "min_width": 380,
+    "min_height": 350
+  },
+  "fields": [
+    {
+      "key": "insight_type",
+      "label": "Action Type",
+      "type": "badge",
+      "binding": "{{insight.type}}",
+      "style": {
+        "follow_up": "bg-blue-500",
+        "payment_reminder": "bg-orange-500",
+        "proposal": "bg-purple-500",
+        "check_in": "bg-green-500",
+        "escalate": "bg-red-500"
+      }
+    },
+    {
+      "key": "priority",
+      "label": "Priority",
+      "type": "badge",
+      "binding": "{{insight.priority}}",
+      "style": {
+        "high": "bg-red-500",
+        "medium": "bg-yellow-500",
+        "low": "bg-gray-400"
+      }
+    },
+    {
+      "key": "lead_name",
+      "label": "Contact",
+      "type": "text",
+      "binding": "{{insight.lead_name}}",
+      "style": { "weight": "semibold" }
+    },
+    {
+      "key": "suggestion",
+      "label": "Suggested Action",
+      "type": "text",
+      "binding": "{{insight.suggestion}}"
+    },
+    {
+      "key": "reason",
+      "label": "Why",
+      "type": "text",
+      "binding": "{{insight.reason}}",
+      "style": { "color": "muted", "size": "sm" }
+    },
+    {
+      "key": "confidence",
+      "label": "Confidence",
+      "type": "percentage",
+      "binding": "{{insight.confidence}}"
+    },
+    {
+      "key": "suggested_template",
+      "label": "Suggested Template",
+      "type": "text",
+      "binding": "{{insight.suggested_template}}"
+    },
+    {
+      "key": "expires_at",
+      "label": "Act Before",
+      "type": "date",
+      "binding": "{{insight.expires_at}}",
+      "format": "relative"
+    },
+    {
+      "key": "actions",
+      "label": "Actions",
+      "type": "action",
+      "binding": "{{insight.id}}",
+      "actions": [
+        {
+          "id": "execute",
+          "label": "Take Action",
+          "icon": "play",
+          "mcp_tool": "executeInsight",
+          "params": {
+            "insight_id": "{{insight.id}}",
+            "lead_id": "{{insight.lead_id}}",
+            "template_name": "{{insight.suggested_template}}"
+          }
+        },
+        {
+          "id": "dismiss",
+          "label": "Dismiss",
+          "icon": "x",
+          "mcp_tool": "dismissInsight",
+          "params": { "insight_id": "{{insight.id}}" }
+        },
+        {
+          "id": "snooze",
+          "label": "Snooze",
+          "icon": "clock",
+          "mcp_tool": "snoozeInsight",
+          "params": { "insight_id": "{{insight.id}}", "hours": 24 }
+        }
+      ]
+    }
+  ],
+  "show_if": "{{insight.confidence}} >= 60",
+  "governance": {
+    "gate_id": "G16",
+    "audit_actions": true
+  }
+}
