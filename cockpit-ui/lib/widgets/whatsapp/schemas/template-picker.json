@@ -1,0 +1,108 @@
+{
+  "id": "widget-wa-templates",
+  "type": "whatsapp:template_picker",
+  "version": "1.0.0",
+  "title": "Message Templates",
+  "description": "Browse and select approved WhatsApp templates",
+  "category": "whatsapp",
+  "data_source": {
+    "mcp_tool": "getWidgetData",
+    "params": { "widget_type": "whatsapp:template_picker" },
+    "refresh_interval_ms": 300000
+  },
+  "layout": {
+    "default_cols": 2,
+    "default_rows": 2,
+    "min_width": 400,
+    "min_height": 350
+  },
+  "fields": [
+    {
+      "key": "template_name",
+      "label": "Template",
+      "type": "text",
+      "binding": "{{template.name}}",
+      "style": { "weight": "semibold" }
+    },
+    {
+      "key": "template_language",
+      "label": "Language",
+      "type": "badge",
+      "binding": "{{template.language}}",
+      "style": {
+        "en": "bg-blue-100 text-blue-800",
+        "ms": "bg-green-100 text-green-800",
+        "zh": "bg-red-100 text-red-800"
+      }
+    },
+    {
+      "key": "template_category",
+      "label": "Category",
+      "type": "badge",
+      "binding": "{{template.category}}",
+      "style": {
+        "marketing": "bg-purple-500",
+        "utility": "bg-blue-500",
+        "service": "bg-gray-500",
+        "authentication": "bg-cyan-500"
+      }
+    },
+    {
+      "key": "template_status",
+      "label": "Status",
+      "type": "badge",
+      "binding": "{{template.status}}",
+      "style": {
+        "approved": "bg-green-500",
+        "pending": "bg-yellow-500",
+        "rejected": "bg-red-500",
+        "disabled": "bg-gray-400"
+      }
+    },
+    {
+      "key": "template_preview",
+      "label": "Preview",
+      "type": "text",
+      "binding": "{{template.components}}"
+    },
+    {
+      "key": "variables",
+      "label": "Variables",
+      "type": "list",
+      "binding": "{{template.variables}}"
+    },
+    {
+      "key": "cost",
+      "label": "Cost/Message",
+      "type": "text",
+      "binding": "{{template.cost_per_message}}",
+      "format": "${{value}}"
+    },
+    {
+      "key": "actions",
+      "label": "Actions",
+      "type": "action",
+      "binding": "{{template.id}}",
+      "actions": [
+        {
+          "id": "use_template",
+          "label": "Use Template",
+          "icon": "send",
+          "mcp_tool": "selectTemplate",
+          "params": { "template_id": "{{template.id}}" }
+        },
+        {
+          "id": "preview",
+          "label": "Preview",
+          "icon": "eye",
+          "mcp_tool": "previewTemplate",
+          "params": { "template_id": "{{template.id}}" }
+        }
+      ]
+    }
+  ],
+  "show_if": "{{template.status}} === 'approved'",
+  "governance": {
+    "audit_actions": true
+  }
+}

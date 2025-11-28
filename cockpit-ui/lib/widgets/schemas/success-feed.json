@@ -1,0 +1,67 @@
+{
+  "id": "widget-success-feed",
+  "type": "success_feed",
+  "version": "1.0.0",
+  "title": "Recent Wins",
+  "description": "Feed of recent successful outcomes and celebrations",
+  "category": "communication",
+  "data_source": {
+    "mcp_tool": "getWidgetData",
+    "params": { "widget_type": "success_feed", "limit": 10 },
+    "refresh_interval_ms": 60000
+  },
+  "layout": {
+    "default_cols": 1,
+    "default_rows": 2,
+    "min_width": 280,
+    "min_height": 320
+  },
+  "fields": [
+    {
+      "key": "type",
+      "label": "Win Type",
+      "type": "badge",
+      "binding": "{{success.type}}",
+      "style": {
+        "deal_won": "bg-green-500",
+        "payment_received": "bg-blue-500",
+        "meeting_booked": "bg-purple-500",
+        "proposal_sent": "bg-orange-500"
+      }
+    },
+    {
+      "key": "description",
+      "label": "Description",
+      "type": "text",
+      "binding": "{{success.description}}"
+    },
+    {
+      "key": "lead_name",
+      "label": "Contact",
+      "type": "text",
+      "binding": "{{success.lead_name}}"
+    },
+    {
+      "key": "amount",
+      "label": "Value",
+      "type": "currency",
+      "binding": "{{success.amount}}"
+    },
+    {
+      "key": "achieved_at",
+      "label": "When",
+      "type": "date",
+      "binding": "{{success.achieved_at}}",
+      "format": "relative"
+    },
+    {
+      "key": "assigned_to",
+      "label": "Team Member",
+      "type": "text",
+      "binding": "{{success.assigned_to}}"
+    }
+  ],
+  "governance": {
+    "audit_actions": false
+  }
+}

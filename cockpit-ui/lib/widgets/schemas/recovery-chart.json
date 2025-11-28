@@ -1,0 +1,59 @@
+{
+  "id": "widget-recovery-chart",
+  "type": "recovery_chart",
+  "version": "1.0.0",
+  "title": "Payment Recovery",
+  "description": "Payment recovery trends and aging analysis",
+  "category": "metrics",
+  "data_source": {
+    "mcp_tool": "getWidgetData",
+    "params": { "widget_type": "recovery_chart" },
+    "refresh_interval_ms": 120000
+  },
+  "layout": {
+    "default_cols": 2,
+    "default_rows": 2,
+    "min_width": 400,
+    "min_height": 280
+  },
+  "fields": [
+    {
+      "key": "total_recoverable",
+      "label": "Total Recoverable",
+      "type": "currency",
+      "binding": "{{recovery.total_recoverable}}"
+    },
+    {
+      "key": "recovered_this_month",
+      "label": "Recovered (MTD)",
+      "type": "currency",
+      "binding": "{{recovery.recovered_mtd}}",
+      "style": { "color": "success" }
+    },
+    {
+      "key": "recovery_rate",
+      "label": "Recovery Rate",
+      "type": "percentage",
+      "binding": "{{recovery.rate}}"
+    },
+    {
+      "key": "aging_chart",
+      "label": "Aging Breakdown",
+      "type": "chart",
+      "binding": "{{recovery.aging}}",
+      "format": "bar-horizontal"
+    },
+    {
+      "key": "trend",
+      "label": "7-Day Trend",
+      "type": "chart",
+      "binding": "{{recovery.trend}}",
+      "format": "line"
+    }
+  ],
+  "governance": {
+    "gate_id": "G2",
+    "proof_required": true,
+    "audit_actions": true
+  }
+}

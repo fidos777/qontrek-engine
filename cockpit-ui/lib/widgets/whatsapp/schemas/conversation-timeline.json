@@ -1,0 +1,70 @@
+{
+  "id": "widget-wa-conversation",
+  "type": "whatsapp:conversation_timeline",
+  "version": "1.0.0",
+  "title": "Conversation",
+  "description": "Chat bubble timeline showing message history",
+  "category": "whatsapp",
+  "data_source": {
+    "mcp_tool": "getWidgetData",
+    "params": { "widget_type": "whatsapp:conversation_timeline", "limit": 50 },
+    "refresh_interval_ms": 10000
+  },
+  "layout": {
+    "default_cols": 2,
+    "default_rows": 3,
+    "min_width": 350,
+    "min_height": 500
+  },
+  "fields": [
+    {
+      "key": "contact_header",
+      "label": "Contact",
+      "type": "text",
+      "binding": "{{conversation.contact.name}}",
+      "style": { "size": "lg", "weight": "semibold" }
+    },
+    {
+      "key": "contact_phone",
+      "label": "Phone",
+      "type": "text",
+      "binding": "{{conversation.contact.phone}}"
+    },
+    {
+      "key": "messages",
+      "label": "Messages",
+      "type": "list",
+      "binding": "{{conversation.messages}}",
+      "format": "chat-bubbles"
+    },
+    {
+      "key": "message_content",
+      "label": "Message",
+      "type": "text",
+      "binding": "{{message.content}}"
+    },
+    {
+      "key": "message_time",
+      "label": "Time",
+      "type": "date",
+      "binding": "{{message.timestamp}}",
+      "format": "relative"
+    },
+    {
+      "key": "message_status",
+      "label": "Status",
+      "type": "badge",
+      "binding": "{{message.status}}",
+      "style": {
+        "sent": "text-gray-400",
+        "delivered": "text-blue-400",
+        "read": "text-green-400",
+        "failed": "text-red-500",
+        "pending": "text-yellow-400"
+      }
+    }
+  ],
+  "governance": {
+    "audit_actions": true
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "id": "widget-wa-cost",
+  "type": "whatsapp:cost_breakdown",
+  "version": "1.0.0",
+  "title": "WhatsApp Costs",
+  "description": "Meta billing breakdown by conversation category",
+  "category": "whatsapp",
+  "data_source": {
+    "mcp_tool": "getWidgetData",
+    "params": { "widget_type": "whatsapp:cost_breakdown" },
+    "refresh_interval_ms": 300000
+  },
+  "layout": {
+    "default_cols": 2,
+    "default_rows": 1,
+    "min_width": 400,
+    "min_height": 200
+  },
+  "fields": [
+    {
+      "key": "period",
+      "label": "Billing Period",
+      "type": "text",
+      "binding": "{{cost.period}}"
+    },
+    {
+      "key": "total_conversations",
+      "label": "Total Conversations",
+      "type": "number",
+      "binding": "{{cost.total_conversations}}"
+    },
+    {
+      "key": "total_cost_usd",
+      "label": "Total (USD)",
+      "type": "text",
+      "binding": "{{cost.total_cost_usd}}",
+      "format": "${{value}}"
+    },
+    {
+      "key": "total_cost_myr",
+      "label": "Total (MYR)",
+      "type": "currency",
+      "binding": "{{cost.total_cost_myr}}"
+    },
+    {
+      "key": "exchange_rate",
+      "label": "Exchange Rate",
+      "type": "text",
+      "binding": "{{cost.exchange_rate}}",
+      "format": "1 USD = {{value}} MYR"
+    },
+    {
+      "key": "marketing_cost",
+      "label": "Marketing",
+      "type": "text",
+      "binding": "{{cost.by_category.marketing.cost_usd}}",
+      "format": "${{value}}",
+      "style": { "color": "purple" }
+    },
+    {
+      "key": "marketing_count",
+      "label": "Marketing Count",
+      "type": "number",
+      "binding": "{{cost.by_category.marketing.count}}"
+    },
+    {
+      "key": "utility_cost",
+      "label": "Utility",
+      "type": "text",
+      "binding": "{{cost.by_category.utility.cost_usd}}",
+      "format": "${{value}}",
+      "style": { "color": "blue" }
+    },
+    {
+      "key": "utility_count",
+      "label": "Utility Count",
+      "type": "number",
+      "binding": "{{cost.by_category.utility.count}}"
+    },
+    {
+      "key": "service_cost",
+      "label": "Service",
+      "type": "text",
+      "binding": "{{cost.by_category.service.cost_usd}}",
+      "format": "${{value}}",
+      "style": { "color": "gray" }
+    },
+    {
+      "key": "service_count",
+      "label": "Service Count",
+      "type": "number",
+      "binding": "{{cost.by_category.service.count}}"
+    },
+    {
+      "key": "category_chart",
+      "label": "Cost by Category",
+      "type": "chart",
+      "binding": "{{cost.by_category}}",
+      "format": "donut"
+    }
+  ],
+  "governance": {
+    "gate_id": "G19",
+    "audit_actions": true
+  }
+}
