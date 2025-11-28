@@ -1,0 +1,46 @@
+{
+  "id": "widget-trust-meter",
+  "type": "trust_meter",
+  "version": "1.0.0",
+  "title": "Trust Index",
+  "description": "Real-time governance trust score with G13-G21 breakdown",
+  "category": "governance",
+  "data_source": {
+    "mcp_tool": "getGovernanceStatus",
+    "params": { "include_evidence": false },
+    "refresh_interval_ms": 30000
+  },
+  "layout": {
+    "default_cols": 1,
+    "default_rows": 1,
+    "min_width": 200
+  },
+  "fields": [
+    {
+      "key": "score",
+      "label": "Trust Index",
+      "type": "percentage",
+      "binding": "{{trust_index}}",
+      "style": { "size": "xl", "color": "dynamic" }
+    },
+    {
+      "key": "gates",
+      "label": "Gate Status",
+      "type": "list",
+      "binding": "{{gates}}",
+      "format": "badge-strip"
+    },
+    {
+      "key": "updated",
+      "label": "Last Updated",
+      "type": "date",
+      "binding": "{{last_updated}}",
+      "format": "relative"
+    }
+  ],
+  "governance": {
+    "gate_id": "G13",
+    "proof_required": true,
+    "audit_actions": true
+  }
+}

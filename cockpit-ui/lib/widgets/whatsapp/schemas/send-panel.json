@@ -1,0 +1,110 @@
+{
+  "id": "widget-wa-send",
+  "type": "whatsapp:send_panel",
+  "version": "1.0.0",
+  "title": "Quick Send",
+  "description": "Quick-send interface for WhatsApp messages",
+  "category": "whatsapp",
+  "data_source": {
+    "mcp_tool": "getWidgetData",
+    "params": { "widget_type": "whatsapp:send_panel" },
+    "refresh_interval_ms": 30000
+  },
+  "layout": {
+    "default_cols": 1,
+    "default_rows": 2,
+    "min_width": 320,
+    "min_height": 400
+  },
+  "fields": [
+    {
+      "key": "recipient_name",
+      "label": "To",
+      "type": "text",
+      "binding": "{{send.recipient.name}}",
+      "style": { "weight": "semibold" }
+    },
+    {
+      "key": "recipient_phone",
+      "label": "Phone",
+      "type": "text",
+      "binding": "{{send.recipient.phone}}"
+    },
+    {
+      "key": "session_status",
+      "label": "Session",
+      "type": "badge",
+      "binding": "{{send.session_status}}",
+      "style": {
+        "active": "bg-green-500",
+        "expiring": "bg-yellow-500",
+        "expired": "bg-red-500",
+        "none": "bg-gray-400"
+      }
+    },
+    {
+      "key": "session_note",
+      "label": "Note",
+      "type": "text",
+      "binding": "{{send.session_note}}"
+    },
+    {
+      "key": "selected_template",
+      "label": "Template",
+      "type": "text",
+      "binding": "{{send.selected_template.name}}"
+    },
+    {
+      "key": "template_cost",
+      "label": "Est. Cost",
+      "type": "text",
+      "binding": "{{send.selected_template.cost_per_message}}",
+      "format": "${{value}}"
+    },
+    {
+      "key": "message_preview",
+      "label": "Message Preview",
+      "type": "text",
+      "binding": "{{send.message_preview}}"
+    },
+    {
+      "key": "actions",
+      "label": "Actions",
+      "type": "action",
+      "binding": "{{send.recipient.id}}",
+      "actions": [
+        {
+          "id": "send",
+          "label": "Send Message",
+          "icon": "send",
+          "mcp_tool": "sendWhatsAppMessage",
+          "params": {
+            "contact_id": "{{send.recipient.id}}",
+            "template_id": "{{send.selected_template.id}}",
+            "variables": "{{send.variables}}"
+          },
+          "confirm": true
+        },
+        {
+          "id": "select_template",
+          "label": "Choose Template",
+          "icon": "file-text",
+          "mcp_tool": "openTemplatePicker",
+          "params": { "contact_id": "{{send.recipient.id}}" }
+        },
+        {
+          "id": "cancel",
+          "label": "Cancel",
+          "icon": "x",
+          "mcp_tool": "closeSendPanel",
+          "params": {}
+        }
+      ]
+    }
+  ],
+  "enable_if": "{{send.session_status}} !== 'none' || {{send.selected_template}} !== null",
+  "governance": {
+    "proof_required": false,
+    "audit_actions": true
+  }
+}

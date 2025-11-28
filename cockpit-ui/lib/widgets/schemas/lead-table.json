@@ -1,0 +1,94 @@
+{
+  "id": "widget-lead-table",
+  "type": "lead_table",
+  "version": "1.0.0",
+  "title": "Leads Data Table",
+  "description": "Sortable and filterable leads data table with actions",
+  "category": "data",
+  "data_source": {
+    "mcp_tool": "getWidgetData",
+    "params": { "widget_type": "lead_table", "limit": 25 },
+    "refresh_interval_ms": 60000
+  },
+  "layout": {
+    "default_cols": 3,
+    "default_rows": 2,
+    "min_width": 600,
+    "min_height": 400
+  },
+  "fields": [
+    {
+      "key": "name",
+      "label": "Contact Name",
+      "type": "text",
+      "binding": "{{lead.name}}"
+    },
+    {
+      "key": "company",
+      "label": "Company",
+      "type": "text",
+      "binding": "{{lead.company}}"
+    },
+    {
+      "key": "amount",
+      "label": "Deal Value",
+      "type": "currency",
+      "binding": "{{lead.amount}}"
+    },
+    {
+      "key": "stage",
+      "label": "Stage",
+      "type": "badge",
+      "binding": "{{lead.stage}}",
+      "style": {
+        "new": "bg-blue-500",
+        "contacted": "bg-yellow-500",
+        "qualified": "bg-purple-500",
+        "proposal": "bg-orange-500",
+        "won": "bg-green-500",
+        "lost": "bg-red-500"
+      }
+    },
+    {
+      "key": "last_contact",
+      "label": "Last Contact",
+      "type": "date",
+      "binding": "{{lead.last_contact}}",
+      "format": "relative"
+    },
+    {
+      "key": "actions",
+      "label": "Actions",
+      "type": "action",
+      "binding": "{{lead.id}}",
+      "actions": [
+        {
+          "id": "call",
+          "label": "Call",
+          "icon": "phone",
+          "mcp_tool": "initiateCall",
+          "params": { "lead_id": "{{lead.id}}" }
+        },
+        {
+          "id": "whatsapp",
+          "label": "WhatsApp",
+          "icon": "message",
+          "mcp_tool": "sendWhatsApp",
+          "params": { "lead_id": "{{lead.id}}" }
+        },
+        {
+          "id": "reminder",
+          "label": "Set Reminder",
+          "icon": "clock",
+          "mcp_tool": "createReminder",
+          "params": { "lead_id": "{{lead.id}}" }
+        }
+      ]
+    }
+  ],
+  "governance": {
+    "gate_id": "G0",
+    "proof_required": false,
+    "audit_actions": true
+  }
+}

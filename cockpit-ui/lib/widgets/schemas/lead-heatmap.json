@@ -1,0 +1,57 @@
+{
+  "id": "widget-lead-heatmap",
+  "type": "lead_heatmap",
+  "version": "1.0.0",
+  "title": "Lead Activity Heatmap",
+  "description": "Heatmap visualization of lead activity by time and day",
+  "category": "data",
+  "data_source": {
+    "mcp_tool": "getWidgetData",
+    "params": { "widget_type": "lead_heatmap" },
+    "refresh_interval_ms": 300000
+  },
+  "layout": {
+    "default_cols": 2,
+    "default_rows": 2,
+    "min_width": 450,
+    "min_height": 300
+  },
+  "fields": [
+    {
+      "key": "heatmap_data",
+      "label": "Activity Heatmap",
+      "type": "chart",
+      "binding": "{{heatmap.data}}",
+      "format": "heatmap"
+    },
+    {
+      "key": "peak_hours",
+      "label": "Peak Hours",
+      "type": "text",
+      "binding": "{{heatmap.peak_hours}}"
+    },
+    {
+      "key": "peak_day",
+      "label": "Peak Day",
+      "type": "text",
+      "binding": "{{heatmap.peak_day}}"
+    },
+    {
+      "key": "total_interactions",
+      "label": "Total Interactions",
+      "type": "number",
+      "binding": "{{heatmap.total_interactions}}"
+    },
+    {
+      "key": "recommendation",
+      "label": "Best Contact Time",
+      "type": "text",
+      "binding": "{{heatmap.recommendation}}",
+      "style": { "highlight": "true" }
+    }
+  ],
+  "governance": {
+    "gate_id": "G0",
+    "audit_actions": true
+  }
+}
