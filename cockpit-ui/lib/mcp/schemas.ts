@@ -16,7 +16,7 @@ export const GateStatusSchema = z.enum(['pass', 'fail', 'warn', 'pending']);
 export const GateResultSchema = z.object({
   status: GateStatusSchema,
   message: z.string(),
-  evidence: z.record(z.unknown()).optional(),
+  evidence: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const ActorSchema = z.object({
@@ -146,7 +146,7 @@ export const LogProofEventInputSchema = z.object({
   event_type: z.string().min(1),
   actor: ActorSchema,
   target: TargetSchema,
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const LogProofEventOutputSchema = z.object({
@@ -250,7 +250,7 @@ export const LeadDetailSchema = z.object({
   email: z.string(),
   stage: LeadStageSchema,
   amount_rm: z.number(),
-  data: z.record(z.unknown()),
+  data: z.record(z.string(), z.unknown()),
   history: z.array(LeadEventSchema).optional(),
 });
 
@@ -282,7 +282,7 @@ export const UpdateLeadStatusOutputSchema = z.object({
 export const TriggerWorkflowInputSchema = z.object({
   workflow_id: z.string().min(1),
   trigger_type: TriggerTypeSchema,
-  context: z.record(z.unknown()).optional(),
+  context: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const TriggerWorkflowOutputSchema = z.object({
@@ -298,12 +298,12 @@ export const TriggerWorkflowOutputSchema = z.object({
 
 export const GetWidgetDataInputSchema = z.object({
   widget_type: z.string().min(1),
-  config: z.record(z.unknown()).optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const GetWidgetDataOutputSchema = z.object({
   widget_type: z.string(),
-  data: z.record(z.unknown()),
+  data: z.record(z.string(), z.unknown()),
   rendered_at: z.string(),
 });
 
@@ -334,7 +334,7 @@ export const GetAgentContextOutputSchema = z.object({
 
 export const ToolSchemaDefinition = z.object({
   type: z.string(),
-  properties: z.record(z.unknown()).optional(),
+  properties: z.record(z.string(), z.unknown()).optional(),
   required: z.array(z.string()).optional(),
 });
 

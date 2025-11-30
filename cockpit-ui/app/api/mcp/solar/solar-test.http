@@ -1,0 +1,583 @@
+### Test KPI
+POST http://localhost:3000/api/mcp/solar
+Content-Type: application/json
+
+{
+  "action": "kpi"
+}
+
+// ============================================
+// SOLAR MCP API ROUTE - Edge Runtime
+// Path: /app/api/mcp/solar/route.ts
+// Actions: kpi, critical_leads, recovery_pipeline, timeline
+// ============================================
+
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { createClient } from '@supabase/supabase-js';
+
+// Edge Runtime configuration
+export const runtime = 'edge';
+
+// Supabase client initialization (Edge-compatible)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl) {
+  throw new Error('NEXT_PUBLIC_SUPABASE_URL is not set');
+}
+
+if (!serviceRoleKey) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
+}
+
+const supabase = createClient(supabaseUrl, serviceRoleKey, {
+  auth: {
+    persistSession: false,
+  },
+});
+
+// ============================================
+// SCHEMA VALIDATION
+// ============================================
+
+const KpiActionSchema = z.object({
+  action: z.literal('kpi'),
+  params: z.object({}).optional(),
+});
+
+const CriticalLeadsActionSchema = z.object({
+  action: z.literal('critical_leads'),
+  params: z
+    .object({
+      limit: z.number().min(1).max(100).optional().default(15),
+      stage: z.enum(['80%', '20%', 'HANDOVER']).optional(),
+    })
+    .optional(),
+});
+
+const RecoveryPipelineActionSchema = z.object({
+  action: z.literal('recovery_pipeline'),
+  params: z
+    .object({
+      stage: z.enum(['80%', '20%', 'HANDOVER', 'ALL']).optional(),
+      state: z.string().optional(),
+      limit: z.number().min(1).max(500).optional(),
+    })
+    .optional(),
+});
+
+const TimelineActionSchema = z.object({
+  action: z.literal('timeline'),
+  params: z.object({
+    project_no: z.string().min(1),
+  }),
+});
+
+const ActionSchema = z.discriminatedUnion('action', [
+  KpiActionSchema,
+  CriticalLeadsActionSchema,
+  RecoveryPipelineActionSchema,
+  TimelineActionSchema,
+]);
+
+// ============================================
+// ACTION HANDLERS
+// ============================================
+
+async function handleKpi() {
+  const startTime = Date.now();
+
+  try {
+    const { data, error } = await supabase
+      .from('v_solar_kpi_summary')
+      .select('*')
+      .single();
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message,
+        data: null,
+        metadata: {
+          execution_time_ms: Date.now() - startTime,
+          source: 'supabase',
+        },
+      };
+    }
+
+    return {
+      success: true,
+      data,
+      metadata: {
+        execution_time_ms: Date.now() - startTime,
+        source: 'supabase',
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      data: null,
+      metadata: {
+        execution_time_ms: Date.now() - startTime,
+        source: 'error',
+      },
+    };
+  }
+}
+
+async function handleCriticalLeads(params: {
+  limit?: number;
+  stage?: '80%' | '20%' | 'HANDOVER';
+}) {
+  const startTime = Date.now();
+
+  try {
+    let query = supabase.from('v_critical_leads').select('*');
+
+    // Filter by stage if specified
+    if (params.stage) {
+      query = query.eq('stage', params.stage);
+    }
+
+    // Apply limit
+    const limit = params.limit || 15;
+    query = query.limit(limit);
+
+    // Order by amount descending (highest first)
+    query = query.order('amount', { ascending: false });
+
+    const { data, error } = await query;
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message,
+        data: null,
+        metadata: {
+          execution_time_ms: Date.now() - startTime,
+          source: 'supabase',
+        },
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        critical_leads: data || [],
+        total_count: data?.length || 0,
+      },
+      metadata: {
+        execution_time_ms: Date.now() - startTime,
+        source: 'supabase',
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      data: null,
+      metadata: {
+        execution_time_ms: Date.now() - startTime,
+        source: 'error',
+      },
+    };
+  }
+}
+
+async function handleRecoveryPipeline(params: {
+  stage?: '80%' | '20%' | 'HANDOVER' | 'ALL';
+  state?: string;
+  limit?: number;
+}) {
+  const startTime = Date.now();
+
+  try {
+    let query = supabase.from('v_payment_recovery_pipeline').select('*');
+
+    // Filter by stage if specified
+    if (params.stage && params.stage !== 'ALL') {
+      query = query.eq('recovery_stage', params.stage);
+    }
+
+    // Filter by state if specified
+    if (params.state) {
+      query = query.ilike('state', `%${params.state}%`);
+    }
+
+    // Apply limit
+    if (params.limit) {
+      query = query.limit(params.limit);
+    }
+
+    // Order by balance descending (highest first)
+    query = query.order('balance', { ascending: false });
+
+    const { data, error } = await query;
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message,
+        data: null,
+        metadata: {
+          execution_time_ms: Date.now() - startTime,
+          source: 'supabase',
+        },
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        pipeline: data || [],
+        total_count: data?.length || 0,
+      },
+      metadata: {
+        execution_time_ms: Date.now() - startTime,
+        source: 'supabase',
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      data: null,
+      metadata: {
+        execution_time_ms: Date.now() - startTime,
+        source: 'error',
+      },
+    };
+  }
+}
+
+async function handleTimeline(params: { project_no: string }) {
+  const startTime = Date.now();
+
+  try {
+    // Get project details
+    const { data: project, error: projectError } = await supabase
+      .from('solar_projects')
+      .select('*')
+      .eq('project_no', params.project_no)
+      .single();
+
+    if (projectError) {
+      return {
+        success: false,
+        error: `Project not found: ${projectError.message}`,
+        data: null,
+        metadata: {
+          execution_time_ms: Date.now() - startTime,
+          source: 'supabase',
+        },
+      };
+    }
+
+    if (!project) {
+      return {
+        success: false,
+        error: `Project not found: ${params.project_no}`,
+        data: null,
+        metadata: {
+          execution_time_ms: Date.now() - startTime,
+          source: 'supabase',
+        },
+      };
+    }
+
+    // Get payments
+    const { data: payments } = await supabase
+      .from('solar_payments')
+      .select('*')
+      .eq('project_no', params.project_no)
+      .order('expected_date', { ascending: true });
+
+    // Get SEDA milestones
+    const { data: sedaMilestones } = await supabase
+      .from('solar_seda_milestones')
+      .select('*')
+      .eq('project_no', params.project_no);
+
+    // Get installation milestones
+    const { data: installations } = await supabase
+      .from('solar_installations')
+      .select('*')
+      .eq('project_no', params.project_no);
+
+    // Get recovery actions
+    const { data: recoveryActions } = await supabase
+      .from('solar_recovery_actions')
+      .select('*')
+      .eq('project_no', params.project_no)
+      .order('action_date', { ascending: false });
+
+    // Build timeline events
+    const timeline: Array<{
+      event_type: string;
+      date: string | null;
+      description: string;
+      status?: string;
+      metadata?: Record<string, unknown>;
+    }> = [];
+
+    // Project creation
+    if (project.created_at) {
+      timeline.push({
+        event_type: 'project_created',
+        date: project.created_at,
+        description: `Project ${params.project_no} created`,
+        metadata: {
+          client_name: project.client_name,
+        },
+      });
+    }
+
+    // Payment milestones
+    if (payments) {
+      payments.forEach((payment) => {
+        if (payment.payment_date) {
+          timeline.push({
+            event_type: 'payment',
+            date: payment.payment_date,
+            description: `${payment.payment_type} payment`,
+            status: payment.status,
+            metadata: {
+              amount: payment.amount,
+              payment_type: payment.payment_type,
+            },
+          });
+        }
+        if (payment.expected_date) {
+          timeline.push({
+            event_type: 'payment_expected',
+            date: payment.expected_date,
+            description: `${payment.payment_type} payment expected`,
+            status: payment.status,
+            metadata: {
+              amount: payment.amount,
+              payment_type: payment.payment_type,
+              days_overdue: payment.days_overdue,
+            },
+          });
+        }
+      });
+    }
+
+    // SEDA milestones
+    if (sedaMilestones && sedaMilestones.length > 0) {
+      const seda = sedaMilestones[0];
+      if (seda.design_completion_date) {
+        timeline.push({
+          event_type: 'seda_design_completed',
+          date: seda.design_completion_date,
+          description: 'SEDA design completed',
+        });
+      }
+      if (seda.seda_submission_date) {
+        timeline.push({
+          event_type: 'seda_submission',
+          date: seda.seda_submission_date,
+          description: 'SEDA submission',
+        });
+      }
+      if (seda.seda_approval_date) {
+        timeline.push({
+          event_type: 'seda_approval',
+          date: seda.seda_approval_date,
+          description: 'SEDA approval received',
+        });
+      }
+      if (seda.seda_cert_date) {
+        timeline.push({
+          event_type: 'seda_cert',
+          date: seda.seda_cert_date,
+          description: 'SEDA certificate issued',
+        });
+      }
+      if (seda.tnb_submission_date) {
+        timeline.push({
+          event_type: 'tnb_submission',
+          date: seda.tnb_submission_date,
+          description: 'TNB submission',
+        });
+      }
+      if (seda.nem_welcome_letter_date) {
+        timeline.push({
+          event_type: 'nem_welcome_letter',
+          date: seda.nem_welcome_letter_date,
+          description: 'NEM welcome letter received',
+        });
+      }
+    }
+
+    // Installation milestones
+    if (installations && installations.length > 0) {
+      const install = installations[0];
+      if (install.site_visit_date) {
+        timeline.push({
+          event_type: 'site_visit',
+          date: install.site_visit_date,
+          description: 'Site visit completed',
+          metadata: {
+            pic: install.pic_site_visit,
+          },
+        });
+      }
+      if (install.installation_date) {
+        timeline.push({
+          event_type: 'installation',
+          date: install.installation_date,
+          description: 'Installation completed',
+          metadata: {
+            subcontractor: install.subcontractor,
+            supervisor: install.site_supervisor,
+          },
+        });
+      }
+      if (install.energize_date) {
+        timeline.push({
+          event_type: 'energized',
+          date: install.energize_date,
+          description: 'System energized',
+          status: install.energize_status,
+        });
+      }
+      if (install.handover_date) {
+        timeline.push({
+          event_type: 'handover',
+          date: install.handover_date,
+          description: 'Project handed over',
+          status: install.handover_status,
+        });
+      }
+    }
+
+    // Recovery actions
+    if (recoveryActions) {
+      recoveryActions.forEach((action) => {
+        timeline.push({
+          event_type: 'recovery_action',
+          date: action.action_date,
+          description: `${action.action_type} - ${action.result || 'Pending'}`,
+          status: action.result,
+          metadata: {
+            action_type: action.action_type,
+            performed_by: action.performed_by,
+            notes: action.notes,
+          },
+        });
+      });
+    }
+
+    // Sort timeline by date (most recent first)
+    timeline.sort((a, b) => {
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
+    return {
+      success: true,
+      data: {
+        project_no: params.project_no,
+        project: {
+          id: project.id,
+          client_name: project.client_name,
+          status: project.status,
+          total_sales: project.total_sales,
+          balance: project.balance,
+        },
+        timeline,
+        total_events: timeline.length,
+      },
+      metadata: {
+        execution_time_ms: Date.now() - startTime,
+        source: 'supabase',
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      data: null,
+      metadata: {
+        execution_time_ms: Date.now() - startTime,
+        source: 'error',
+      },
+    };
+  }
+}
+
+// ============================================
+// API ROUTE HANDLER
+// ============================================
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const validated = ActionSchema.parse(body);
+
+    let result;
+
+    switch (validated.action) {
+      case 'kpi':
+        result = await handleKpi();
+        break;
+
+      case 'critical_leads':
+        result = await handleCriticalLeads(validated.params || {});
+        break;
+
+      case 'recovery_pipeline':
+        result = await handleRecoveryPipeline(validated.params || {});
+        break;
+
+      case 'timeline':
+        result = await handleTimeline(validated.params);
+        break;
+
+      default:
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Unknown action: ${(validated as { action: string }).action}`,
+          },
+          { status: 400 }
+        );
+    }
+
+    return NextResponse.json(result);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Validation error',
+          details: error.issues,
+        },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// GET endpoint for health check
+export async function GET() {
+  return NextResponse.json({
+    status: 'ok',
+    actions: ['kpi', 'critical_leads', 'recovery_pipeline', 'timeline'],
+    runtime: 'edge',
+    version: '1.0.0',
+    vertical: 'solar',
+  });
+}
