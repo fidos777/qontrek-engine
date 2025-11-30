@@ -1,0 +1,441 @@
+{
+  "metadata": {
+    "generated_at": "2025-11-28T16:02:07.147314",
+    "source": "real",
+    "version": "19.1",
+    "tenant": "voltek"
+  },
+  "summary": {
+    "total_recoverable": 1067295.5,
+    "pending_80_count": 87,
+    "pending_80_value": 1021805.5,
+    "pending_20_count": 13,
+    "pending_20_value": 33890.0,
+    "handover_count": 126,
+    "handover_value": 11600.0,
+    "total_projects": 808,
+    "active_projects": 553
+  },
+  "kpi": {
+    "recovery_rate_7d": 45,
+    "recovery_rate_30d": 54.0,
+    "avg_days_to_payment": 6.1,
+    "escalation_rate": 11.4,
+    "contact_success_rate": 79.6
+  },
+  "critical_leads": [
+    {
+      "id": "cc144ad3-03e6-4854-b9b2-d1bbd4e9066e",
+      "project_no": "VESB/RESI/IN/2025/06/0707",
+      "name": "MUHAMMAD ALIF HAKIM BIN ISMAIL",
+      "phone": "+60 12-513 4883",
+      "status": "Pending Design",
+      "amount": 57792.0,
+      "state": "JOHOR",
+      "system_size": 0.0,
+      "project_value": 61680.0,
+      "stage": "HANDOVER",
+      "days_overdue": 11,
+      "last_contact": "2025-11-24",
+      "next_action": "Schedule follow-up call for HANDOVER payment"
+    },
+    {
+      "id": "2170aaa2-f04a-445e-aa1b-78adb7ed24ae",
+      "project_no": "VESB/RESI/IN/2025/06/0719",
+      "name": "PREMJEET KAUR KALSI A/P THARAM SINGH",
+      "phone": "+60 12-922 2903",
+      "status": "Pending Design",
+      "amount": 57765.96,
+      "state": "",
+      "system_size": 0.0,
+      "project_value": 61653.96,
+      "stage": "HANDOVER",
+      "days_overdue": 14,
+      "last_contact": "2025-11-21",
+      "next_action": "Schedule follow-up call for HANDOVER payment"
+    },
+    {
+      "id": "ae5966f7-3fc3-4250-ab6d-c5e8b21e5392",
+      "project_no": "VESB/RESI/IN/2025/06/0720",
+      "name": "DYG NURFALIZA BINTI ABDULLAH",
+      "phone": "+60 12-843 4239",
+      "status": "Pending Design",
+      "amount": 57765.96,
+      "state": "19-06/2025",
+      "system_size": 0.0,
+      "project_value": 61653.96,
+      "stage": "HANDOVER",
+      "days_overdue": 11,
+      "last_contact": "2025-11-20",
+      "next_action": "Schedule follow-up call for HANDOVER payment"
+    },
+    {
+      "id": "5fce3c07-c6f6-442d-8215-9072c89cbad8",
+      "project_no": "VESB/RESI/IN/2025/05/0647",
+      "name": "NORA ASHIKIN BINTI MUHAMAD (ZAIDI BIN ZAKARIA)",
+      "phone": "+60 12-697 3971",
+      "status": "Pending Design",
+      "amount": 55800.0,
+      "state": "SELANGOR",
+      "system_size": 0.0,
+      "project_value": 56800.0,
+      "stage": "HANDOVER",
+      "days_overdue": 16,
+      "last_contact": "2025-11-21",
+      "next_action": "Send payment reminder for HANDOVER"
+    },
+    {
+      "id": "b5adbd4f-04e4-4f40-9394-eeddaee555c6",
+      "project_no": "VESB/RESI/IN/2024/06/0277",
+      "name": "SOONG CHIN YEE",
+      "phone": "+60 12-275 3354",
+      "status": "Pending Site Visit",
+      "amount": 53000.0,
+      "state": "",
+      "system_size": 16.0,
+      "project_value": 54000.0,
+      "stage": "HANDOVER",
+      "days_overdue": 17,
+      "last_contact": "2025-11-15",
+      "next_action": "Send payment reminder for HANDOVER"
+    },
+    {
+      "id": "4eefd74d-88c2-4117-8c88-eb4d6bf7524d",
+      "project_no": "VESB/RESI/IN/2025/05/0619",
+      "name": "TUAN AMIRUL SYAFIK BIN TUAN RUSLAN",
+      "phone": "+60 12-677 8412",
+      "status": "Pending 2nd SEDA submission, update capacity",
+      "amount": 52112.0,
+      "state": "SELANGOR",
+      "system_size": 10.62,
+      "project_value": 56000.0,
+      "stage": "HANDOVER",
+      "days_overdue": 22,
+      "last_contact": "2025-11-26",
+      "next_action": "Call immediately for HANDOVER payment follow-up"
+    },
+    {
+      "id": "2cb64f2e-4ed6-4d5a-818d-574c02c1a382",
+      "project_no": "VESB/RESI/IN/2024/04/0160",
+      "name": "S.RAGURAMAN A/L SUBRAMANIAM (SHARMILA)",
+      "phone": "+60 12-396 8274",
+      "status": "NEM Approved, pending 80% payment",
+      "amount": 51800.0,
+      "state": "",
+      "system_size": 16.15,
+      "project_value": 52800.0,
+      "stage": "80%",
+      "days_overdue": 23,
+      "last_contact": "2025-11-14",
+      "next_action": "Call immediately for 80% payment follow-up"
+    },
+    {
+      "id": "e74a1051-6fd4-47c1-a446-d7efd653d6ae",
+      "project_no": "VESB/RESI/IN/2025/05/0625",
+      "name": "SITI JUNAINAH BINTI KIMIN",
+      "phone": "+60 12-700 4620",
+      "status": "Pending Design",
+      "amount": 48000.0,
+      "state": "SELANGOR",
+      "system_size": 0.0,
+      "project_value": 49000.0,
+      "stage": "HANDOVER",
+      "days_overdue": 23,
+      "last_contact": "2025-11-23",
+      "next_action": "Call immediately for HANDOVER payment follow-up"
+    },
+    {
+      "id": "4712c390-2cca-483f-a432-4021fc6a8581",
+      "project_no": "VESB/RESI/IN/2024/01/0107",
+      "name": "MUHAMMAD LOKMAN BIN MOHD ZAIN",
+      "phone": "+60 12-573 9127",
+      "status": "Pending SEDA Submission",
+      "amount": 44500.0,
+      "state": "WANGSA MELAWATI, KUALA LUMPUR",
+      "system_size": 10.2,
+      "project_value": 45500.0,
+      "stage": "HANDOVER",
+      "days_overdue": 24,
+      "last_contact": "2025-11-15",
+      "next_action": "Call immediately for HANDOVER payment follow-up"
+    },
+    {
+      "id": "25665a82-a229-41b4-bd61-24977a8df01c",
+      "project_no": "VESB/RESI/IN/2025/05/0632",
+      "name": "ANWAR ISRA BIN ISLAMUDIN",
+      "phone": "+60 12-536 9809",
+      "status": "Pending Site Visit",
+      "amount": 44500.0,
+      "state": "SELANGOR",
+      "system_size": 0.0,
+      "project_value": 45500.0,
+      "stage": "HANDOVER",
+      "days_overdue": 28,
+      "last_contact": "2025-11-17",
+      "next_action": "Call immediately for HANDOVER payment follow-up"
+    },
+    {
+      "id": "1dd6e61c-38a4-474e-a775-249d1950c819",
+      "project_no": "VESB/RESI/IN/2025/05/0618",
+      "name": "WAN ZULFAKKAR B WAN YUSOF",
+      "phone": "+60 12-688 7064",
+      "status": "Pending Site Visit",
+      "amount": 43200.0,
+      "state": "TERENGGANU",
+      "system_size": 0.0,
+      "project_value": 44200.0,
+      "stage": "HANDOVER",
+      "days_overdue": 28,
+      "last_contact": "2025-11-17",
+      "next_action": "Call immediately for HANDOVER payment follow-up"
+    },
+    {
+      "id": "0fcf5e41-2687-4bd3-927d-f824779be009",
+      "project_no": "VESB/RESI/IN/2025/05/0617",
+      "name": "PUANG AH BEE",
+      "phone": "+60 12-365 2746",
+      "status": "Pending Design",
+      "amount": 42200.0,
+      "state": "SELANGOR",
+      "system_size": 0.0,
+      "project_value": 43200.0,
+      "stage": "HANDOVER",
+      "days_overdue": 31,
+      "last_contact": "2025-11-17",
+      "next_action": "URGENT: Escalate HANDOVER payment - 31 days overdue"
+    },
+    {
+      "id": "27cd93d4-b5b3-4419-a16f-06a964b39df8",
+      "project_no": "VESB/RESI/IN/2025/05/0641",
+      "name": "LUKMAN BIN ISMAIL",
+      "phone": "+60 12-436 3801",
+      "status": "Pending Design",
+      "amount": 41683.6,
+      "state": "",
+      "system_size": 0.0,
+      "project_value": 42183.6,
+      "stage": "HANDOVER",
+      "days_overdue": 33,
+      "last_contact": "2025-11-27",
+      "next_action": "URGENT: Escalate HANDOVER payment - 33 days overdue"
+    },
+    {
+      "id": "e3047efb-2634-42d5-897e-c43465386a89",
+      "project_no": "VESB/RESI/IN/2025/03/0573",
+      "name": "WASANDARAN A/L MUNUSAMY",
+      "phone": "+60 12-870 3795",
+      "status": "Pending Site Visit",
+      "amount": 41000.0,
+      "state": "SELANGOR",
+      "system_size": 0.0,
+      "project_value": 42000.0,
+      "stage": "HANDOVER",
+      "days_overdue": 33,
+      "last_contact": "2025-11-26",
+      "next_action": "URGENT: Escalate HANDOVER payment - 33 days overdue"
+    },
+    {
+      "id": "e5dc4195-1939-4adb-b931-ef2db1c69cb0",
+      "project_no": "VESB/RESI/IN/2025/04/0702",
+      "name": "MOHD NOOR BIN MAMAT",
+      "phone": "+60 12-829 1965",
+      "status": "Pending Design",
+      "amount": 37500.0,
+      "state": "",
+      "system_size": 0.0,
+      "project_value": 38500.0,
+      "stage": "HANDOVER",
+      "days_overdue": 40,
+      "last_contact": "2025-11-16",
+      "next_action": "URGENT: Escalate HANDOVER payment - 40 days overdue"
+    }
+  ],
+  "active_reminders": [
+    {
+      "id": "rem_cc144ad3-03e6-4854-b9b2-d1bbd4e9066e",
+      "project_no": "VESB/RESI/IN/2025/06/0707",
+      "lead_name": "MUHAMMAD ALIF HAKIM BIN ISMAIL",
+      "stage": "HANDOVER",
+      "next_action": "Schedule follow-up call for HANDOVER payment",
+      "due_date": "2025-11-28",
+      "priority": "LOW"
+    },
+    {
+      "id": "rem_2170aaa2-f04a-445e-aa1b-78adb7ed24ae",
+      "project_no": "VESB/RESI/IN/2025/06/0719",
+      "lead_name": "PREMJEET KAUR KALSI A/P THARAM SINGH",
+      "stage": "HANDOVER",
+      "next_action": "Schedule follow-up call for HANDOVER payment",
+      "due_date": "2025-12-01",
+      "priority": "LOW"
+    },
+    {
+      "id": "rem_ae5966f7-3fc3-4250-ab6d-c5e8b21e5392",
+      "project_no": "VESB/RESI/IN/2025/06/0720",
+      "lead_name": "DYG NURFALIZA BINTI ABDULLAH",
+      "stage": "HANDOVER",
+      "next_action": "Schedule follow-up call for HANDOVER payment",
+      "due_date": "2025-12-01",
+      "priority": "LOW"
+    },
+    {
+      "id": "rem_5fce3c07-c6f6-442d-8215-9072c89cbad8",
+      "project_no": "VESB/RESI/IN/2025/05/0647",
+      "lead_name": "NORA ASHIKIN BINTI MUHAMAD (ZAIDI BIN ZAKARIA)",
+      "stage": "HANDOVER",
+      "next_action": "Send payment reminder for HANDOVER",
+      "due_date": "2025-11-28",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": "rem_b5adbd4f-04e4-4f40-9394-eeddaee555c6",
+      "project_no": "VESB/RESI/IN/2024/06/0277",
+      "lead_name": "SOONG CHIN YEE",
+      "stage": "HANDOVER",
+      "next_action": "Send payment reminder for HANDOVER",
+      "due_date": "2025-11-30",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": "rem_4eefd74d-88c2-4117-8c88-eb4d6bf7524d",
+      "project_no": "VESB/RESI/IN/2025/05/0619",
+      "lead_name": "TUAN AMIRUL SYAFIK BIN TUAN RUSLAN",
+      "stage": "HANDOVER",
+      "next_action": "Call immediately for HANDOVER payment follow-up",
+      "due_date": "2025-11-29",
+      "priority": "HIGH"
+    },
+    {
+      "id": "rem_2cb64f2e-4ed6-4d5a-818d-574c02c1a382",
+      "project_no": "VESB/RESI/IN/2024/04/0160",
+      "lead_name": "S.RAGURAMAN A/L SUBRAMANIAM (SHARMILA)",
+      "stage": "80%",
+      "next_action": "Call immediately for 80% payment follow-up",
+      "due_date": "2025-11-29",
+      "priority": "HIGH"
+    },
+    {
+      "id": "rem_e74a1051-6fd4-47c1-a446-d7efd653d6ae",
+      "project_no": "VESB/RESI/IN/2025/05/0625",
+      "lead_name": "SITI JUNAINAH BINTI KIMIN",
+      "stage": "HANDOVER",
+      "next_action": "Call immediately for HANDOVER payment follow-up",
+      "due_date": "2025-12-01",
+      "priority": "HIGH"
+    }
+  ],
+  "recent_success": [
+    {
+      "id": "success_0",
+      "name": "DINA IZZEAN BINTI TAJUDIN",
+      "amount": 4434.0,
+      "days_to_pay": 9,
+      "paid_at": "2025-11-16T16:02:07Z",
+      "stage": "20%"
+    },
+    {
+      "id": "success_1",
+      "name": "LEE KET CHING",
+      "amount": 4000.0,
+      "days_to_pay": 4,
+      "paid_at": "2025-11-17T16:02:07Z",
+      "stage": "20%"
+    },
+    {
+      "id": "success_2",
+      "name": "Yoganeshwaran A/l Jagabala",
+      "amount": 5280.0,
+      "days_to_pay": 6,
+      "paid_at": "2025-11-25T16:02:07Z",
+      "stage": "20%"
+    },
+    {
+      "id": "success_3",
+      "name": "NOR SHAHILA BT HARUN SHAH",
+      "amount": 4200.0,
+      "days_to_pay": 7,
+      "paid_at": "2025-11-27T16:02:07Z",
+      "stage": "20%"
+    },
+    {
+      "id": "success_4",
+      "name": "NOR MALA BINTI ABDUL AZIZ",
+      "amount": 4200.0,
+      "days_to_pay": 10,
+      "paid_at": "2025-11-14T16:02:07Z",
+      "stage": "20%"
+    }
+  ],
+  "pipeline_by_stage": [
+    {
+      "stage": "Pending 80%",
+      "count": 87,
+      "value": 1021805.5,
+      "percentage": 95.7
+    },
+    {
+      "stage": "Pending 20%",
+      "count": 13,
+      "value": 33890.0,
+      "percentage": 3.2
+    },
+    {
+      "stage": "Handover",
+      "count": 126,
+      "value": 11600.0,
+      "percentage": 1.1
+    }
+  ],
+  "state_distribution": [
+    {
+      "state": "Unknown",
+      "count": 288,
+      "value": 1553897.38
+    },
+    {
+      "state": "SELANGOR",
+      "count": 78,
+      "value": 986836.6
+    },
+    {
+      "state": "NEGERI SEMBILAN",
+      "count": 20,
+      "value": 102579.0
+    },
+    {
+      "state": "N9",
+      "count": 4,
+      "value": 94438.4
+    },
+    {
+      "state": "MELAKA",
+      "count": 13,
+      "value": 78600.0
+    },
+    {
+      "state": "JOHOR",
+      "count": 15,
+      "value": 77792.0
+    },
+    {
+      "state": "TERENGGANU",
+      "count": 2,
+      "value": 67866.6
+    },
+    {
+      "state": "KL",
+      "count": 6,
+      "value": 67700.0
+    },
+    {
+      "state": "PERAK",
+      "count": 4,
+      "value": 61800.0
+    },
+    {
+      "state": "19-06/2025",
+      "count": 1,
+      "value": 57765.96
+    }
+  ]
+}
