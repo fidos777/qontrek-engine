@@ -24,3 +24,6 @@ yarn-error.log*
 # Local env files
 .env*.local
 .vercel
+
+# Exclude voltek-demo directory
+voltek-demo/

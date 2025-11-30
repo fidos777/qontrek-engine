@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit -p ./tsconfig.cockpit.json",
+    "demo:reset": "echo \"reset ok (no persistent local store used)\""
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -30,6 +31,7 @@
     "sqlite3": "^5.1.7",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
+    "xlsx": "^0.18.5",
     "zod": "^4.1.13"
   },
   "devDependencies": {
