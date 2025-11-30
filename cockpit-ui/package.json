@@ -1,9 +1,13 @@
 {
   "name": "cockpit-ui",
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run",
     "type-check": "tsc --noEmit -p ./tsconfig.cockpit.json",
-    "build": "echo \"(cockpit-ui library: nothing to build)\"",
     "demo:reset": "echo \"reset ok (no persistent local store used)\""
   },
   "dependencies": {
@@ -29,10 +33,6 @@
     "tailwindcss-animate": "^1.0.7",
     "xlsx": "^0.18.5",
     "zod": "^4.1.13"
-  },
-  "peerDependencies": {
-    "react": "^18 || ^19",
-    "react-dom": "^18 || ^19"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.2",
