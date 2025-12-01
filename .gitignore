@@ -13,3 +13,7 @@ codex-api/
 
 # macOS
 .DS_Store
+
+# Exclude voltek-demo node_modules
+voltek-demo/node_modules/
+**/node_modules/

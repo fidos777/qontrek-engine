@@ -1,7 +1,9 @@
 // ======================================================
 // SOLAR MCP API ROUTE — Edge Runtime
 // Path: /app/api/mcp/solar/route.ts
+// Supports: Action-based API + JSON-RPC 2.0 MCP Protocol
 // Actions: kpi, critical_leads, recovery_pipeline, timeline
+// MCP Tools: get_kpi_summary, get_critical_leads, get_recovery_pipeline, get_recent_activity
 // ======================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -9,6 +11,16 @@ import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'edge';
+
+// ---------------------------------------------
+// CORS Headers (MCP-compatible)
+// ---------------------------------------------
+const corsHeaders = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
 
 // ---------------------------------------------
 // Supabase (Edge)
@@ -21,7 +33,55 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 });
 
 // ---------------------------------------------
-// ZOD SCHEMAS (Discriminated Union)
+// MCP Tool Definitions
+// ---------------------------------------------
+const MCP_TOOLS = [
+  {
+    name: 'get_kpi_summary',
+    description: 'Fetch KPI summary data',
+    input_schema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'get_critical_leads',
+    description: 'Fetch overdue leads data',
+    input_schema: {
+      type: 'object',
+      properties: {
+        stage: { type: 'string', description: 'Filter by stage' },
+        limit: { type: 'number', description: 'Limit results' },
+      },
+    },
+  },
+  {
+    name: 'get_recovery_pipeline',
+    description: 'Fetch financial recovery pipeline',
+    input_schema: {
+      type: 'object',
+      properties: {
+        stage: { type: 'string', description: 'Filter by stage' },
+        state: { type: 'string', description: 'Filter by state' },
+        limit: { type: 'number', description: 'Limit results' },
+      },
+    },
+  },
+  {
+    name: 'get_recent_activity',
+    description: 'Fetch recent financial reminders & payments',
+    input_schema: {
+      type: 'object',
+      properties: {
+        project_no: { type: 'string', description: 'Project number to filter by' },
+      },
+      required: ['project_no'],
+    },
+  },
+] as const;
+
+// ---------------------------------------------
+// ZOD SCHEMAS (Discriminated Union) - Legacy Action-based API
 // ---------------------------------------------
 const KpiAction = z.object({
   action: z.literal('kpi'),
@@ -60,129 +120,251 @@ const ActionSchema = z.discriminatedUnion('action', [
 ]);
 
 // ---------------------------------------------
-// POST HANDLER
+// JSON-RPC 2.0 Schema
+// ---------------------------------------------
+const JsonRpcRequestSchema = z.object({
+  jsonrpc: z.literal('2.0'),
+  id: z.union([z.string(), z.number(), z.null()]),
+  method: z.string(),
+  params: z.any().optional(),
+});
+
+// ---------------------------------------------
+// Tool Execution Functions
+// ---------------------------------------------
+async function executeKpi() {
+  const { data, error } = await supabase
+    .from('v_solar_kpi_summary')
+    .select('*');
+  if (error) throw error;
+  return data;
+}
+
+async function executeCriticalLeads(params?: { stage?: string; limit?: number }) {
+  let q = supabase.from('v_critical_leads').select('*');
+  if (params?.stage) q = q.eq('stage', params.stage);
+  if (params?.limit) q = q.limit(params.limit);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data;
+}
+
+async function executeRecoveryPipeline(params?: { stage?: string; state?: string; limit?: number }) {
+  let q = supabase.from('v_payment_recovery_pipeline').select('*');
+  if (params?.stage) q = q.eq('stage', params.stage);
+  if (params?.state) q = q.eq('state', params.state);
+  if (params?.limit) q = q.limit(params.limit);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data;
+}
+
+async function executeTimeline(project_no: string) {
+  const { data, error } = await supabase
+    .from('v_solar_timeline')
+    .select('*')
+    .eq('project_no', project_no)
+    .order('event_date', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+// ---------------------------------------------
+// POST HANDLER (Strict JSON-RPC 2.0 for Agent Builder)
 // ---------------------------------------------
 export async function POST(req: NextRequest) {
-  const start = Date.now();
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+  };
 
-  let parsed;
   try {
     const body = await req.json();
-    parsed = ActionSchema.parse(body);
+
+    // Validate JSON-RPC 2.0 request
+    if (body.jsonrpc !== '2.0' || !body.method || body.id === undefined) {
+      return NextResponse.json(
+        {
+          jsonrpc: '2.0',
+          id: body.id ?? null,
+          error: {
+            code: -32600,
+            message: 'Invalid Request',
+          },
+        },
+        { status: 400, headers }
+      );
+    }
+
+    const { id, method, params } = body;
+
+    // Handle tools/list
+    if (method === 'tools/list') {
+      return NextResponse.json(
+        {
+          jsonrpc: '2.0',
+          id,
+          result: {
+            tools: [
+              { name: 'get_kpi_summary', description: 'Fetch KPI summary data' },
+              { name: 'get_critical_leads', description: 'Fetch overdue leads data' },
+              { name: 'get_recovery_pipeline', description: 'Fetch financial recovery pipeline' },
+              { name: 'get_recent_activity', description: 'Fetch financial reminders & payments' },
+            ],
+          },
+        },
+        { headers }
+      );
+    }
+
+    // Handle tools/call
+    if (method === 'tools/call') {
+      const toolName = params?.name;
+      const toolArguments = params?.arguments || {};
+
+      if (!toolName) {
+        return NextResponse.json(
+          {
+            jsonrpc: '2.0',
+            id,
+            error: {
+              code: -32602,
+              message: 'Invalid params: tool name required',
+            },
+          },
+          { status: 400, headers }
+        );
+      }
+
+      try {
+        let content;
+
+        switch (toolName) {
+          case 'get_kpi_summary':
+            content = await executeKpi();
+            break;
+          case 'get_critical_leads':
+            content = await executeCriticalLeads(toolArguments);
+            break;
+          case 'get_recovery_pipeline':
+            content = await executeRecoveryPipeline(toolArguments);
+            break;
+          case 'get_recent_activity':
+            if (!toolArguments?.project_no) {
+              throw new Error('project_no parameter is required');
+            }
+            content = await executeTimeline(toolArguments.project_no);
+            break;
+          default:
+            return NextResponse.json(
+              {
+                jsonrpc: '2.0',
+                id,
+                error: {
+                  code: -32601,
+                  message: `Tool '${toolName}' not found`,
+                },
+              },
+              { status: 404, headers }
+            );
+        }
+
+        return NextResponse.json(
+          {
+            jsonrpc: '2.0',
+            id,
+            result: {
+              content: content,
+            },
+          },
+          { headers }
+        );
+      } catch (toolError: any) {
+        return NextResponse.json(
+          {
+            jsonrpc: '2.0',
+            id,
+            error: {
+              code: -32000,
+              message: toolError.message || 'Tool execution failed',
+            },
+          },
+          { status: 500, headers }
+        );
+      }
+    }
+
+    // Unknown method
+    return NextResponse.json(
+      {
+        jsonrpc: '2.0',
+        id,
+        error: {
+          code: -32601,
+          message: 'Method not found',
+        },
+      },
+      { status: 404, headers }
+    );
   } catch (err: any) {
-    return NextResponse.json({
-      success: false,
-      error: 'Validation error',
-      details: err.errors ?? err.message,
-    }, { status: 400 });
-  }
-
-  const { action, params } = parsed;
-
-  try {
-    // ---------------------------------------------
-    // KPI
-    // ---------------------------------------------
-    if (action === 'kpi') {
-      const { data, error } = await supabase
-        .from('v_solar_kpi_summary')
-        .select('*');
-
-      if (error) throw error;
-
-      return NextResponse.json({
-        success: true,
-        action,
-        data,
-        meta: { ms: Date.now() - start },
-      });
-    }
-
-    // ---------------------------------------------
-    // CRITICAL LEADS
-    // ---------------------------------------------
-    if (action === 'critical_leads') {
-      let q = supabase.from('v_critical_leads').select('*');
-
-      if (params?.stage) q = q.eq('stage', params.stage);
-      if (params?.limit) q = q.limit(params.limit);
-
-      const { data, error } = await q;
-      if (error) throw error;
-
-      return NextResponse.json({
-        success: true,
-        action,
-        data,
-        meta: { ms: Date.now() - start },
-      });
-    }
-
-    // ---------------------------------------------
-    // RECOVERY PIPELINE
-    // ---------------------------------------------
-    if (action === 'recovery_pipeline') {
-      let q = supabase.from('v_payment_recovery_pipeline').select('*');
-
-      if (params?.stage) q = q.eq('stage', params.stage);
-      if (params?.state) q = q.eq('state', params.state);
-      if (params?.limit) q = q.limit(params.limit);
-
-      const { data, error } = await q;
-      if (error) throw error;
-
-      return NextResponse.json({
-        success: true,
-        action,
-        data,
-        meta: { ms: Date.now() - start },
-      });
-    }
-
-    // ---------------------------------------------
-    // TIMELINE (project_no)
-    // ---------------------------------------------
-    if (action === 'timeline') {
-      const { project_no } = params!;
-
-      const { data, error } = await supabase
-        .from('v_solar_timeline')
-        .select('*')
-        .eq('project_no', project_no)
-        .order('event_date', { ascending: true });
-
-      if (error) throw error;
-
-      return NextResponse.json({
-        success: true,
-        action,
-        data,
-        meta: { ms: Date.now() - start },
-      });
-    }
-
-    // fallback (should never hit)
-    return NextResponse.json({
-      success: false,
-      error: 'Unknown action',
-    }, { status: 400 });
-
-  } catch (err: any) {
-    return NextResponse.json({
-      success: false,
-      error: err.message,
-      meta: { ms: Date.now() - start },
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        jsonrpc: '2.0',
+        id: null,
+        error: {
+          code: -32700,
+          message: 'Parse error',
+        },
+      },
+      { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+    );
   }
 }
 
 // ---------------------------------------------
-// GET HANDLER (health check)
+// GET HANDLER (MCP Discovery)
 // ---------------------------------------------
 export async function GET() {
-  return NextResponse.json({
-    success: true,
-    runtime: 'edge',
-    actions: ['kpi', 'critical_leads', 'recovery_pipeline', 'timeline'],
+  return NextResponse.json(
+    {
+      mcp_server: true,
+      version: '1.0',
+      capabilities: {
+        jsonrpc: true,
+        tool_calling: true,
+        edge_runtime: true,
+      },
+      tools: [
+        { name: 'get_kpi_summary', description: 'Fetch KPI summary data' },
+        { name: 'get_critical_leads', description: 'Fetch overdue leads data' },
+        { name: 'get_recovery_pipeline', description: 'Fetch financial recovery pipeline' },
+        { name: 'get_recent_activity', description: 'Fetch financial reminders & payments' },
+      ],
+      server_info: {
+        name: 'qontrek-mcp-solar',
+        owner: 'Qontrek',
+        contact: 'support@qontrek.com',
+      },
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    }
+  );
+}
+
+// ---------------------------------------------
+// OPTIONS HANDLER (CORS Preflight)
+// ---------------------------------------------
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
   });
 }

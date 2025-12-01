@@ -1,0 +1,64 @@
+{
+  "summary": {
+    "pending_80_count": 12,
+    "pending_80_value": 96000,
+    "pending_20_count": 8,
+    "pending_20_value": 24000,
+    "pending_handover_count": 3,
+    "pending_handover_value": 18000,
+    "total_recoverable": 180400
+  },
+  "critical_leads": [
+    {
+      "name": "Ahmad Razak",
+      "stage": "80%",
+      "amount": 8000,
+      "days_overdue": 21
+    },
+    {
+      "name": "Siti Nurhaliza",
+      "stage": "20%",
+      "amount": 2400,
+      "days_overdue": 18
+    },
+    {
+      "name": "Wong Mei Ling",
+      "stage": "handover",
+      "amount": 7200,
+      "days_overdue": 4
+    }
+  ],
+  "kpi": {
+    "recovery_rate_7d": 68.5,
+    "recovery_rate_30d": 82.3,
+    "avg_days": 8.2,
+    "escalation_rate": 12.5,
+    "average_days_to_payment": 12.3
+  },
+  "active_reminders": [
+    {
+      "id": "FIN-1191",
+      "name": "Vista Hotels Bhd",
+      "stage": "PENDING_20",
+      "amount": 9600,
+      "days_overdue": 9,
+      "next_action": "Day 9 SMS reminder queued"
+    },
+    {
+      "id": "FIN-1194",
+      "name": "Seri Impian Residence",
+      "stage": "PENDING_HANDOVER",
+      "amount": 6600,
+      "days_overdue": 6,
+      "next_action": "Site handover scheduling"
+    }
+  ],
+  "recent_success": [
+    {
+      "name": "Wong Mei Ling",
+      "amount": 7200,
+      "days_to_pay": 4,
+      "paid_at": "2025-10-20T16:45:00"
+    }
+  ]
+}

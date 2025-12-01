@@ -1,0 +1,9 @@
+{
+  "etag": "merkle:demo-abc123",
+  "ack_age_ms": 42000,
+  "schema_pass": true,
+  "freshness_ms": 60000,
+  "rate_headroom": 0.82,
+  "mode": "demo",
+  "generated_at": 1737567890123
+}

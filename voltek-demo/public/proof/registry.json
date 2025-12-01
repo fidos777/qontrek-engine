@@ -1,0 +1,9 @@
+{
+  "_rfc": "selector: JSONPath 0.8; hash: canonical-json v1",
+  "pipeline.total": { "file": "/proof/g2_dashboard_v19.1.json", "jsonpath": "$.summary.total_recoverable", "node_sha256": "demo" },
+  "kpi.pending80":  { "file": "/proof/g2_dashboard_v19.1.json", "jsonpath": "$.summary.pending_80_value", "node_sha256": "demo" },
+  "kpi.pending20":  { "file": "/proof/g2_dashboard_v19.1.json", "jsonpath": "$.summary.pending_20_value", "node_sha256": "demo" },
+  "kpi.handover":   { "file": "/proof/g2_dashboard_v19.1.json", "jsonpath": "$.summary.pending_handover_value", "node_sha256": "demo" },
+  "kpi.success7d":  { "file": "/proof/g2_dashboard_v19.1.json", "jsonpath": "$.kpi.recovery_rate_7d", "node_sha256": "demo" },
+  "kpi.avg_days_to_payment": { "file": "/proof/g2_dashboard_v19.1.json", "jsonpath": "$.kpi.average_days_to_payment", "node_sha256": "demo" }
+}

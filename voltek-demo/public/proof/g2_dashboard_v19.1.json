@@ -1,0 +1,12 @@
+{
+  "summary": {
+    "total_recoverable": 180400,
+    "pending_80_value": 96000,
+    "pending_20_value": 24000,
+    "pending_handover_value": 6000
+  },
+  "kpi": {
+    "recovery_rate_7d": 69,
+    "average_days_to_payment": 14.3
+  }
+}
