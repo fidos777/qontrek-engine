@@ -327,7 +327,7 @@ export class SolarIngestionRunner {
           invalid.push({
             row: i + 2, // +2 for header row and 0-index
             data: row,
-            errors: result.error.errors.map(e => ({
+            errors: result.error.issues.map(e => ({
               field: e.path.join('.'),
               message: e.message,
             })),

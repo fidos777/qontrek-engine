@@ -93,7 +93,7 @@ export default function Gate2Dashboard() {
       <Card className="p-4">
         <div className="text-sm text-gray-500 mb-2">Total Recoverable</div>
         <div className="text-3xl font-semibold text-green-600">
-          {fmtMYR.format(totalRecoverable)}
+          {fmtMYR(totalRecoverable)}
         </div>
         <div className="grid grid-cols-2 gap-4 mt-4 text-sm text-gray-600">
           <div>Pending Cases: {pendingCases}</div>
@@ -126,7 +126,7 @@ export default function Gate2Dashboard() {
               >
                 <td className="py-2 pr-4">{lead.name}</td>
                 <td className="py-2 pr-4">{lead.stage}</td>
-                <td className="py-2 pr-4">{fmtMYR.format(lead.amount)}</td>
+                 <td className="py-2 pr-4">{fmtMYR(lead.amount)}</td>
                 <td className="py-2 pr-4">{lead.overdue_days}</td>
                 <td className="py-2 pr-4">{lead.last_reminder}</td>
               </motion.tr>
@@ -137,9 +137,13 @@ export default function Gate2Dashboard() {
 
       {modalOpen && (
         <LeadModal
-          open={modalOpen}
+          isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
           lead={selectedLead}
+          onAction={(action, lead) => {
+            console.log(`${action} action for lead:`, lead);
+            // Handle action (call, sms, whatsapp)
+          }}
         />
       )}
     </motion.div>

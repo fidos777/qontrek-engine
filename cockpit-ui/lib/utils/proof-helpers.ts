@@ -1,11 +1,39 @@
+// ProofDatum type for proof modal
+export interface ProofDatum {
+  field: string;
+  value: any;
+  hash: string;
+  timestamp: number | Date;
+  etag?: string;
+  drift?: boolean;
+}
+
 // Get nested object values safely (for deep-links)
 export const pick = (obj: any, path: string): any =>
   path.split('.').reduce((o, k) => o?.[k], obj);
 
 // Build deep-link URL for proof modal
-export const buildDeepLink = (field: string): string => {
+export const buildDeepLink = (data: ProofDatum | string): string => {
   if (typeof window === 'undefined') return '';
+  const field = typeof data === 'string' ? data : data.field;
   return `${window.location.pathname}?proof=${encodeURIComponent(field)}`;
+};
+
+// Copy to clipboard helper
+export const copyToClipboard = async (text: string): Promise<boolean> => {
+  if (typeof window === 'undefined' || !navigator.clipboard) return false;
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Format timestamp helper
+export const formatTimestamp = (timestamp: number | Date): string => {
+  const date = typeof timestamp === 'number' ? new Date(timestamp) : timestamp;
+  return date.toLocaleString();
 };
 
 // Check if user prefers reduced motion

@@ -4,6 +4,10 @@
 // Purpose: Main Solar vertical dashboard
 // ============================================
 
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+
 import { solarApi } from '@/app/lib/mcp/solarClient';
 
 export default async function SolarDemoPage() {

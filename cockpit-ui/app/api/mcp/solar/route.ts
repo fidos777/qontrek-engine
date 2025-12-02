@@ -130,43 +130,78 @@ const JsonRpcRequestSchema = z.object({
 });
 
 // ---------------------------------------------
-// Tool Execution Functions
+// Tool Execution Functions (with error guards)
 // ---------------------------------------------
 async function executeKpi() {
-  const { data, error } = await supabase
-    .from('v_solar_kpi_summary')
-    .select('*');
-  if (error) throw error;
-  return data;
+  try {
+    const { data, error } = await supabase
+      .from('v_solar_kpi_summary')
+      .select('*');
+    if (error) {
+      console.error('[MCP] Supabase error in executeKpi:', error);
+      throw new Error(`Supabase query failed: ${error.message}`);
+    }
+    return data || [];
+  } catch (err: any) {
+    console.error('[MCP] executeKpi error:', err);
+    throw err;
+  }
 }
 
 async function executeCriticalLeads(params?: { stage?: string; limit?: number }) {
-  let q = supabase.from('v_critical_leads').select('*');
-  if (params?.stage) q = q.eq('stage', params.stage);
-  if (params?.limit) q = q.limit(params.limit);
-  const { data, error } = await q;
-  if (error) throw error;
-  return data;
+  try {
+    let q = supabase.from('v_critical_leads').select('*');
+    if (params?.stage) q = q.eq('stage', params.stage);
+    if (params?.limit) q = q.limit(params.limit);
+    const { data, error } = await q;
+    if (error) {
+      console.error('[MCP] Supabase error in executeCriticalLeads:', error);
+      throw new Error(`Supabase query failed: ${error.message}`);
+    }
+    return data || [];
+  } catch (err: any) {
+    console.error('[MCP] executeCriticalLeads error:', err);
+    throw err;
+  }
 }
 
 async function executeRecoveryPipeline(params?: { stage?: string; state?: string; limit?: number }) {
-  let q = supabase.from('v_payment_recovery_pipeline').select('*');
-  if (params?.stage) q = q.eq('stage', params.stage);
-  if (params?.state) q = q.eq('state', params.state);
-  if (params?.limit) q = q.limit(params.limit);
-  const { data, error } = await q;
-  if (error) throw error;
-  return data;
+  try {
+    let q = supabase.from('v_payment_recovery_pipeline').select('*');
+    if (params?.stage) q = q.eq('stage', params.stage);
+    if (params?.state) q = q.eq('state', params.state);
+    if (params?.limit) q = q.limit(params.limit);
+    const { data, error } = await q;
+    if (error) {
+      console.error('[MCP] Supabase error in executeRecoveryPipeline:', error);
+      throw new Error(`Supabase query failed: ${error.message}`);
+    }
+    return data || [];
+  } catch (err: any) {
+    console.error('[MCP] executeRecoveryPipeline error:', err);
+    throw err;
+  }
 }
 
 async function executeTimeline(project_no: string) {
-  const { data, error } = await supabase
-    .from('v_solar_timeline')
-    .select('*')
-    .eq('project_no', project_no)
-    .order('event_date', { ascending: true });
-  if (error) throw error;
-  return data;
+  try {
+    if (!project_no || typeof project_no !== 'string') {
+      throw new Error('project_no parameter is required and must be a string');
+    }
+    const { data, error } = await supabase
+      .from('v_solar_timeline')
+      .select('*')
+      .eq('project_no', project_no)
+      .order('event_date', { ascending: true });
+    if (error) {
+      console.error('[MCP] Supabase error in executeTimeline:', error);
+      throw new Error(`Supabase query failed: ${error.message}`);
+    }
+    return data || [];
+  } catch (err: any) {
+    console.error('[MCP] executeTimeline error:', err);
+    throw err;
+  }
 }
 
 // ---------------------------------------------
@@ -280,13 +315,23 @@ export async function POST(req: NextRequest) {
           { headers }
         );
       } catch (toolError: any) {
+        // Guard: Always return JSON-RPC compliant error
+        const errorMessage = toolError?.message || 'Tool execution failed';
+        const errorCode = toolError?.code || -32603; // Internal error
+        
+        console.error('[MCP] Tool execution error:', {
+          tool: toolName,
+          error: errorMessage,
+          code: errorCode,
+        });
+        
         return NextResponse.json(
           {
             jsonrpc: '2.0',
             id,
             error: {
-              code: -32000,
-              message: toolError.message || 'Tool execution failed',
+              code: errorCode,
+              message: errorMessage,
             },
           },
           { status: 500, headers }
@@ -307,16 +352,25 @@ export async function POST(req: NextRequest) {
       { status: 404, headers }
     );
   } catch (err: any) {
+    // Guard: Catch-all for any unexpected errors
+    console.error('[MCP] Unexpected error in POST handler:', err);
+    
     return NextResponse.json(
       {
         jsonrpc: '2.0',
         id: null,
         error: {
           code: -32700,
-          message: 'Parse error',
+          message: err?.message || 'Parse error',
         },
       },
-      { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+      { 
+        status: 400, 
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Access-Control-Allow-Origin': '*' 
+        } 
+      }
     );
   }
 }

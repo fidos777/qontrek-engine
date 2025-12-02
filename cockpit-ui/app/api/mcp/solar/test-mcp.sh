@@ -27,3 +27,4 @@ curl -s -X POST "${ENDPOINT}" \
 echo -e "\n"
 
 echo "✅ Tests complete!"
+

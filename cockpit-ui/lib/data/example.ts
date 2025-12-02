@@ -116,15 +116,15 @@ export async function example1_ValidateAndLoad() {
   // Validate the dataset
   const validationResult = safeParseDataset(mockData);
 
-  if (!validationResult.ok) {
-    console.error("Validation failed:", validationResult.issues);
+  if (!validationResult.success || !validationResult.data) {
+    console.error("Validation failed:", validationResult);
     return;
   }
 
   console.log("✓ Dataset validated successfully");
 
-  // Load into store
-  await setSnapshot(validationResult.data!, "manual");
+  // Load into store - use mockData directly since it already has version, imported_at, source
+  await setSnapshot(mockData, "manual");
   console.log("✓ Dataset loaded into store");
 
   // Get computed snapshot

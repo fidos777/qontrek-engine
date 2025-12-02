@@ -61,7 +61,7 @@ export function LeadModal({ lead, isOpen, onClose, onAction }: LeadModalProps) {
   const overdueBg = getOverdueBg(lead.overdue_days);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog isOpen={isOpen} onClose={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <AnimatePresence>
           <motion.div

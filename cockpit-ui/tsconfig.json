@@ -21,6 +21,12 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@components/*": [
+        "components/*"
+      ],
+      "@voltek/*": [
+        "components/voltek/*"
       ]
     },
     "plugins": [

@@ -52,7 +52,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose }: LeadDetailMod
   };
 
   const handleMarkResolved = () => {
-    showSuccessToast(`${lead.name} marked as resolved!`, true);
+    showSuccessToast(`${lead.name} marked as resolved!`, { confetti: true });
     setTimeout(() => {
       onClose();
     }, 1500);

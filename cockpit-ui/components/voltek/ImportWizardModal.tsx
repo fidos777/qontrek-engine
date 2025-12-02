@@ -133,18 +133,24 @@ export const ImportWizardModal: React.FC<ImportWizardModalProps> = ({ isOpen, on
   };
 
   // Final import action
-  const handleImport = () => {
+  const handleImport = async () => {
     try {
-      const snapshot = setSnapshot(state.dataset, "import");
+      const datasetWithMetadata = {
+        ...state.dataset,
+        version: "1.0",
+        imported_at: new Date().toISOString(),
+        source: "import" as const,
+      };
+      await setSnapshot(datasetWithMetadata, "import");
 
       // Emit event
       emit("import:completed", {
-        count: snapshot.count,
-        hash: snapshot.hash,
+        count: state.dataset.length,
+        hash: "imported",
       });
 
       // Show success toast (simple implementation)
-      alert(`Successfully imported ${snapshot.count} projects (hash: ${snapshot.hash})`);
+      alert(`Successfully imported ${state.dataset.length} projects`);
 
       // Close modal
       onClose();
@@ -250,19 +256,19 @@ export const ImportWizardModal: React.FC<ImportWizardModalProps> = ({ isOpen, on
         )}
 
         {state.step === "upload" && state.file && !state.isProcessing && (
-          <Button variant="primary" onClick={handleNext}>
+          <Button variant="default" onClick={handleNext}>
             Next
           </Button>
         )}
 
         {(state.step === "review" || state.step === "validate") && (
-          <Button variant="primary" onClick={handleNext} disabled={state.isProcessing}>
+          <Button variant="default" onClick={handleNext} disabled={state.isProcessing}>
             Next
           </Button>
         )}
 
         {state.step === "import" && (
-          <Button variant="primary" onClick={handleImport} disabled={state.isProcessing}>
+          <Button variant="default" onClick={handleImport} disabled={state.isProcessing}>
             Import {state.dataset.length} Projects
           </Button>
         )}

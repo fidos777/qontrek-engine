@@ -70,7 +70,7 @@ export const LedgerEntrySchema = z.object({
   }).optional(),
   
   // Payload (operation-specific data)
-  payload: z.record(z.unknown()),
+  payload: z.record(z.string(), z.unknown()),
   
   // Integrity
   checksum: z.string(), // SHA-256 of payload

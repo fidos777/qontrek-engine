@@ -327,7 +327,7 @@ export function normalizeRow(raw: RawExcelRow): NormalizedProjectRow {
     status: statusResult.status,
     status_category: statusResult.status_category,
     remarks: raw.remarks ? String(raw.remarks).trim() : null,
-    total_sales: paymentData.total_sales,
+    total_sales: paymentData.total_sales ?? null,
     balance: calculateBalance(paymentData),
     mode_of_payment: raw.mode_of_payment ? String(raw.mode_of_payment).trim() : null,
     bank_merchant: raw.bank_merchant ? String(raw.bank_merchant).trim() : null,

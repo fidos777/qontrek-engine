@@ -16,7 +16,7 @@ const validVerticals: VerticalId[] = [
 
 export default function VerticalPage() {
   const params = useParams();
-  const verticalId = params.vertical as string;
+  const verticalId = params?.vertical as string;
 
   if (!validVerticals.includes(verticalId as VerticalId)) {
     return (

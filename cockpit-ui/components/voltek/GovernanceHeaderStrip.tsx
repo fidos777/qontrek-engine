@@ -3,11 +3,13 @@
 type GovernanceHeaderStripProps = {
   title?: string;
   status?: "active" | "pending" | "inactive";
+  lastSync?: Date | string | null;
 };
 
 export default function GovernanceHeaderStrip({
   title = "Governance",
-  status = "active"
+  status = "active",
+  lastSync
 }: GovernanceHeaderStripProps) {
   const statusColors = {
     active: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",

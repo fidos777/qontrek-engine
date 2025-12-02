@@ -2,10 +2,12 @@
 
 type ConfidenceMeterAnimatedProps = {
   trust?: number;
+  confidence?: number;
 };
 
-export default function ConfidenceMeterAnimated({ trust = 0 }: ConfidenceMeterAnimatedProps) {
-  const clampedTrust = Math.max(0, Math.min(100, trust));
+export default function ConfidenceMeterAnimated({ trust, confidence }: ConfidenceMeterAnimatedProps) {
+  const value = trust ?? confidence ?? 0;
+  const clampedTrust = Math.max(0, Math.min(100, typeof value === 'number' ? value * 100 : value));
 
   const getColorClass = () => {
     if (clampedTrust >= 80) return "bg-green-500";

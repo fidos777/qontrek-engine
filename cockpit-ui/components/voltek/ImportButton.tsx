@@ -12,7 +12,7 @@ export const ImportButton: React.FC = () => {
 
   return (
     <>
-      <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+      <Button variant="default" onClick={() => setIsModalOpen(true)}>
         Import Voltek Projects
       </Button>
 

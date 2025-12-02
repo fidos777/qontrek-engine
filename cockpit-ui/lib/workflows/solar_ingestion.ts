@@ -30,6 +30,66 @@ export interface WorkflowDefinition {
   outputs: string[];
 }
 
+// ============================================
+// FIELD MAPPING (Excel Column → DB Field)
+// ============================================
+
+export const FIELD_MAPPING: Record<string, string> = {
+  // Project Identification
+  'NO': 'sequence_no',
+  'PROJECT NO': 'project_no',
+  'Project No': 'project_no',
+  
+  // Client Information
+  "CLIENT'S NAME": 'client_name',
+  "Client's Name": 'client_name',
+  'CLIENT NAME': 'client_name',
+  'CONTACT NO': 'client_phone',
+  'Contact No': 'client_phone',
+  'EMAIL': 'client_email',
+  "CLIENT'S IC": 'client_ic',
+  "SPOUSE'S IC": 'spouse_ic',
+  
+  // Location
+  'ADDRESS': 'address',
+  'STATE': 'state',
+  'SITE OWNERSHIP': 'site_ownership',
+  
+  // Project Details
+  'MONTH': 'month',
+  'QTR': 'quarter',
+  'Quarter': 'quarter',
+  'EVENT NAME': 'event_name',
+  'EVENT DATE': 'event_date',
+  
+  // System Specifications
+  'PROPOSED CAPACITY (kWp)': 'proposed_capacity_kwp',
+  'PROPOSED SYSTEM': 'proposed_system',
+  'FINALIZED CAPACITY (kWp)': 'finalized_capacity_kwp',
+  'FINALIZED CAPACITY (kWac)': 'finalized_capacity_kwac',
+  'SYSTEM FINALIZED': 'system_finalized',
+  
+  // Status
+  'STATUS': 'status',
+  'REMARKS': 'remarks',
+  
+  // Financial
+  'TOTAL SALES': 'total_sales',
+  'Total Sales': 'total_sales',
+  'BALANCE': 'balance',
+  'Balance': 'balance',
+  'MODE OF PAYMENT': 'mode_of_payment',
+  'BANK/MERCHANT': 'bank_merchant',
+  
+  // Payment Milestones
+  'BOOKING': 'booking_amount',
+  'Booking': 'booking_amount',
+  '80%': 'payment_80_amount',
+  '80% PAYMENT': 'payment_80_amount',
+  '20%': 'payment_20_amount',
+  '20% PAYMENT': 'payment_20_amount',
+};
+
 export const SOLAR_INGESTION_WORKFLOW: WorkflowDefinition = {
   id: 'solar_pipeline_ingestion',
   name: 'Solar Pipeline Excel Ingestion',
@@ -146,66 +206,6 @@ export const SOLAR_INGESTION_WORKFLOW: WorkflowDefinition = {
     'validation_errors',
     'total_pipeline_value',
   ],
-};
-
-// ============================================
-// FIELD MAPPING (Excel Column → DB Field)
-// ============================================
-
-export const FIELD_MAPPING: Record<string, string> = {
-  // Project Identification
-  'NO': 'sequence_no',
-  'PROJECT NO': 'project_no',
-  'Project No': 'project_no',
-  
-  // Client Information
-  "CLIENT'S NAME": 'client_name',
-  "Client's Name": 'client_name',
-  'CLIENT NAME': 'client_name',
-  'CONTACT NO': 'client_phone',
-  'Contact No': 'client_phone',
-  'EMAIL': 'client_email',
-  "CLIENT'S IC": 'client_ic',
-  "SPOUSE'S IC": 'spouse_ic',
-  
-  // Location
-  'ADDRESS': 'address',
-  'STATE': 'state',
-  'SITE OWNERSHIP': 'site_ownership',
-  
-  // Project Details
-  'MONTH': 'month',
-  'QTR': 'quarter',
-  'Quarter': 'quarter',
-  'EVENT NAME': 'event_name',
-  'EVENT DATE': 'event_date',
-  
-  // System Specifications
-  'PROPOSED CAPACITY (kWp)': 'proposed_capacity_kwp',
-  'PROPOSED SYSTEM': 'proposed_system',
-  'FINALIZED CAPACITY (kWp)': 'finalized_capacity_kwp',
-  'FINALIZED CAPACITY (kWac)': 'finalized_capacity_kwac',
-  'SYSTEM FINALIZED': 'system_finalized',
-  
-  // Status
-  'STATUS': 'status',
-  'REMARKS': 'remarks',
-  
-  // Financial
-  'TOTAL SALES': 'total_sales',
-  'Total Sales': 'total_sales',
-  'BALANCE': 'balance',
-  'Balance': 'balance',
-  'MODE OF PAYMENT': 'mode_of_payment',
-  'BANK/MERCHANT': 'bank_merchant',
-  
-  // Payment Milestones
-  'BOOKING': 'booking_amount',
-  'Booking': 'booking_amount',
-  '80%': 'payment_80_amount',
-  '80% PAYMENT': 'payment_80_amount',
-  '20%': 'payment_20_amount',
-  '20% PAYMENT': 'payment_20_amount',
 };
 
 // ============================================

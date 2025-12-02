@@ -3,11 +3,13 @@
 type ProofFreshnessIndicatorProps = {
   lastUpdated?: Date | string | null;
   freshnessThresholdMinutes?: number;
+  className?: string;
 };
 
 export default function ProofFreshnessIndicator({
   lastUpdated,
-  freshnessThresholdMinutes = 60
+  freshnessThresholdMinutes = 60,
+  className = ""
 }: ProofFreshnessIndicatorProps) {
   const getMinutesAgo = (): number | null => {
     if (!lastUpdated) return null;
@@ -41,7 +43,7 @@ export default function ProofFreshnessIndicator({
   const status = getStatusDisplay();
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={`flex items-center gap-2 ${className}`}>
       <span className={`w-2 h-2 rounded-full ${status.dot}`} />
       <span className={`text-sm ${status.color}`}>{status.text}</span>
       {isStale && (
