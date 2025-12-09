@@ -1,0 +1,8 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- KuasaTurbo Logo Placeholder -->
+  <rect x="10" y="10" width="40" height="40" rx="8" fill="#FE4800"/>
+  <path d="M20 30 L30 20 L40 30 L30 40 Z" fill="white"/>
+  <text x="60" y="38" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#262A3B">
+    KuasaTurbo
+  </text>
+</svg>
