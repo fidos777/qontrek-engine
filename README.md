@@ -53,3 +53,5 @@ This is a dummy line to test pull request workflow.
 
 
 ✅ Clean & ready — no merge conflict markers.
+test governance trigger
+
