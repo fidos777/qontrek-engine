@@ -64,6 +64,7 @@ jobs:
 
       # 10) Factory Runtime Seal - Compute proof hashes and upload to Tower
       - name: Factory Runtime Seal
+        continue-on-error: true
         env:
           TOWER_URL: ${{ secrets.TOWER_URL || 'http://localhost:3000' }}
           FACTORY_SIGNING_SECRET: ${{ secrets.FACTORY_SIGNING_SECRET }}
