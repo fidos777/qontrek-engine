@@ -8,11 +8,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from "./supabase";
 
-export const runtime = 'edge';
 
-// ---------------------------------------------
 // CORS Headers (MCP-compatible)
 // ---------------------------------------------
 const corsHeaders = {
@@ -25,12 +23,6 @@ const corsHeaders = {
 // ---------------------------------------------
 // Supabase (Edge)
 // ---------------------------------------------
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  auth: { persistSession: false },
-});
 
 // ---------------------------------------------
 // MCP Tool Definitions
@@ -134,7 +126,7 @@ const JsonRpcRequestSchema = z.object({
 // ---------------------------------------------
 async function executeKpi() {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('v_solar_kpi_summary')
       .select('*');
     if (error) {
@@ -150,7 +142,7 @@ async function executeKpi() {
 
 async function executeCriticalLeads(params?: { stage?: string; limit?: number }) {
   try {
-    let q = supabase.from('v_critical_leads').select('*');
+    let q = getSupabase().from('v_critical_leads').select('*');
     if (params?.stage) q = q.eq('stage', params.stage);
     if (params?.limit) q = q.limit(params.limit);
     const { data, error } = await q;
@@ -167,7 +159,7 @@ async function executeCriticalLeads(params?: { stage?: string; limit?: number })
 
 async function executeRecoveryPipeline(params?: { stage?: string; state?: string; limit?: number }) {
   try {
-    let q = supabase.from('v_payment_recovery_pipeline').select('*');
+    let q = getSupabase().from('v_payment_recovery_pipeline').select('*');
     if (params?.stage) q = q.eq('stage', params.stage);
     if (params?.state) q = q.eq('state', params.state);
     if (params?.limit) q = q.limit(params.limit);
@@ -188,7 +180,7 @@ async function executeTimeline(project_no: string) {
     if (!project_no || typeof project_no !== 'string') {
       throw new Error('project_no parameter is required and must be a string');
     }
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('v_solar_timeline')
       .select('*')
       .eq('project_no', project_no)
