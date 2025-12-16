@@ -1,0 +1,83 @@
+name: Enforce Deprecated Repos
+
+# Blocks any import or reference to deprecated repositories
+# Enforces: DEPRECATED.md "Never Resurrect Declaration"
+# Authority: SHARED_ENGINE_LAW.md, GOVERNANCE_INDEX.md
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+  push:
+    branches: [main, master, develop]
+
+jobs:
+  deprecated-scan:
+    name: Scan for Deprecated Repo Usage
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Block deprecated repo imports
+        run: |
+          echo "🔍 Scanning for deprecated repository usage..."
+          echo ""
+          
+          # Define deprecated repos (add more as needed)
+          DEPRECATED_REPOS=(
+            "qontrek-flows-js"
+          )
+          
+          VIOLATIONS_FOUND=0
+          
+          for REPO in "${DEPRECATED_REPOS[@]}"; do
+            echo "Checking for: $REPO"
+            
+            # Search for imports, requires, references
+            # Exclude .github folder (contains this workflow)
+            if grep -r --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" \
+                      --include="*.json" \
+                      "$REPO" . --exclude-dir=.github 2>/dev/null; then
+              echo ""
+              echo "❌ ERROR: Found reference to deprecated repo: $REPO"
+              VIOLATIONS_FOUND=1
+            fi
+          done
+          
+          # Check for resurrection signature
+          echo ""
+          echo "Checking for deprecated code resurrection..."
+          if grep -r "DEPRECATED_REPO_SIGNATURE" . --include="*.ts" --include="*.js" --exclude-dir=.github 2>/dev/null; then
+            echo ""
+            echo "❌ ERROR: Deprecated code signature detected outside legacy repo"
+            echo "This indicates copy-pasted code from a deprecated repository."
+            VIOLATIONS_FOUND=1
+          fi
+          
+          echo ""
+          if [ $VIOLATIONS_FOUND -eq 1 ]; then
+            echo "════════════════════════════════════════════════════════════"
+            echo "❌ VIOLATION: Deprecated Repository Reference Detected"
+            echo "════════════════════════════════════════════════════════════"
+            echo ""
+            echo "This violates the Shared Engine Law."
+            echo "Deprecated repositories must NEVER be:"
+            echo "  • Imported"
+            echo "  • Referenced"
+            echo "  • Copy-pasted from"
+            echo ""
+            echo "See DEPRECATED.md for details."
+            echo "See GOVERNANCE_INDEX.md for authority hierarchy."
+            echo ""
+            echo "Violation = Bug"
+            echo "════════════════════════════════════════════════════════════"
+            exit 1
+          else
+            echo "✅ No deprecated repository references found"
+          fi
+
+      - name: Report success
+        if: success()
+        run: |
+          echo "✅ Deprecated repo enforcement passed"

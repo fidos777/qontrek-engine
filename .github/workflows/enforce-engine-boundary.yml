@@ -1,0 +1,16 @@
+name: Enforce Engine Boundary
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  boundary-check:
+    runs-on: ubuntu-latest
+    if: github.event.repository.name != 'qontrek-engine'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check boundaries
+        run: echo "Boundary check placeholder"
