@@ -1,0 +1,17 @@
+name: Enforce Engine Boundary
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  boundary-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Engine boundary placeholder
+        run: |
+          echo "Engine boundary check placeholder"
