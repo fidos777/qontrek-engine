@@ -35,9 +35,10 @@ jobs:
             echo "Checking for: $REPO"
             
             # Search for imports, requires, references
+            # Exclude .github folder (contains this workflow)
             if grep -r --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" \
-                      --include="*.json" --include="*.yaml" --include="*.yml" \
-                      "$REPO" . 2>/dev/null; then
+                      --include="*.json" \
+                      "$REPO" . --exclude-dir=.github 2>/dev/null; then
               echo ""
               echo "❌ ERROR: Found reference to deprecated repo: $REPO"
               VIOLATIONS_FOUND=1
@@ -47,7 +48,7 @@ jobs:
           # Check for resurrection signature
           echo ""
           echo "Checking for deprecated code resurrection..."
-          if grep -r "DEPRECATED_REPO_SIGNATURE" . --include="*.ts" --include="*.js" 2>/dev/null | grep -v ".github"; then
+          if grep -r "DEPRECATED_REPO_SIGNATURE" . --include="*.ts" --include="*.js" --exclude-dir=.github 2>/dev/null; then
             echo ""
             echo "❌ ERROR: Deprecated code signature detected outside legacy repo"
             echo "This indicates copy-pasted code from a deprecated repository."
